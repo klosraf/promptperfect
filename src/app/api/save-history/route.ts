@@ -1,15 +1,9 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { createRouteHandlerClient } from '@/lib/server/supabase';
-
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const key =
-    process.env.SUPABASE_SERVICE_KEY?.trim() ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-  if (!url || !key) return null;
-  return createClient(url, key);
-}
+import {
+  createRouteHandlerClient,
+  getSupabaseAdminClient,
+} from '@/lib/server/supabase';
+import { logWarn } from '@/lib/logger';
 
 export async function POST(request: Request) {
   const routeSupabase = await createRouteHandlerClient();
@@ -21,7 +15,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const admin = getAdminClient();
+  const admin = getSupabaseAdminClient();
   if (!admin) {
     return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
   }
@@ -104,6 +98,6 @@ export async function POST(request: Request) {
     break;
   }
 
-  console.error('[save-history POST]', lastError?.message ?? 'Insert failed');
+  logWarn('save-history', `POST failed: ${lastError?.message ?? 'Insert failed'}`);
   return NextResponse.json({ error: 'Could not save history' }, { status: 500 });
 }

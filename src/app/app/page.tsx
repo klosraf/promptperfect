@@ -9,34 +9,39 @@ import { PromptInput } from '@/components/PromptInput';
 import { AppModeSelector } from '@/components/AppModeSelector';
 import { StreamingPromptOutput } from '@/components/StreamingPromptOutput';
 import { ExplanationPanel } from '@/components/ExplanationPanel';
-import { HistoryPanel, type OptimizationHistoryItem } from '@/components/HistoryPanel';
+import { HistoryPanel } from '@/components/HistoryPanel';
+import type { OptimizationHistoryItem } from '@/lib/historyMerge';
 import {
   explanationTextFromFullCompletion,
   getOrCreateSessionId,
   optimizedTextFromFullCompletion,
   saveToHistory,
 } from '@/lib/client/optimizationHistory';
-import { FeedbackButtons } from '@/components/FeedbackButtons';
-import { ShareButton } from '@/components/ShareButton';
-import { SavePromptButton } from '@/components/SavePromptButton';
+import { RunActions } from '@/components/workspace/RunActions';
+import { TranslateButton } from '@/components/TranslateButton';
 import { StatsBar } from '@/components/StatsBar';
 import { AppSettingsPanel } from '@/components/AppSettingsPanel';
 import { DemoTokenBar } from '@/components/DemoTokenBar';
 import { DemoLimitModal } from '@/components/DemoLimitModal';
+import { ProjectLinker } from '@/components/ProjectLinker';
 import { SignInRequiredModal } from '@/components/SignInRequiredModal';
 import {
   GUEST_TOKEN_LIMIT,
   getGuestId,
-  getGuestCount,
   setGuestCount,
   incrementGuestCount,
+  decrementGuestCount,
   isGuestLimitReached,
 } from '@/lib/guest';
+import { useOptimisticThumbs } from '@/hooks/useOptimisticThumbs';
+import { useLibraryStatus } from '@/hooks/useLibraryStatus';
+import { useGuestUsageSync } from '@/hooks/useGuestUsageSync';
+import { isUnlimitedMode } from '@/lib/localMode';
 import type { OptimizationMode, Provider } from '@/lib/types';
 import { createSupabaseBrowserClient } from '@/lib/client/supabaseBrowser';
-import { getPromptPerfectAuthHeaders } from '@/lib/client/promptPerfectAuthHeaders';
 import {
   buildAppUserFromSupabaseUser,
+  loadApiKey,
   readEnginePrefs,
 } from '@/lib/client/enginePrefsStorage';
 import {
@@ -50,19 +55,13 @@ import { userFacingOptimizeError } from '@/lib/optimizeUserError';
 import {
   CHANGES_DELIMITER,
   EXPLANATION_DELIMITER,
-  stripPromptScoreMarkers,
 } from '@/lib/delimiter';
 import { UserAccountMenu } from '@/components/UserAccountMenu';
 import { ClientErrorBoundary } from '@/components/ClientErrorBoundary';
-
-const STORAGE_KEY = 'promptperfect:apikey';
-
-function getOptimizedPromptText(fullText: string): string {
-  const explIdx = fullText.indexOf(EXPLANATION_DELIMITER);
-  const beforeExplanation =
-    explIdx !== -1 ? fullText.slice(0, explIdx) : fullText;
-  return stripPromptScoreMarkers(beforeExplanation);
-}
+import {
+  FEEDBACK_MODES,
+  modeFromHistoryRow,
+} from '@/lib/modes';
 
 function generateSessionId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -73,35 +72,6 @@ function generateSessionId(): string {
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
-}
-
-function loadApiKey(provider: Provider): string {
-  if (provider === 'gemini') return '';
-  try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    return stored[provider] || '';
-  } catch {
-    // swallow: could not read optimization session from storage
-    return '';
-  }
-}
-
-const FEEDBACK_MODES: readonly OptimizationMode[] = [
-  'better',
-  'specific',
-  'cot',
-  'developer',
-  'research',
-  'beginner',
-  'product',
-  'marketing',
-] as const;
-
-function modeFromHistoryRow(mode: string): OptimizationMode {
-  const m = mode.trim().toLowerCase();
-  return (FEEDBACK_MODES as readonly string[]).includes(m)
-    ? (m as OptimizationMode)
-    : 'better';
 }
 
 interface PPUser {
@@ -130,8 +100,6 @@ export default function AppPage() {
   } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [statsRefresh, setStatsRefresh] = useState(0);
-  /** Instant bump until /api/stats finishes after feedback + delayed refresh. */
-  const [thumbOptimistic, setThumbOptimistic] = useState({ up: 0, down: 0 });
   const [historyRefresh, setHistoryRefresh] = useState(0);
   const [selectedHistoryItem, setSelectedHistoryItem] =
     useState<OptimizationHistoryItem | null>(null);
@@ -145,71 +113,35 @@ export default function AppPage() {
   const userRef = useRef<PPUser | null>(null);
   const selectedHistoryItemRef = useRef<OptimizationHistoryItem | null>(null);
   const historyIdRef = useRef<string | null>(null);
-  /** Last successful /api/stats thumb counts — used to detect when server reflects new feedback. */
-  const lastServerThumbsRef = useRef({ up: 0, down: 0 });
-  /** Baseline thumbs at feedback submit time; optimistic clears only after server totals change. */
-  const thumbFeedbackPendingRef = useRef<{
-    baselineUp: number;
-    baselineDown: number;
-  } | null>(null);
+
+  /** Optimistic thumbs overlay (history refreshes now, stats on a delay cascade). */
+  const {
+    thumbOptimistic,
+    handleStatsThumbsSynced,
+    handleFeedbackSubmitted,
+    seedServerThumbs,
+  } = useOptimisticThumbs({
+      onStatsRefresh: useCallback(() => {
+        setStatsRefresh((n) => n + 1);
+      }, []),
+      onHistoryRefresh: useCallback(() => {
+        setHistoryRefresh((n) => n + 1);
+      }, []),
+    });
 
   /** Set to true when arriving from library "Re-optimize" — consumed by auto-trigger below. */
   const pendingAutoOptimizeRef = useRef(false);
+  const pendingAutoRunRef = useRef(false);
   /** Always holds the latest handleOptimize to avoid stale-closure issues in the auto-trigger. */
   const handleOptimizeRef = useRef<(() => Promise<void>) | null>(null);
 
   const [syncCompletion, setSyncCompletion] = useState('');
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
-  /** Whether this history row is already in the library (server). */
-  const [inLibrary, setInLibrary] = useState<boolean | null>(null);
   const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
-
-  const handleStatsThumbsSynced = useCallback(
-    (payload: { thumbsUp: number; thumbsDown: number }) => {
-      const nu = Number(payload.thumbsUp);
-      const nd = Number(payload.thumbsDown);
-      const up = Number.isFinite(nu) ? nu : 0;
-      const down = Number.isFinite(nd) ? nd : 0;
-
-      const pending = thumbFeedbackPendingRef.current;
-      if (pending) {
-        const bu = Number(pending.baselineUp);
-        const bd = Number(pending.baselineDown);
-        const baseUp = Number.isFinite(bu) ? bu : 0;
-        const baseDown = Number.isFinite(bd) ? bd : 0;
-        /** Only drop optimistic overlay once totals actually move off the pre-submit baseline. */
-        const serverCaughtUp = up !== baseUp || down !== baseDown;
-        if (serverCaughtUp) {
-          thumbFeedbackPendingRef.current = null;
-          setThumbOptimistic({ up: 0, down: 0 });
-        }
-      }
-      lastServerThumbsRef.current = { up, down };
-    },
-    [],
-  );
-
-  const handleFeedbackSubmitted = useCallback((direction: 'up' | 'down') => {
-    thumbFeedbackPendingRef.current = {
-      baselineUp: lastServerThumbsRef.current.up,
-      baselineDown: lastServerThumbsRef.current.down,
-    };
-    setThumbOptimistic((o) => ({
-      up: o.up + (direction === 'up' ? 1 : 0),
-      down: o.down + (direction === 'down' ? 1 : 0),
-    }));
-    const delaysMs = [450, 1100, 2600, 5200];
-    for (const ms of delaysMs) {
-      window.setTimeout(() => {
-        setStatsRefresh((n) => n + 1);
-      }, ms);
-    }
-    setHistoryRefresh((n) => n + 1);
   }, []);
 
   useEffect(() => {
@@ -247,12 +179,9 @@ export default function AppPage() {
     if (!uid) return;
     const c = readStatsBarCache(uid);
     if (c) {
-      lastServerThumbsRef.current = {
-        up: c.thumbsUp,
-        down: c.thumbsDown,
-      };
+      seedServerThumbs(c.thumbsUp, c.thumbsDown);
     }
-  }, [user?.id]);
+  }, [user?.id, seedServerThumbs]);
 
   const providerRef = useRef(provider);
   useEffect(() => {
@@ -311,27 +240,17 @@ export default function AppPage() {
     };
   }, [mounted]);
 
-  useEffect(() => {
-    if (!mounted || !hydrated || user) return;
-    const gid = getGuestId();
-    if (!gid) return;
-    void fetch(`/api/guest-usage?guestId=${encodeURIComponent(gid)}`)
-      .then((r) => r.json())
-      .then(
-        (data: {
-          count?: number;
-          serverTracking?: boolean;
-        }) => {
-          if (data.serverTracking === false) return;
-          if (typeof data.count === 'number') {
-            const merged = Math.max(getGuestCount(), data.count);
-            setGuestCount(merged);
-            setGuestUsageVersion((v) => v + 1);
-          }
-        },
-      )
-      .catch(() => {});
-  }, [mounted, hydrated, user]);
+  // Merge the server-side guest counter once the app hydrates (guests only).
+  const bumpGuestUsageVersion = useCallback(
+    () => setGuestUsageVersion((v) => v + 1),
+    [],
+  );
+  useGuestUsageSync({
+    mounted,
+    hydrated,
+    userId: user?.id,
+    onSynced: bumpGuestUsageVersion,
+  });
 
   useEffect(() => {
     setApiKey(loadApiKey(provider));
@@ -341,38 +260,8 @@ export default function AppPage() {
     optimizeContextRef.current.mode = selectedMode;
   }, [selectedMode]);
 
-  useEffect(() => {
-    if (!user?.id || !historyId || !/^[\da-f-]{36}$/i.test(historyId)) {
-      setInLibrary(null);
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      const client = createSupabaseBrowserClient();
-      if (!client) {
-        if (!cancelled) setInLibrary(false);
-        return;
-      }
-      const headers = await getPromptPerfectAuthHeaders(client);
-      if (!headers) {
-        if (!cancelled) setInLibrary(false);
-        return;
-      }
-      try {
-        const r = await fetch(
-          `/api/saved-prompts/status?history_id=${encodeURIComponent(historyId)}`,
-          { headers },
-        );
-        const j = (await r.json().catch(() => ({}))) as { saved?: boolean };
-        if (!cancelled) setInLibrary(!!j.saved);
-      } catch {
-        if (!cancelled) setInLibrary(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id, historyId]);
+  /** Whether this history row is already in the library (server). */
+  const [inLibrary, setInLibrary] = useLibraryStatus(user?.id, historyId);
 
   useEffect(() => {
     const open = () => setSettingsOpen(true);
@@ -432,6 +321,13 @@ export default function AppPage() {
       }
       return res;
     },
+    onError: () => {
+      // Refund the optimistic guest reservation: failed runs must not burn quota.
+      if (!userRef.current) {
+        decrementGuestCount();
+        setGuestUsageVersion((v) => v + 1);
+      }
+    },
   });
 
   const isGemini = provider === 'gemini';
@@ -443,7 +339,8 @@ export default function AppPage() {
     if (!inputText.trim()) return;
     setUsageGateError(null);
 
-    if (!user) {
+    // Unlimited local-dev mode: no quota gate, no server tracking, no counting.
+    if (!user && !isUnlimitedMode()) {
       if (isGuestLimitReached()) {
         setShowLimitModal(true);
         return;
@@ -566,9 +463,14 @@ export default function AppPage() {
           setStatsRefresh((n) => n + 1);
           setHistoryRefresh((n) => n + 1);
         })
-        .catch((err) =>
-          setSyncError(err instanceof Error ? err.message : 'Request failed'),
-        )
+        .catch((err) => {
+          // Refund the optimistic guest reservation: failed runs must not burn quota.
+          if (!user) {
+            decrementGuestCount();
+            setGuestUsageVersion((v) => v + 1);
+          }
+          setSyncError(err instanceof Error ? err.message : 'Request failed');
+        })
         .finally(() => setSyncLoading(false));
     }
   }, [user, inputText, selectedMode, provider, apiKey, hasApiKey, isGemini, complete]);
@@ -583,6 +485,14 @@ export default function AppPage() {
     pendingAutoOptimizeRef.current = false;
     void handleOptimizeRef.current?.();
   }, [hydrated, user, inputText, isLoading]);
+
+  // Auto-trigger: fires after "Link project directory" builds a digest.
+  // Works for guests too (no user required) — mirrors the pattern above.
+  useEffect(() => {
+    if (!hydrated || !pendingAutoRunRef.current || !inputText.trim() || isLoading) return;
+    pendingAutoRunRef.current = false;
+    void handleOptimizeRef.current?.();
+  }, [hydrated, inputText, isLoading]);
 
   const resetComposerToNewPrompt = useCallback(() => {
     setSelectedHistoryItem(null);
@@ -602,7 +512,43 @@ export default function AppPage() {
     } else {
       setSyncCompletion('');
     }
-  }, [isGemini, setStreamCompletion]);
+  }, [isGemini, setStreamCompletion, setInLibrary]);
+
+  // "Link project directory" flow: load the digest as input, switch to the
+  // Production Audit mode, and auto-run via pendingAutoRunRef.
+  const handleProjectDigest = useCallback(
+    (digest: string) => {
+      resetComposerToNewPrompt();
+      setInputText(digest);
+      setSelectedMode('production');
+      pendingAutoRunRef.current = true;
+    },
+    [resetComposerToNewPrompt],
+  );
+
+  // "Fix & re-run" flow: append the remediation directives to the current
+  // input and auto-run. handleOptimize resets run state for the new run.
+  const handleRemediate = useCallback((directiveBlock: string) => {
+    if (!directiveBlock.trim()) return;
+    setInputText((prev) => `${prev.trimEnd()}${directiveBlock}`);
+    pendingAutoRunRef.current = true;
+  }, []);
+
+  // Output translation: swap the whole completion (markers preserved by the
+  // translator) and re-derive the explanation. Treated as a fresh unsaved run.
+  const handleTranslateOutput = useCallback(
+    (translatedFullText: string) => {
+      setSelectedHistoryItem(null);
+      setHistoryId(null);
+      setExplanation(explanationTextFromFullCompletion(translatedFullText));
+      if (isGemini) {
+        setStreamCompletion(translatedFullText);
+      } else {
+        setSyncCompletion(translatedFullText);
+      }
+    },
+    [isGemini, setStreamCompletion],
+  );
 
   const handleHistorySelect = useCallback(
     (item: OptimizationHistoryItem) => {
@@ -650,7 +596,7 @@ export default function AppPage() {
     if (historyIdRef.current === deletedId) {
       setInLibrary(false);
     }
-  }, []);
+  }, [setInLibrary]);
 
   const handleLogout = async () => {
     setSigningOut(true);
@@ -727,13 +673,22 @@ export default function AppPage() {
               </>
             ) : (
               <>
-                <button
-                  type="button"
-                  onClick={() => setShowSignInModal(true)}
-                  className="rounded-lg border border-transparent px-3 py-1.5 text-sm text-[#888] transition-all duration-200 ease-out hover:border-[#2a2a2a] hover:bg-[#111] hover:text-[#ECECEC]"
-                >
-                  Library
-                </button>
+                {isUnlimitedMode() ? (
+                  <Link
+                    href="/library"
+                    className="rounded-lg border border-transparent px-3 py-1.5 text-sm text-[#888] transition-all duration-200 ease-out hover:border-[#2a2a2a] hover:bg-[#111] hover:text-[#ECECEC]"
+                  >
+                    Library
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowSignInModal(true)}
+                    className="rounded-lg border border-transparent px-3 py-1.5 text-sm text-[#888] transition-all duration-200 ease-out hover:border-[#2a2a2a] hover:bg-[#111] hover:text-[#ECECEC]"
+                  >
+                    Library
+                  </button>
+                )}
                 <Link
                   href="/login"
                   className="rounded-lg border border-transparent px-3 py-1.5 text-sm text-[#888] transition-all duration-200 ease-out hover:border-[#2a2a2a] hover:bg-[#111] hover:text-[#ECECEC]"
@@ -775,6 +730,13 @@ export default function AppPage() {
               onChange={setInputText}
               disabled={isLoading}
             />
+            <div className="mt-2 flex justify-end">
+              <TranslateButton
+                text={inputText}
+                onTranslated={(t) => setInputText(t)}
+                disabled={isLoading}
+              />
+            </div>
           </div>
 
           <div className="min-w-0 flex-1">
@@ -785,31 +747,25 @@ export default function AppPage() {
               onExplanation={setExplanation}
               afterTextarea={
                 completion && !isLoading ? (
-                  <div className="flex flex-wrap items-center gap-3">
-                    {historyId && (
-                      <ShareButton historyId={historyId} userId={user?.id ?? null} />
-                    )}
-                    <SavePromptButton
-                      originalPrompt={inputText}
-                      optimizedPrompt={getOptimizedPromptText(completion)}
-                      explanation={explanation}
-                      mode={runMeta?.mode ?? selectedMode}
-                      provider={runMeta?.provider ?? provider}
-                      userId={user?.id ?? null}
-                      historyId={historyId}
-                      alreadySaved={inLibrary === true}
-                      onSavedToLibrary={() => setInLibrary(true)}
-                    />
-                    <FeedbackButtons
-                      sessionId={sessionId}
-                      mode={runMeta?.mode ?? selectedMode}
-                      provider={runMeta?.provider ?? provider}
-                      inputLength={runMeta?.inputLength ?? inputText.trim().length}
-                      outputLength={getOptimizedPromptText(completion).length}
-                      disabled={Boolean(user?.id && !historyId)}
-                      onSubmitted={handleFeedbackSubmitted}
-                    />
-                  </div>
+                  <RunActions
+                    historyId={historyId}
+                    userId={user?.id ?? null}
+                    sessionId={sessionId}
+                    inputText={inputText}
+                    optimized={optimizedTextFromFullCompletion(completion)}
+                    fullText={completion}
+                    explanation={explanation}
+                    mode={runMeta?.mode ?? selectedMode}
+                    provider={runMeta?.provider ?? provider}
+                    inputLength={runMeta?.inputLength ?? inputText.trim().length}
+                    outputLength={optimizedTextFromFullCompletion(completion).length}
+                    inLibrary={inLibrary}
+                    feedbackDisabled={Boolean(user?.id && !historyId)}
+                    onSavedToLibrary={() => setInLibrary(true)}
+                    onFeedbackSubmitted={handleFeedbackSubmitted}
+                    onRemediate={handleRemediate}
+                    onTranslateOutput={handleTranslateOutput}
+                  />
                 ) : null
               }
             />
@@ -838,6 +794,12 @@ export default function AppPage() {
             >
               {isLoading ? 'Optimizing…' : 'Optimize'}
             </button>
+            <div className="mt-3">
+              <ProjectLinker
+                onDigest={(digest) => handleProjectDigest(digest)}
+                disabled={isLoading}
+              />
+            </div>
             <DemoTokenBar
               key={guestUsageVersion}
               isAuthenticated={!!user}
@@ -861,7 +823,7 @@ export default function AppPage() {
           <ExplanationPanel
             explanation={explanation}
             original={inputText}
-            optimized={getOptimizedPromptText(completion)}
+            optimized={optimizedTextFromFullCompletion(completion)}
           />
         </div>
         </ClientErrorBoundary>

@@ -1,15 +1,17 @@
 'use client';
 
 import { getGuestCount, getGuestLimit } from '@/lib/guest';
+import { isUnlimitedMode } from '@/lib/localMode';
 
 interface DemoTokenBarProps {
   isAuthenticated: boolean;
 }
 
 export function DemoTokenBar({ isAuthenticated }: DemoTokenBarProps) {
-  const limit = getGuestLimit();
+  // Unlimited local-dev mode: no quota UI at all.
+  if (isAuthenticated || isUnlimitedMode()) return null;
 
-  if (isAuthenticated) return null;
+  const limit = getGuestLimit();
 
   const count = getGuestCount();
   const percentage = limit > 0 ? (count / limit) * 100 : 0;

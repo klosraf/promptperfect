@@ -29,14 +29,6 @@ function buildServiceClient(opts: {
   existingEmail?: boolean;
   adminCreateUser?: { data: unknown; error: unknown };
 }) {
-  const profileRow = {
-    id: 'new-user',
-    name: null,
-    email: 'new@example.com',
-    provider: 'gemini',
-    model: 'gemini-2.0-flash',
-  };
-
   const maybeSingle = vi.fn().mockResolvedValue({
     data: opts.existingEmail ? { id: 'existing-id' } : null,
     error: null,

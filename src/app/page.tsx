@@ -1,5 +1,3 @@
-'use client';
-
 import {
   Clipboard,
   Code2,

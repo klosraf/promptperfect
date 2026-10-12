@@ -2,10 +2,25 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Bookmark, ChevronDown, ChevronUp, Search, Trash2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bookmark, BookmarkPlus, ChevronDown, ChevronUp, Search, Sparkles, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { createSupabaseBrowserClient } from '@/lib/client/supabaseBrowser';
+import { getPromptPerfectAuthHeaders } from '@/lib/client/promptPerfectAuthHeaders';
+import { isUnlimitedMode } from '@/lib/localMode';
+import {
+  deleteLocalLibraryRow,
+  getLocalLibrary,
+  isInLocalLibrary,
+  saveToLocalLibrary,
+  type LocalLibraryRow,
+} from '@/lib/client/optimizationHistory';
+import {
+  PROMPT_TEMPLATES,
+  TEMPLATE_CATEGORIES,
+  type PromptTemplate,
+  type TemplateCategory,
+} from '@/lib/promptTemplates';
 import {
   buildAppUserFromSupabaseUser,
   readEnginePrefs,
@@ -201,6 +216,21 @@ function DeleteConfirmModal({
   );
 }
 
+// ── Local-mode mapping ────────────────────────────────────────────────────────
+function mapLocalLibraryRows(rows: LocalLibraryRow[]): SavedPromptRow[] {
+  return rows.map((r) => ({
+    id: r.id,
+    user_id: 'local',
+    title: r.title,
+    original_prompt: r.prompt_original,
+    optimized_prompt: r.prompt_optimized,
+    explanation: r.explanation,
+    mode: r.mode,
+    provider: r.provider,
+    created_at: r.created_at,
+  }));
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function LibraryPage() {
   const router = useRouter();
@@ -216,6 +246,12 @@ export default function LibraryPage() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   /** ID pending confirmation before delete; null = no modal open */
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [tab, setTab] = useState<'mine' | 'templates'>('mine');
+  const [tplCategory, setTplCategory] = useState<TemplateCategory | 'All'>('All');
+  const [tplExpandedId, setTplExpandedId] = useState<string | null>(null);
+  const [savedTplIds, setSavedTplIds] = useState<Set<string>>(new Set());
+  const [tplSavingId, setTplSavingId] = useState<string | null>(null);
+  const [tplError, setTplError] = useState<string | null>(null);
 
   const filteredRows = useMemo(
     () =>
@@ -237,6 +273,20 @@ export default function LibraryPage() {
   const loadSaved = useCallback(async (userId: string) => {
     const client = createSupabaseBrowserClient();
     if (!client) {
+      // Local mode without backend: library lives in localStorage.
+      if (isUnlimitedMode()) {
+        setLoading(true);
+        setError(null);
+        try {
+          setRows(mapLocalLibraryRows(getLocalLibrary()));
+        } catch {
+          setError('Could not load saved prompts.');
+          setRows([]);
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
       setError('Library is unavailable.');
       setRows([]);
       setLoading(false);
@@ -252,7 +302,9 @@ export default function LibraryPage() {
           'id,user_id,title,original_prompt,optimized_prompt,explanation,mode,provider,created_at',
         )
         .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
+        .limit(500);
 
       if (qErr) throw qErr;
       setRows((data as SavedPromptRow[]) ?? []);
@@ -272,6 +324,15 @@ export default function LibraryPage() {
     setError(null);
     setRows((r) => r.filter((row) => row.id !== id));
     setExpandedId((prev) => (prev === id ? null : prev));
+
+    // Local mode: delete from localStorage, no backend involved.
+    if (user.id === 'local') {
+      if (!deleteLocalLibraryRow(id)) {
+        setError('Could not delete prompt.');
+        setRows(mapLocalLibraryRows(getLocalLibrary()));
+      }
+      return;
+    }
 
     const client = createSupabaseBrowserClient();
     if (!client) {
@@ -311,12 +372,122 @@ export default function LibraryPage() {
     [router],
   );
 
+  const filteredTemplates = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return PROMPT_TEMPLATES.filter(
+      (t) =>
+        (tplCategory === 'All' || t.category === tplCategory) &&
+        (!q ||
+          `${t.title} ${t.description} ${t.category}`.toLowerCase().includes(q)),
+    );
+  }, [tplCategory, searchQuery]);
+
+  const templateCountByCategory = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const t of PROMPT_TEMPLATES) {
+      counts.set(t.category, (counts.get(t.category) ?? 0) + 1);
+    }
+    return counts;
+  }, []);
+
+  const isTplSaved = useCallback(
+    (id: string) =>
+      savedTplIds.has(id) ||
+      (user?.id === 'local' && isInLocalLibrary(`template:${id}`)),
+    [savedTplIds, user],
+  );
+
+  /** Fork a template into the optimizer (loaded for review, not auto-run). */
+  const handleUseTemplate = useCallback(
+    (tpl: PromptTemplate) => {
+      try {
+        sessionStorage.setItem(
+          REOPTIMIZE_SESSION_KEY,
+          JSON.stringify({
+            text: tpl.optimized_prompt,
+            mode: tpl.mode,
+            autoOptimize: false,
+          }),
+        );
+      } catch {
+        // swallow: quota / private mode blocks draft storage
+      }
+      router.push('/app');
+    },
+    [router],
+  );
+
+  const handleSaveTemplate = useCallback(
+    async (tpl: PromptTemplate) => {
+      if (!user || tplSavingId || isTplSaved(tpl.id)) return;
+      setTplSavingId(tpl.id);
+      setTplError(null);
+      try {
+        if (user.id === 'local') {
+          saveToLocalLibrary({
+            title: tpl.title,
+            prompt_original: tpl.original_prompt,
+            prompt_optimized: tpl.optimized_prompt,
+            explanation: tpl.explanation,
+            mode: tpl.mode,
+            provider: tpl.provider,
+            session_id: `template-${tpl.id}`,
+            history_id: `template:${tpl.id}`,
+          });
+        } else {
+          const client = createSupabaseBrowserClient();
+          if (!client) {
+            setTplError('Sign in to save templates.');
+            return;
+          }
+          const headers = await getPromptPerfectAuthHeaders(client);
+          if (!headers) {
+            setTplError('Sign in again to save templates.');
+            return;
+          }
+          const res = await fetch('/api/saved-prompts', {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: tpl.title,
+              original_prompt: tpl.original_prompt,
+              optimized_prompt: tpl.optimized_prompt,
+              explanation: tpl.explanation,
+              mode: tpl.mode,
+              provider: tpl.provider,
+            }),
+          });
+          if (!res.ok) {
+            const data = (await res.json().catch(() => ({}))) as { error?: string };
+            setTplError(
+              typeof data.error === 'string' && data.error
+                ? data.error
+                : 'Could not save template.',
+            );
+            return;
+          }
+        }
+        setSavedTplIds((prev) => new Set(prev).add(tpl.id));
+      } finally {
+        setTplSavingId(null);
+      }
+    },
+    [user, tplSavingId, isTplSaved],
+  );
+
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (!mounted) return;
     const client = createSupabaseBrowserClient();
     if (!client) {
+      // Local mode without backend: library works off localStorage, no sign-in.
+      if (isUnlimitedMode()) {
+        setUser({ id: 'local', name: 'Local device', email: '', provider: '', model: '' });
+        void loadSaved('local');
+        setAuthReady(true);
+        return;
+      }
       setUser(null);
       setRows([]);
       setLoading(false);
@@ -428,6 +599,37 @@ export default function LibraryPage() {
         </header>
 
         <main className="mx-auto max-w-4xl">
+          {/* Tabs */}
+          <div
+            className="mb-4 flex gap-2"
+            role="tablist"
+            aria-label="Library sections"
+          >
+            {(
+              [
+                { id: 'mine' as const, label: `My Library (${rows.length})` },
+                { id: 'templates' as const, label: `Templates (${PROMPT_TEMPLATES.length})` },
+              ] as const
+            ).map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={tab === id}
+                onClick={() => setTab(id)}
+                className={`rounded-lg border px-4 py-2 text-[13px] font-medium transition-colors ${
+                  tab === id
+                    ? 'border-[#4552FF] bg-[#4552FF]/20 text-[#ECECEC]'
+                    : 'border-[#2a2a2a] bg-[#0A0A0A] text-[#B0B0B0] hover:border-[#4552FF]/50'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {tab === 'mine' ? (
+          <>
           {/* Search */}
           <label className="relative mb-4 block">
             <span className="sr-only">Search saved prompts</span>
@@ -605,6 +807,136 @@ export default function LibraryPage() {
                 </div>
               )}
             </>
+          )}
+          </>
+          ) : (
+          <>
+          {/* Templates: curated production-ready prompts, works offline */}
+          <div
+            className="mb-4 flex flex-wrap gap-2"
+            role="group"
+            aria-label="Filter templates by category"
+          >
+            {(['All', ...TEMPLATE_CATEGORIES] as const).map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setTplCategory(c)}
+                aria-pressed={tplCategory === c}
+                className={`rounded-lg border px-3 py-1.5 text-[12px] font-medium transition-colors ${
+                  tplCategory === c
+                    ? 'border-[#4552FF] bg-[#4552FF]/20 text-[#ECECEC]'
+                    : 'border-[#2a2a2a] bg-[#0A0A0A] text-[#B0B0B0] hover:border-[#4552FF]/50'
+                }`}
+              >
+                {c === 'All'
+                  ? `All (${PROMPT_TEMPLATES.length})`
+                  : `${c} (${templateCountByCategory.get(c) ?? 0})`}
+              </button>
+            ))}
+          </div>
+
+          {tplError ? (
+            <div
+              className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-5 py-3 text-center text-sm text-red-400"
+              role="alert"
+            >
+              {tplError}
+            </div>
+          ) : null}
+
+          {filteredTemplates.length === 0 ? (
+            <p className="py-12 text-center text-sm text-[#71717A]">
+              No templates match your filters.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {filteredTemplates.map((tpl) => {
+                const expanded = tplExpandedId === tpl.id;
+                const saved = isTplSaved(tpl.id);
+                const saving = tplSavingId === tpl.id;
+                return (
+                  <li
+                    key={tpl.id}
+                    className="rounded-xl border border-[#252525] bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4 transition hover:border-[#3F3F46]"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setTplExpandedId(expanded ? null : tpl.id)}
+                      className="flex w-full items-start justify-between gap-2 text-left"
+                      aria-expanded={expanded}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <h2 className="truncate font-[family-name:var(--font-space-grotesk),sans-serif] text-[15px] font-medium text-[#E7E6D9]">
+                          {tpl.title}
+                        </h2>
+                        <p className="mt-1 truncate text-[13px] text-[#aaa]">
+                          {tpl.description}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span className="rounded bg-[#4552FF]/20 px-2 py-0.5 text-[11px] font-medium text-[#8B9AFF]">
+                          {tpl.category}
+                        </span>
+                        <span className="rounded bg-green-500/20 px-2 py-0.5 text-[11px] font-medium text-green-400">
+                          {modeBadgeLabel(tpl.mode)}
+                        </span>
+                        {expanded ? (
+                          <ChevronUp className="h-4 w-4 text-[#71717A]" aria-hidden />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-[#71717A]" aria-hidden />
+                        )}
+                      </div>
+                    </button>
+
+                    {expanded && (
+                      <div className="mt-4 border-t border-[#252525] pt-4">
+                        <p className="mb-1 text-[11px] text-[#71717A]">
+                          Built from starter
+                        </p>
+                        <p className="mb-3 text-[13px] italic text-[#888]">
+                          “{tpl.original_prompt}”
+                        </p>
+                        <p className="mb-1 text-[11px] text-[#71717A]">
+                          Template — fill the {'{{PLACEHOLDERS}}'} then optimize
+                        </p>
+                        <p className="whitespace-pre-wrap text-sm text-[#ECECEC]">
+                          {tpl.optimized_prompt}
+                        </p>
+                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handleUseTemplate(tpl)}
+                            className="inline-flex items-center gap-1.5 rounded-[10px] bg-[linear-gradient(135deg,#4552FF,#5c6aff)] px-4 py-2 text-[13px] font-semibold text-white transition hover:opacity-90"
+                          >
+                            <Sparkles size={14} aria-hidden />
+                            Use in optimizer
+                          </button>
+                          {saved ? (
+                            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#4552FF]">
+                              <Bookmark size={16} aria-hidden />
+                              Saved!
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => void handleSaveTemplate(tpl)}
+                              disabled={saving}
+                              className="inline-flex items-center gap-1.5 text-sm text-[#B0B0B0] transition hover:text-[#4552FF] disabled:opacity-50"
+                            >
+                              <BookmarkPlus size={16} aria-hidden />
+                              {saving ? 'Saving…' : 'Save to library'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          </>
           )}
         </main>
       </div>

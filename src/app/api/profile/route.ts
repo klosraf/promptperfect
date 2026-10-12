@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseAdminClient } from '@/lib/client/supabase';
+import { getSupabaseAdminClient } from '@/lib/server/supabase';
 import { checkRateLimit } from '@/lib/auth/rateLimit';
 import {
   isUniqueViolation,
@@ -11,6 +11,7 @@ import {
   jsonUnauthorizedDetails,
   resolveIdentity,
 } from '@/lib/server/supabaseRequestIdentity';
+import { logWarn } from '@/lib/logger';
 
 type ProfileRow = {
   id: string;
@@ -123,7 +124,7 @@ export async function GET(request: Request) {
     const msg = selErr.message || '';
     const missing =
       /does not exist|could not find|schema cache|42P01/i.test(msg);
-    console.error('[profile GET select]', msg);
+    logWarn('profile', `GET select failed: ${msg}`);
     return NextResponse.json(
       {
         error: missing
@@ -188,7 +189,7 @@ export async function GET(request: Request) {
 
     if (insErr) {
       const fk = /pp_user_profiles_id_fkey|foreign key/i.test(insErr.message);
-      console.error('[profile GET insert]', insErr.message);
+      logWarn('profile', `GET insert failed: ${insErr.message}`);
       return NextResponse.json(
         {
           error: fk
@@ -416,7 +417,7 @@ export async function PATCH(request: Request) {
     .maybeSingle();
 
   if (selErr) {
-    console.error('[profile PATCH select]', selErr.message);
+    logWarn('profile', `PATCH select failed: ${selErr.message}`);
     return NextResponse.json({ error: 'Database error' }, { status: 500 });
   }
 
@@ -489,7 +490,7 @@ export async function PATCH(request: Request) {
         { status: 409 },
       );
     }
-    console.error('[profile PATCH upsert]', error.message);
+    logWarn('profile', `PATCH upsert failed: ${error.message}`);
     return NextResponse.json({ error: 'Database error' }, { status: 500 });
   }
 

@@ -23,7 +23,7 @@ export class ClientErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // TODO: replace with structured logger hook when available
+    // NOTE: dev-only console.error is intentional (see note in app/error.tsx).
     if (process.env.NODE_ENV !== 'production') {
       console.error('[ClientErrorBoundary]', error, info.componentStack)
     }

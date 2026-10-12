@@ -6,7 +6,8 @@ export type OptimizationMode =
   | 'research' 
   | 'beginner' 
   | 'product' 
-  | 'marketing';
+  | 'marketing'
+  | 'production';
 
 export type Mode = OptimizationMode;
 

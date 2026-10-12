@@ -111,6 +111,113 @@ export function getLocalHistoryForSession(sessionId: string): LocalHistoryRow[] 
   return readLocalHistoryRows().filter((r) => r.session_id === sessionId);
 }
 
+/** All locally stored history rows, newest first (powers local-mode Library). */
+export function getAllLocalHistory(): LocalHistoryRow[] {
+  return readLocalHistoryRows();
+}
+
+/** Remove one local history row. Returns true when a row was removed. */
+export function deleteLocalHistoryRow(id: string): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const rows = readLocalHistoryRows();
+    const next = rows.filter((r) => r.id !== id);
+    if (next.length === rows.length) return false;
+    writeLocalHistoryRows(next);
+    return true;
+  } catch {
+    // swallow: localStorage unavailable — nothing to delete
+    return false;
+  }
+}
+
+// ── Local library (saved prompts without a backend) ───────────────────────────
+
+const LOCAL_LIBRARY_KEY = 'pp:library_saved_local';
+
+export type LocalLibraryRow = LocalHistoryRow & {
+  title: string;
+  provider: string;
+  /** History row this snapshot was saved from (null when saved ad-hoc). */
+  history_id: string | null;
+};
+
+function readLocalLibraryRows(): LocalLibraryRow[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(LOCAL_LIBRARY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? (parsed as LocalLibraryRow[]) : [];
+  } catch {
+    // swallow: JSON.parse failed or localStorage unavailable
+    return [];
+  }
+}
+
+/** All locally saved library rows, newest first. */
+export function getLocalLibrary(): LocalLibraryRow[] {
+  return readLocalLibraryRows();
+}
+
+/** True when `historyId` is already in the local library. */
+export function isInLocalLibrary(historyId: string): boolean {
+  if (!historyId) return false;
+  return readLocalLibraryRows().some((r) => r.history_id === historyId);
+}
+
+/** Snapshot a prompt into the local library. Returns the saved row id. */
+export function saveToLocalLibrary(params: {
+  title: string;
+  prompt_original: string;
+  prompt_optimized: string;
+  explanation: string;
+  mode: string;
+  provider: string;
+  session_id: string;
+  history_id?: string | null;
+}): string {
+  const id =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? `local-saved-${crypto.randomUUID()}`
+      : `local-saved-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const row: LocalLibraryRow = {
+    id,
+    session_id: params.session_id,
+    prompt_original: params.prompt_original,
+    prompt_optimized: params.prompt_optimized,
+    mode: params.mode,
+    explanation: params.explanation,
+    title: params.title,
+    provider: params.provider,
+    history_id: params.history_id ?? null,
+    created_at: new Date().toISOString(),
+  };
+  const list = readLocalLibraryRows();
+  list.unshift(row);
+  try {
+    localStorage.setItem(LOCAL_LIBRARY_KEY, JSON.stringify(list.slice(0, LOCAL_HISTORY_CAP)));
+  } catch {
+    // swallow: quota / private mode — save is best-effort
+  }
+  return id;
+}
+
+/** Remove one local library row. Returns true when a row was removed. */
+export function deleteLocalLibraryRow(id: string): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const rows = readLocalLibraryRows();
+    const next = rows.filter((r) => r.id !== id);
+    if (next.length === rows.length) return false;
+    localStorage.setItem(LOCAL_LIBRARY_KEY, JSON.stringify(next));
+    return true;
+  } catch {
+    // swallow: localStorage unavailable — nothing to delete
+    return false;
+  }
+}
+
 export async function saveToHistory(params: {
   prompt_original: string;
   prompt_optimized: string;

@@ -23,7 +23,7 @@ vi.mock('@supabase/supabase-js', () => ({
   createClient: (...args: unknown[]) => mockCreateClient(...args),
 }));
 
-vi.mock('@/lib/client/supabase', () => ({
+vi.mock('@/lib/server/supabase', () => ({
   getSupabaseAdminClient: () => mockGetSupabaseAdminClient(),
 }));
 

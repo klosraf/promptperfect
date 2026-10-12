@@ -1,7 +1,9 @@
 'use client';
 
+import { useId } from 'react';
 import Link from 'next/link';
 import { Bookmark } from 'lucide-react';
+import { Modal } from '@/components/ui/Modal';
 
 interface SignInRequiredModalProps {
   isOpen: boolean;
@@ -18,17 +20,11 @@ export function SignInRequiredModal({
   feature = 'this feature',
   title,
 }: SignInRequiredModalProps) {
-  if (!isOpen) return null;
+  const titleId = useId();
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="sign-in-modal-title"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="w-full max-w-sm rounded-2xl border border-[#252525] bg-[#0A0A0A] p-7 shadow-2xl">
+    <Modal isOpen={isOpen} onClose={onClose} titleId={titleId} maxWidthClass="max-w-sm">
+      <div className="p-0">
         {/* Icon */}
         <div className="mb-5 flex flex-col items-center gap-3 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#4552FF]/10 ring-1 ring-[#4552FF]/20">
@@ -36,7 +32,7 @@ export function SignInRequiredModal({
           </div>
           <div>
             <h2
-              id="sign-in-modal-title"
+              id={titleId}
               className="font-heading text-lg font-semibold text-[#E7E6D9]"
             >
               {title ?? `Sign in to use ${feature}`}
@@ -73,6 +69,6 @@ export function SignInRequiredModal({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

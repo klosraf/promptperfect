@@ -1,6 +1,10 @@
+import { isUnlimitedMode } from '@/lib/localMode'
+
 const attempts = new Map<string, { count: number; resetAt: number }>()
 
 export function checkRateLimit(ip: string, maxAttempts = 5): boolean {
+  // Unlimited local-dev mode: no throttling.
+  if (isUnlimitedMode()) return true
   const now = Date.now()
   const record = attempts.get(ip)
   if (!record || now > record.resetAt) {

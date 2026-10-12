@@ -13,6 +13,7 @@ const MODES: { value: OptimizationMode; label: string }[] = [
   { value: "better", label: "Make it Better" },
   { value: "specific", label: "Make it Specific" },
   { value: "cot", label: "Add Chain-of-Thought" },
+  { value: "production", label: "Production Audit" },
 ];
 
 export function AppModeSelector({

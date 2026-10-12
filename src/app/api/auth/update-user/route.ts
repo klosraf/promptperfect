@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseAdminClient } from '@/lib/client/supabase';
+import { getSupabaseAdminClient } from '@/lib/server/supabase';
 import { createRouteHandlerClient } from '@/lib/server/supabase';
 
 export async function POST(request: Request) {

@@ -2,7 +2,7 @@ import { checkRateLimit } from '@/lib/auth/rateLimit'
 import { jsonLoginSuccess } from '@/lib/auth/jsonLoginSuccess'
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import { getSupabaseAdminClient } from '@/lib/client/supabase'
+import { getSupabaseAdminClient } from '@/lib/server/supabase'
 
 export async function POST(request: Request) {
   const ip =

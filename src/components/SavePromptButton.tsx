@@ -4,6 +4,11 @@ import { useMemo, useState, useEffect } from 'react';
 import { Bookmark, BookmarkCheck } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/client/supabaseBrowser';
 import { getPromptPerfectAuthHeaders } from '@/lib/client/promptPerfectAuthHeaders';
+import { isUnlimitedMode } from '@/lib/localMode';
+import {
+  getOrCreateSessionId,
+  saveToLocalLibrary,
+} from '@/lib/client/optimizationHistory';
 
 export interface SavePromptButtonProps {
   originalPrompt: string;
@@ -38,6 +43,9 @@ export function SavePromptButton({
 
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
+  // Local mode (no backend): guests can save snapshots into the local library.
+  const localMode = !supabase && isUnlimitedMode();
+
   useEffect(() => {
     setJustSaved(false);
     setShowTitleInput(false);
@@ -49,12 +57,31 @@ export function SavePromptButton({
     if (alreadySaved) setJustSaved(false);
   }, [alreadySaved]);
 
-  if (!userId) return null;
+  if (!userId && !localMode) return null;
 
   const showSavedState = alreadySaved || justSaved;
 
   const handleSave = async () => {
-    if (!title.trim() || !supabase) return;
+    if (!title.trim()) return;
+    setError(null);
+    if (localMode) {
+      saveToLocalLibrary({
+        title: title.trim(),
+        prompt_original: originalPrompt,
+        prompt_optimized: optimizedPrompt,
+        explanation,
+        mode,
+        provider,
+        session_id: getOrCreateSessionId(),
+        history_id: historyId ?? null,
+      });
+      setJustSaved(true);
+      setShowTitleInput(false);
+      setTitle('');
+      onSavedToLibrary?.();
+      return;
+    }
+    if (!supabase) return;
     setError(null);
     setSaving(true);
     try {

@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GUEST_LIMIT } from "@/lib/guest";
-import * as supabaseLib from "@/lib/supabase";
+import * as supabaseLib from "@/lib/server/supabase";
 import { GET, POST } from "./route";
 
-vi.mock("@/lib/supabase", () => ({
-  getSupabaseClient: vi.fn(),
+vi.mock("@/lib/server/supabase", () => ({
+  getServiceClient: vi.fn(),
 }));
 
 function buildGuestUsageClient() {
@@ -36,14 +36,14 @@ describe("/api/guest-usage GET", () => {
 
 describe("/api/guest-usage POST", () => {
   beforeEach(() => {
-    vi.mocked(supabaseLib.getSupabaseClient).mockReset();
+    vi.mocked(supabaseLib.getServiceClient).mockReset();
   });
 
   it("returns 400 when guestId is missing", async () => {
     const client = buildGuestUsageClient();
-    vi.mocked(supabaseLib.getSupabaseClient).mockReturnValue(
+    vi.mocked(supabaseLib.getServiceClient).mockReturnValue(
       client as unknown as NonNullable<
-        ReturnType<typeof supabaseLib.getSupabaseClient>
+        ReturnType<typeof supabaseLib.getServiceClient>
       >,
     );
 
@@ -60,7 +60,7 @@ describe("/api/guest-usage POST", () => {
   });
 
   it("returns 503 when Supabase is not configured", async () => {
-    vi.mocked(supabaseLib.getSupabaseClient).mockReturnValue(null);
+    vi.mocked(supabaseLib.getServiceClient).mockReturnValue(null);
 
     const res = await POST(
       new Request("http://localhost/api/guest-usage", {

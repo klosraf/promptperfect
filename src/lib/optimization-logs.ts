@@ -2,9 +2,9 @@
  * DB constraint `optimization_logs_mode_check` allows only better | specific | cot.
  * Map app modes (developer, research, …) to a safe value for inserts/updates.
  */
-export function normalizeModeForDb(mode: string): 'better' | 'specific' | 'cot' {
+export function normalizeModeForDb(mode: string): 'better' | 'specific' | 'cot' | 'production' {
   const m = mode.toLowerCase();
-  if (m === 'specific' || m === 'cot') return m;
+  if (m === 'specific' || m === 'cot' || m === 'production') return m;
   return 'better';
 }
 

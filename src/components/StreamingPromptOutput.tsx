@@ -1,17 +1,16 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Check, Copy } from "lucide-react";
+import { useCopy } from "@/lib/clipboard";
 
 import {
   CHANGES_DELIMITER,
   EXPLANATION_DELIMITER,
   stripPromptScoreMarkers,
 } from "@/lib/delimiter";
-
-const optimizerTextarea =
-  "pp-workspace-scroll box-border h-[380px] w-full shrink-0 resize-none overflow-y-auto rounded-[12px] border border-solid border-[#222] bg-[#0f0f0f] p-4 text-[14px] leading-relaxed text-[#ECECEC] placeholder-[#3a3a3a] outline-none transition-[border-color,box-shadow] duration-150 ease-out focus:border-[#4552FF] focus:shadow-[0_0_0_2px_#4552FF18] focus:outline-none disabled:opacity-50 font-[family-name:var(--font-space-grotesk),sans-serif] whitespace-pre-wrap break-words [word-break:break-word] overflow-wrap-anywhere";
+import { optimizerTextarea } from "@/components/ui/optimizerTextarea";
 
 export interface StreamingPromptOutputProps {
   text: string;
@@ -45,7 +44,7 @@ export function StreamingPromptOutput({
   afterTextarea,
 }: StreamingPromptOutputProps) {
   const lastExplRef = useRef("");
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopy();
 
   const optimized = useMemo(() => optimizedFromFullText(text), [text]);
   const explanation = useMemo(() => explanationFromFullText(text), [text]);
@@ -59,13 +58,7 @@ export function StreamingPromptOutput({
 
   const handleCopy = async () => {
     if (!optimized.trim()) return;
-    try {
-      await navigator.clipboard.writeText(optimized);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // swallow: streaming parse edge case
-    }
+    await copy(optimized);
   };
 
   const outLen = optimized.length;

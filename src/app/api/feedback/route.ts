@@ -1,5 +1,5 @@
 import { normalizeModeForDb } from '@/lib/optimization-logs';
-import { getSupabaseClient } from '@/lib/supabase';
+import { getServiceClient } from '@/lib/server/supabase';
 import { resolveIdentity } from '@/lib/server/supabaseRequestIdentity';
 
 export const runtime = 'nodejs';
@@ -11,7 +11,7 @@ function isMissingColumnError(message: string): boolean {
 }
 
 export async function POST(req: Request) {
-  const supabase = getSupabaseClient();
+  const supabase = getServiceClient();
   if (!supabase) {
     return Response.json({ error: 'Supabase not configured' }, { status: 500 });
   }

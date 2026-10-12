@@ -1,9 +1,21 @@
 import { NextResponse } from 'next/server'
-import { GUEST_LIMIT } from '@/lib/guest'
-import { getSupabaseClient } from '@/lib/supabase'
+import { GUEST_LIMIT, assertGuestId } from '@/lib/guest'
+import { getServiceClient } from '@/lib/server/supabase'
+import { getRequestId, logApi } from '@/lib/logger'
 
 export async function POST(request: Request) {
-  const supabase = getSupabaseClient()
+  const started = Date.now();
+  const res = await handlePost(request);
+  logApi('guest-usage', {
+    status: res.status,
+    ms: Date.now() - started,
+    requestId: getRequestId(request),
+  });
+  return res;
+}
+
+async function handlePost(request: Request) {
+  const supabase = getServiceClient()
   if (!supabase) {
     return NextResponse.json(
       { error: 'Database not configured' },
@@ -17,15 +29,11 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
-  const { guestId, mode, provider } = body;
+  const { guestId: rawGuestId, mode, provider } = body;
+  const guestId = assertGuestId(rawGuestId);
 
   if (!guestId) {
     return NextResponse.json({ error: 'Guest ID required' }, { status: 400 })
-  }
-
-  // Accept UUIDs (36-char hex+dash) or short alphanumeric identifiers up to 80 chars.
-  if (!/^[a-zA-Z0-9_-]{4,80}$/.test(guestId)) {
-    return NextResponse.json({ error: 'Invalid guest ID format' }, { status: 400 })
   }
 
   const { data: existing } = await supabase
@@ -73,11 +81,11 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-  const supabase = getSupabaseClient()
+  const supabase = getServiceClient()
   const { searchParams } = new URL(request.url)
-  const guestId = searchParams.get('guestId')
+  const guestId = assertGuestId(searchParams.get('guestId'))
 
-  if (!guestId || !/^[a-zA-Z0-9_-]{4,80}$/.test(guestId)) {
+  if (!guestId) {
     return NextResponse.json({ count: 0, limit: GUEST_LIMIT, remaining: GUEST_LIMIT })
   }
 

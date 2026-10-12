@@ -1,4 +1,4 @@
-import { getSupabaseClient } from '@/lib/supabase';
+import { getServiceClient } from '@/lib/server/supabase';
 import Link from 'next/link';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { CopyButton } from '@/components/CopyButton';
@@ -59,7 +59,7 @@ export default async function SharedOptimizationPage({
   params: Promise<{ shareId: string }>;
 }) {
   const { shareId } = await params;
-  const client = getSupabaseClient();
+  const client = getServiceClient();
 
   if (!client) {
     return <ErrorPage title="Service Unavailable" body="Unable to connect to the database." />;

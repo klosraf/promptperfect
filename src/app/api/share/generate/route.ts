@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { nanoid } from 'nanoid';
 
-import { getSupabaseAdminClient } from '@/lib/client/supabase';
+import { getSupabaseAdminClient } from '@/lib/server/supabase';
 import {
   jsonUnauthorizedDetails,
   resolveIdentity,

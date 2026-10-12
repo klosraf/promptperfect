@@ -3,7 +3,10 @@
 import Link from 'next/link'
 import { useEffect } from 'react'
 
-// TODO: replace console.error with a structured logger hook (e.g. useLogger)
+// NOTE: dev-only console.error is intentional here (standard Next.js error
+// pattern). Server routes use the structured logger in `lib/logger.ts`; a
+// client ingest endpoint was deliberately not added (no backend in local
+// mode, extra attack surface in prod).
 export default function Error({
   error,
   reset,

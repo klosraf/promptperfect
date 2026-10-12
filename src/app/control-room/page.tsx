@@ -9,7 +9,7 @@ import { resolveAuthUserAndSession } from '@/lib/client/ppUserSync';
 
 const PROVIDER_MODELS: Record<Provider, string> = {
   gemini: 'gemini-2.0-flash',
-  openai: 'gpt-4o-mini',
+  openai: 'gpt-6-astra',
   anthropic: 'claude-3-5-haiku-20241022',
 };
 

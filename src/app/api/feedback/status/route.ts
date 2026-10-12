@@ -1,4 +1,4 @@
-import { getSupabaseClient } from '@/lib/supabase';
+import { getServiceClient } from '@/lib/server/supabase';
 
 export const runtime = 'nodejs';
 
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     return Response.json({ submitted: false, feedback: null as string | null });
   }
 
-  const supabase = getSupabaseClient();
+  const supabase = getServiceClient();
   if (!supabase) {
     return Response.json({ submitted: false, feedback: null as string | null });
   }

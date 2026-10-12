@@ -77,7 +77,7 @@ export function AppSettingsPanel({
             localProvider === 'gemini'
               ? 'gemini-2.0-flash'
               : localProvider === 'openai'
-                ? 'gpt-4o-mini'
+                ? 'gpt-6-astra'
                 : 'claude-3-5-haiku-20241022',
           api_key: localProvider !== 'gemini' ? localKey : '',
         }),
@@ -114,7 +114,7 @@ export function AppSettingsPanel({
           localProvider === 'gemini'
             ? 'gemini-2.0-flash'
             : localProvider === 'openai'
-              ? 'gpt-4o-mini'
+              ? 'gpt-6-astra'
               : 'claude-3-5-haiku-20241022',
       });
       onSaveSuccess();

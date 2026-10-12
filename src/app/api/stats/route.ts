@@ -1,6 +1,7 @@
-import { getSupabaseAdminClient } from '@/lib/client/supabase';
+import { getSupabaseAdminClient } from '@/lib/server/supabase';
 import { computeOptimizationFeedbackAnalytics } from '@/lib/server/optimizationLogStats';
 import { resolveIdentity } from '@/lib/server/supabaseRequestIdentity';
+import { logWarn } from '@/lib/logger';
 
 /**
  * Analytics for the signed-in user only (cookie session or Bearer via `resolveIdentity`).
@@ -37,9 +38,7 @@ export async function GET(request: Request) {
       const fallback =
         /optimize_session_id|schema cache|could not find/i.test(error.message);
       if (!fallback) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.error('[Stats API]', error);
-        }
+        logWarn('stats', `history aggregate failed: ${error.message}`);
         return Response.json({ error: error.message }, { status: 500 });
       }
       const { data: hist2, error: err2 } = await supabase
@@ -47,9 +46,7 @@ export async function GET(request: Request) {
         .select('mode, provider')
         .eq('user_id', identity.userId);
       if (err2) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.error('[Stats API]', err2);
-        }
+        logWarn('stats', `history fallback failed: ${err2.message}`);
         return Response.json({ error: err2.message }, { status: 500 });
       }
       const rows = hist2 ?? [];
@@ -123,9 +120,10 @@ export async function GET(request: Request) {
       authenticated: true,
     });
   } catch (err) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('[Stats API] Unexpected error:', err);
-    }
+    logWarn(
+      'stats',
+      `request failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
+    );
     return Response.json({ error: 'Failed to fetch stats' }, { status: 500 });
   }
 }

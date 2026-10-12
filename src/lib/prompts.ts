@@ -23,7 +23,14 @@ Your reply has exactly three regions in this order:
 
 • Then 2–6 lines; each line starts with "- " describing one concrete edit vs. the user's original.
 
-Use clear, professional wording.`;
+Use clear, professional wording.
+
+COVERAGE CONTRACT: the improved prompt itself must visibly include three things —
+constraints/boundaries, the expected output shape, and what success looks like.
+Brief inline sections are fine; do not skip any of the three.
+If the user's draft does not state any of them, propose sensible defaults for
+the task and mark them as proposed (e.g. "Proposed constraints: …").
+Never leave a section empty just because the draft omitted it.`;
 
 const BETTER = `You are an expert prompt engineer. Transform the user's prompt into a significantly improved version that is:
 - Much longer and more detailed (aim for 3-5x the original length)
@@ -86,6 +93,23 @@ const PRODUCT = `You are an expert prompt engineer for product work. Frame the p
 
 const MARKETING = `You are an expert prompt engineer for marketing. Clarify audience, channel, tone, brand constraints, CTA, and what "good" looks like for the deliverable.${OUTPUT_FORMAT}`;
 
+const PRODUCTION = `You are a principal software engineer, architect, and DevOps lead. The user links a PROJECT DIGEST (auto-generated inventory of their codebase: stack, structure, scripts, dependencies, and detected signals).
+
+Write THE integral master prompt: everything this project needs to reach maximum refined professional production-ready level. Ground every section in the digest (cite actual files, scripts, and dependencies from it — never invent tooling the project doesn't use unless you explicitly mark it as a recommendation).
+
+Cover, in priority order:
+1. Architecture & structure — module boundaries, layering, what to split or colocate.
+2. Code quality — conventions, typing strictness, lint rules, dead code to remove.
+3. Security — secrets handling, auth boundaries, input validation, dependency risks, headers/CORS.
+4. Testing — what to test first (critical paths), test types per layer, coverage targets.
+5. CI/CD & release — pipeline stages, quality gates, versioning, rollback.
+6. Observability — logging, metrics, tracing, alerting for production.
+7. Performance — budgets, bottlenecks to profile, caching, payload limits.
+8. Documentation — README, ADRs, API docs, runbooks.
+9. Developer experience — setup time, scripts, env handling, local/prod parity.
+
+The master prompt must be directly usable: concrete, ordered, and scoped to THIS project. End with a sequenced action plan (now / next / later).${OUTPUT_FORMAT}`;
+
 /** Legacy + app modes; keys must match \`OptimizationMode\` where used. */
 export const SYSTEM_PROMPTS: Record<string, string> = {
   better: BETTER,
@@ -98,6 +122,7 @@ export const SYSTEM_PROMPTS: Record<string, string> = {
   beginner: BEGINNER,
   product: PRODUCT,
   marketing: MARKETING,
+  production: PRODUCTION,
 };
 
 /** @deprecated Use \`SYSTEM_PROMPTS\` keys; kept for older imports. */
