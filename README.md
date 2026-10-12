@@ -148,6 +148,9 @@ Follow these steps to run PromptPerfect locally on your machine.
 | `npm run dev` | Local dev server with Turbopack |
 | `npm run test:coverage` | Test suite with V8 coverage report (`./coverage`) |
 | `npm run db:migrate` | Apply `supabase/migrations/*.sql` (`DATABASE_URL` required) |
+| `npm run db:verify` | 47 DB assertions: schema, CHECK enforcement, RLS, triggers |
+| `npm run db:seed` | Idempotent local-dev fixtures (never on production) |
+| `npm run db:check` | Exit 1 if migrations pending (pre-deploy gate) |
 | `docker build -t promptperfect .` | Validate the production container (see `Dockerfile`) |
 
 - **Browser extension:** load `extension/` unpacked via `chrome://extensions` (details in `extension/README.md`); it calls `/api/optimize-sync` with your own provider key (BYOK).

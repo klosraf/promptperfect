@@ -16,6 +16,9 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "db:migrate": "node supabase/migrate.js",
+    "db:check": "node supabase/migrate.js --check",
+    "db:verify": "node supabase/tests/verify.js",
+    "db:seed": "psql \"$DATABASE_URL\" -f supabase/tests/seed.sql",
     "postinstall": "node scripts/fix-supabase-js-types.mjs"
   },
   "dependencies": {
