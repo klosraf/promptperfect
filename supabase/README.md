@@ -78,6 +78,10 @@ psql "$DATABASE_URL" -f supabase/tests/seed.sql
      `CREATE` with a stable name. Never open a table without a `WITH CHECK` guard.
    - **Functions**: `SECURITY DEFINER` + `SET search_path = public` on all trigger
      functions (privilege-escalation hardening).
+   - **Lock-safety**: new constraints use `ADD ... NOT VALID` → `VALIDATE`
+     (scan blocks writes, not reads). Indexes are plain `CREATE INDEX` — never
+     `CONCURRENTLY` (it cannot run inside the runner's per-file transaction).
+     For tables over ~1M rows, coordinate a maintenance window instead.
 3. Test locally: fresh DB → `db:migrate` → `db:seed` → `db:verify` (all green), then
    second `db:migrate` is a no-op.
 4. Rollback: every migration header documents reverse steps by object name

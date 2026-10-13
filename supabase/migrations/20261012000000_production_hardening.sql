@@ -3,9 +3,21 @@
 -- Production hardening (additive, idempotent, backward-compatible).
 -- Pattern: expand-and-contract — only ADDs constraints/indexes/policies,
 -- never drops columns or changes types. Safe to re-run; safe on populated
--- production tables (constraints added NOT VALID, then VALIDATEd so existing
--- rows are checked without long ACCESS EXCLUSIVE holds beyond the validate
--- scan; all names stable for rollback-by-name).
+-- production tables at current scale (see lock table below).
+--
+-- Lock-safety (Postgres 16 lock levels, all DDL transactional here):
+--   ADD CONSTRAINT ... NOT VALID  → SHARE UPDATE EXCLUSIVE, brief (no scan).
+--   VALIDATE CONSTRAINT           → SHARE UPDATE EXCLUSIVE for the scan:
+--                                   blocks WRITES, allows READS. Duration ∝
+--                                   table size; fine at current row counts.
+--   CREATE INDEX (non-concurrent) → SHARE lock: blocks writes during build.
+--   ADD COLUMN + DEFAULT          → metadata-only since PG11 (no rewrite).
+--   POLICY / TRIGGER DDL          → brief, self-conflicting locks only.
+-- Deliberately NOT CONCURRENTLY: CREATE INDEX CONCURRENTLY cannot run
+-- inside a transaction block, and migrate.js wraps each file in one
+-- transaction (atomicity wins over zero-downtime index builds at this
+-- scale). If a target table ever exceeds ~1M rows, build the index
+-- out-of-band and follow the README's large-table procedure instead.
 --
 -- Covers:
 --   1. Required extension (pgcrypto for gen_random_uuid()).
