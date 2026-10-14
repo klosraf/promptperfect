@@ -146,6 +146,7 @@ async function handlePost(req: NextRequest) {
     const system = getSystemPrompt(mode);
 
     try {
+      const llmStart = Date.now();
       const result = await generateText({
         model,
         system,
@@ -178,6 +179,39 @@ async function handlePost(req: NextRequest) {
           void db.from('optimization_logs').insert(logRow);
         }
       }
+
+      // Observability: LLM metrics (additive log line, correlated by requestId).
+      // `usage` shape varies by provider, so read it defensively (log-only).
+      const usage = (
+        result as unknown as {
+          usage?: {
+            promptTokens?: number;
+            completionTokens?: number;
+            totalTokens?: number;
+          };
+        }
+      ).usage;
+      logApi('optimize-sync', {
+        status: 200,
+        ms: Date.now() - llmStart,
+        requestId: getRequestId(req),
+        extra: {
+          llm: true,
+          provider,
+          model: modelId,
+          promptLength: promptRaw.length,
+          optimizedLength: optimizedText.length,
+          ...(typeof usage?.promptTokens === 'number'
+            ? { promptTokens: usage.promptTokens }
+            : {}),
+          ...(typeof usage?.completionTokens === 'number'
+            ? { completionTokens: usage.completionTokens }
+            : {}),
+          ...(typeof usage?.totalTokens === 'number'
+            ? { totalTokens: usage.totalTokens }
+            : {}),
+        },
+      });
 
       return Response.json(
         {
