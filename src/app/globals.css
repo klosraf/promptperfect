@@ -1,6 +1,4 @@
 @import "tailwindcss";
-@custom-variant dark (&&:where(.dark, .dark *));
-
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
@@ -18,18 +16,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-space-grotesk), var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-:root.dark {
-  --background: #050505;
-  --foreground: #ececec;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    --background: #050505;
-    --foreground: #ececec;
-  }
 }
 
 @keyframes fade-in {
