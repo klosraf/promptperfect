@@ -1,11 +1,40 @@
 import { describe, it, expect } from "vitest";
 import {
   parseFeedbackBody,
+  parseLoginBody,
   parseMode,
   parseOptimizeBody,
   parseProvider,
   parseTranslateBody,
 } from "./apiSchemas";
+
+describe("parseLoginBody", () => {
+  it("lowercases the email and keeps the original casing for rawEmail", () => {
+    const r = parseLoginBody({ email: "  User@Example.COM ", password: "secret" });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.value.email).toBe("user@example.com");
+      expect(r.value.rawEmail).toBe("User@Example.COM");
+      expect(r.value.password).toBe("secret");
+    }
+  });
+
+  it("rejects missing email or password with a non-enumerating error", () => {
+    expect(parseLoginBody({ password: "x" }).ok).toBe(false);
+    expect(parseLoginBody({ email: "a@b.c" }).ok).toBe(false);
+    const no = parseLoginBody({});
+    expect(no.ok).toBe(false);
+    if (!no.ok) expect(no.error).toMatch(/email and password/i);
+  });
+
+  it("rejects non-objects and oversized fields", () => {
+    expect(parseLoginBody(null).ok).toBe(false);
+    expect(parseLoginBody("x").ok).toBe(false);
+    expect(
+      parseLoginBody({ email: "a@b.c", password: "y".repeat(201) }).ok,
+    ).toBe(false);
+  });
+});
 
 describe("parseMode / parseProvider", () => {
   it("accepts known values case-insensitively, falls back otherwise", () => {

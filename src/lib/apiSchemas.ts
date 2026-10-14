@@ -181,3 +181,37 @@ export function parseFeedbackBody(
     },
   };
 }
+
+const MAX_EMAIL_CHARS = 320;
+const MAX_PASSWORD_CHARS = 200;
+
+export interface CredentialsBodyValue {
+  /** Trimmed + lowercased email (for auth calls). */
+  email: string;
+  /** Trimmed original-case email (for downstream display/personalization). */
+  rawEmail: string;
+  password: string;
+}
+
+/**
+ * Shared credentials parser for `/api/auth/login` (and reusable for other
+ * password routes). Returns a single, non-enumerating error message for
+ * missing/oversized fields so it never leaks which credential is wrong.
+ */
+export function parseLoginBody(
+  body: unknown,
+): { ok: true; value: CredentialsBodyValue } | { ok: false; error: string } {
+  if (typeof body !== 'object' || body === null) {
+    return { ok: false, error: 'Email and password are required' };
+  }
+  const b = body as Record<string, unknown>;
+  const rawEmail = typeof b.email === 'string' ? b.email.trim() : '';
+  const password = typeof b.password === 'string' ? b.password : '';
+  if (!rawEmail || !password) {
+    return { ok: false, error: 'Email and password are required' };
+  }
+  if (rawEmail.length > MAX_EMAIL_CHARS || password.length > MAX_PASSWORD_CHARS) {
+    return { ok: false, error: 'Email and password are required' };
+  }
+  return { ok: true, value: { email: rawEmail.toLowerCase(), rawEmail, password } };
+}

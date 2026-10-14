@@ -3,6 +3,7 @@ import { jsonLoginSuccess } from '@/lib/auth/jsonLoginSuccess'
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { getSupabaseAdminClient } from '@/lib/server/supabase'
+import { parseLoginBody } from '@/lib/apiSchemas'
 
 export async function POST(request: Request) {
   const ip =
@@ -16,17 +17,14 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const emailRawTrim =
-      typeof body.email === 'string' ? body.email.trim() : ''
-    const email = emailRawTrim.toLowerCase()
-    const password = typeof body.password === 'string' ? body.password : ''
-
-    if (!email || !password) {
+    const parsed = parseLoginBody(body)
+    if (!parsed.ok) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: parsed.error },
         { status: 400 }
       )
     }
+    const { email, rawEmail, password } = parsed.value
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
@@ -78,7 +76,7 @@ export async function POST(request: Request) {
         admin,
         { session: authData.session, user: authData.user },
         email,
-        emailRawTrim,
+        rawEmail,
       )
     }
 
