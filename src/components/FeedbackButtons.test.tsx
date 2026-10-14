@@ -93,4 +93,48 @@ describe("FeedbackButtons", () => {
       ).toHaveAttribute("aria-pressed", "true");
     });
   });
+
+  it("announces success via a status region", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (String(url).includes("/api/feedback/status")) {
+          return { ok: true, json: async () => ({ submitted: false }) };
+        }
+        return { ok: true, json: async () => ({}) };
+      })
+    );
+    renderButtons("sess-1");
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /thumbs up/i })
+      ).not.toBeDisabled();
+    });
+    fireEvent.click(screen.getByRole("button", { name: /thumbs up/i }));
+    await waitFor(() => {
+      expect(screen.getByRole("status")).toHaveTextContent(/feedback saved/i);
+    });
+  });
+
+  it("announces errors via an alert region", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (String(url).includes("/api/feedback/status")) {
+          return { ok: true, json: async () => ({ submitted: false }) };
+        }
+        return { ok: false, json: async () => ({ error: "db down" }) };
+      })
+    );
+    renderButtons("sess-1");
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /thumbs down/i })
+      ).not.toBeDisabled();
+    });
+    fireEvent.click(screen.getByRole("button", { name: /thumbs down/i }));
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent("db down");
+    });
+  });
 });

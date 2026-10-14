@@ -154,7 +154,9 @@ export function FeedbackButtons({
           <span className="text-sm text-[#71717A]">…</span>
         )}
         {submitted && !loading && (
-          <span className="text-sm text-green-500/90">Feedback saved</span>
+          <span role="status" className="text-sm text-green-500/90">
+            Feedback saved
+          </span>
         )}
       </div>
       {!sessionId?.trim() && !loading && (
@@ -162,7 +164,11 @@ export function FeedbackButtons({
           Run Optimize or choose an item from history to attach feedback.
         </p>
       )}
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-red-400">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
