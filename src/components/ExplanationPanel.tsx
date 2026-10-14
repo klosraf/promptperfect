@@ -3,6 +3,7 @@
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
+import { SegmentedToggle } from '@/components/ui/SegmentedToggle';
 
 const DiffViewLazy = dynamic(
   () => import('@/components/DiffView').then((m) => ({ default: m.DiffView })),
@@ -62,36 +63,15 @@ export function ExplanationPanel({
           )}
         </button>
         {hasDiffInputs && (
-          <div
-            className="flex shrink-0 rounded-lg border border-[#2a2a2a]"
-            role="group"
+          <SegmentedToggle
             aria-label="View mode"
-          >
-            <button
-              type="button"
-              onClick={() => setViewMode('explanation')}
-              aria-pressed={viewMode === 'explanation'}
-              className={`rounded-l-md px-3 py-1.5 text-[12px] font-medium transition-colors ${
-                viewMode === 'explanation'
-                  ? 'bg-[#1a1a1a] text-[#ECECEC]'
-                  : 'bg-transparent text-[#888] hover:bg-[#141414] hover:text-[#ccc]'
-              }`}
-            >
-              Explanation
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('diff')}
-              aria-pressed={viewMode === 'diff'}
-              className={`rounded-r-md border-l border-[#2a2a2a] px-3 py-1.5 text-[12px] font-medium transition-colors ${
-                viewMode === 'diff'
-                  ? 'bg-[#1a1a1a] text-[#ECECEC]'
-                  : 'bg-transparent text-[#888] hover:bg-[#141414] hover:text-[#ccc]'
-              }`}
-            >
-              Diff View
-            </button>
-          </div>
+            value={viewMode}
+            onChange={setViewMode}
+            options={[
+              { value: 'explanation', label: 'Explanation' },
+              { value: 'diff', label: 'Diff View' },
+            ]}
+          />
         )}
       </div>
       {expanded && (
