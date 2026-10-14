@@ -131,7 +131,7 @@ export function TemplatesTab({
                       <button
                         type="button"
                         onClick={() => onUseTemplate(tpl)}
-                        className="inline-flex items-center gap-1.5 rounded-[10px] bg-[linear-gradient(135deg,#4552FF,#5c6aff)] px-4 py-2 text-[13px] font-semibold text-white transition hover:opacity-90"
+                        className="inline-flex items-center gap-1.5 rounded-[10px] cta-gradient px-4 py-2 text-[13px] font-semibold text-white transition hover:opacity-90"
                       >
                         <Sparkles size={14} aria-hidden />
                         Use in optimizer

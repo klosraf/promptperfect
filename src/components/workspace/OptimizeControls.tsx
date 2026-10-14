@@ -51,7 +51,7 @@ export function OptimizeControls({
           type="button"
           onClick={onOptimize}
           disabled={!canOptimize || disabled}
-          className="mt-4 flex h-12 w-full max-w-[300px] cursor-pointer items-center justify-center rounded-[12px] border-none bg-[linear-gradient(135deg,#4552FF,#5c6aff)] text-[15px] font-semibold text-white transition-opacity duration-200 ease-out hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-4 flex h-12 w-full max-w-[300px] cursor-pointer items-center justify-center rounded-[12px] border-none cta-gradient text-[15px] font-semibold text-white transition-opacity duration-200 ease-out hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isLoading ? 'Optimizing…' : 'Optimize'}
         </button>

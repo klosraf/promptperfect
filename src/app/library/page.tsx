@@ -87,7 +87,7 @@ export default function LibraryPage() {
           >
             <Link
               href="/signup"
-              className="inline-flex h-11 items-center justify-center rounded-[12px] bg-[linear-gradient(135deg,#4552FF,#5c6aff)] px-8 text-[15px] font-semibold text-white transition-opacity hover:opacity-95"
+              className="inline-flex h-11 items-center justify-center rounded-[12px] cta-gradient px-8 text-[15px] font-semibold text-white transition-opacity hover:opacity-95"
             >
               Sign up free
             </Link>
@@ -190,7 +190,7 @@ export default function LibraryPage() {
                 >
                   <Link
                     href="/app"
-                    className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#4552FF,#5c6aff)] px-5 py-2.5 text-[13px] font-semibold text-white transition hover:opacity-90"
+                    className="inline-flex items-center gap-2 rounded-xl cta-gradient px-5 py-2.5 text-[13px] font-semibold text-white transition hover:opacity-90"
                   >
                     Optimize a prompt to get started
                   </Link>

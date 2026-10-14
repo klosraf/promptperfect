@@ -27,7 +27,7 @@ export default function Error({
       <div className="flex gap-2">
         <button
           onClick={reset}
-          className="rounded-[10px] bg-[linear-gradient(135deg,#4552FF,#5c6aff)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          className="rounded-[10px] cta-gradient px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         >
           Try again
         </button>
