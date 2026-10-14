@@ -215,3 +215,51 @@ export function parseLoginBody(
   }
   return { ok: true, value: { email: rawEmail.toLowerCase(), rawEmail, password } };
 }
+
+const UPDATE_USER_PROVIDERS: readonly string[] = ['gemini', 'openai', 'anthropic'];
+const UPDATE_USER_MAX_MODEL_CHARS = 128;
+/** BYOK keys are ~50–200 chars; cap generously to bound row size. */
+const UPDATE_USER_MAX_API_KEY_CHARS = 2000;
+
+export interface UpdateUserBodyValue {
+  provider?: string;
+  model?: string;
+  apiKey?: string;
+}
+
+/**
+ * Shared parser for `/api/auth/update-user`. `provider` is allow-listed and
+ * lowercased; `model` and the BYOK `api_key` are length-bounded. Returns the
+ * exact user-facing error for a 400 body. The BYOK value is returned as
+ * `apiKey` (callers map it to the `api_key` column; never log/echo it).
+ */
+export function parseUpdateUserBody(
+  body: unknown,
+): { ok: true; value: UpdateUserBodyValue } | { ok: false; error: string } {
+  if (typeof body !== 'object' || body === null) {
+    return { ok: false, error: 'Invalid request' };
+  }
+  const b = body as Record<string, unknown>;
+  const value: UpdateUserBodyValue = {};
+
+  if (b.provider !== undefined) {
+    const p = typeof b.provider === 'string' ? b.provider.trim().toLowerCase() : '';
+    if (!UPDATE_USER_PROVIDERS.includes(p)) return { ok: false, error: 'Invalid provider' };
+    value.provider = p;
+  }
+  if (b.model !== undefined) {
+    const m = typeof b.model === 'string' ? b.model.trim() : '';
+    if (m.length === 0 || m.length > UPDATE_USER_MAX_MODEL_CHARS) {
+      return { ok: false, error: 'Invalid model' };
+    }
+    value.model = m;
+  }
+  if (b.api_key !== undefined) {
+    const k = typeof b.api_key === 'string' ? b.api_key.trim() : '';
+    if (k.length > UPDATE_USER_MAX_API_KEY_CHARS) {
+      return { ok: false, error: 'Invalid api_key' };
+    }
+    value.apiKey = k;
+  }
+  return { ok: true, value };
+}

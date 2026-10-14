@@ -3,11 +3,7 @@ import { getSupabaseAdminClient } from '@/lib/server/supabase';
 import { createRouteHandlerClient } from '@/lib/server/supabase';
 import { checkRateLimit } from '@/lib/auth/rateLimit';
 import { logWarn } from '@/lib/logger';
-
-const PROVIDERS = ['gemini', 'openai', 'anthropic'] as const;
-const MAX_MODEL_CHARS = 128;
-/** BYOK keys are ~50–200 chars; cap generously to bound row size. */
-const MAX_API_KEY_CHARS = 2000;
+import { parseUpdateUserBody } from '@/lib/apiSchemas';
 
 export async function POST(request: Request) {
   try {
@@ -31,27 +27,15 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const userId = user.id;
-    const rawProvider = typeof body.provider === 'string' ? body.provider.trim().toLowerCase() : undefined;
-    const rawModel = typeof body.model === 'string' ? body.model.trim() : undefined;
-    const rawApiKey = typeof body.api_key === 'string' ? body.api_key.trim() : undefined;
-
-    if (rawProvider !== undefined && !(PROVIDERS as readonly string[]).includes(rawProvider)) {
-      return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
+    const parsed = parseUpdateUserBody(body);
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
-    if (rawModel !== undefined && (rawModel.length === 0 || rawModel.length > MAX_MODEL_CHARS)) {
-      return NextResponse.json({ error: 'Invalid model' }, { status: 400 });
-    }
-    if (rawApiKey !== undefined && rawApiKey.length > MAX_API_KEY_CHARS) {
-      return NextResponse.json({ error: 'Invalid api_key' }, { status: 400 });
-    }
-
-    const provider = rawProvider;
-    const model = rawModel;
+    const { provider, model, apiKey } = parsed.value;
     // NOTE (secret boundary): the BYOK key is stored as-sent in pp_users so
     // the server can call providers on the user's behalf. It is scoped to
     // the authenticated user (service-role write + RLS), never logged, and
     // never echoed back in any response. See SECURITY_AUDIT.md.
-    const api_key = rawApiKey;
 
     const admin = getSupabaseAdminClient();
     if (!admin) {
@@ -64,7 +48,7 @@ export async function POST(request: Request) {
     const updates: Record<string, unknown> = {};
     if (provider !== undefined) updates.provider = provider;
     if (model !== undefined) updates.model = model;
-    if (api_key !== undefined) updates.api_key = api_key;
+    if (apiKey !== undefined) updates.api_key = apiKey;
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ ok: true });

@@ -6,6 +6,7 @@ import {
   parseOptimizeBody,
   parseProvider,
   parseTranslateBody,
+  parseUpdateUserBody,
 } from "./apiSchemas";
 
 describe("parseLoginBody", () => {
@@ -33,6 +34,29 @@ describe("parseLoginBody", () => {
     expect(
       parseLoginBody({ email: "a@b.c", password: "y".repeat(201) }).ok,
     ).toBe(false);
+  });
+});
+
+describe("parseUpdateUserBody", () => {
+  it("allow-lists + lowercases provider and trims model/api_key", () => {
+    const r = parseUpdateUserBody({ provider: "OpenAI", model: " gpt-6-astra ", api_key: " sk-test " });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.value).toEqual({ provider: "openai", model: "gpt-6-astra", apiKey: "sk-test" });
+    }
+  });
+
+  it("returns exact error strings for provider/model/api_key", () => {
+    expect(parseUpdateUserBody({ provider: "evil" })).toEqual({ ok: false, error: "Invalid provider" });
+    expect(parseUpdateUserBody({ model: "" })).toEqual({ ok: false, error: "Invalid model" });
+    expect(parseUpdateUserBody({ model: "x".repeat(129) })).toEqual({ ok: false, error: "Invalid model" });
+    expect(parseUpdateUserBody({ api_key: "x".repeat(2001) })).toEqual({ ok: false, error: "Invalid api_key" });
+  });
+
+  it("returns an empty value when no fields are provided", () => {
+    const r = parseUpdateUserBody({});
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.value).toEqual({});
   });
 });
 
