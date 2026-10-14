@@ -90,6 +90,28 @@ body {
   overflow-x: hidden;
 }
 
+/* Global visible focus indicator for keyboard users. Component-level
+   focus-visible styling (e.g. Button's ring) still wins by specificity,
+   so only previously unfocusable-looking elements (links, plain inputs)
+   gain a consistent accent outline. */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Respect users who prefer reduced motion: collapse entrance animations,
+   transitions, and smooth scrolling so the UI stays usable and calm. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Smooth scrolling for all scrollable elements */
 * {
   scroll-behavior: smooth;
