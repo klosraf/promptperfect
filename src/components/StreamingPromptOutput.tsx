@@ -95,6 +95,7 @@ export function StreamingPromptOutput({
           <textarea
             readOnly
             value={optimized}
+            placeholder="Your optimized prompt will stream here…"
             aria-label="Optimized prompt output"
             className={optimizerTextarea}
             rows={1}
@@ -107,7 +108,17 @@ export function StreamingPromptOutput({
           {outLen} characters -- {tokEst} tokens
         </p>
         {isStreaming && (
-          <p className="mt-1 shrink-0 text-[13px] text-[#666]">Streaming…</p>
+          <p
+            role="status"
+            aria-live="polite"
+            className="mt-1 flex shrink-0 items-center gap-1.5 text-[13px] text-[#666]"
+          >
+            <span
+              aria-hidden
+              className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent"
+            />
+            Streaming…
+          </p>
         )}
       </div>
     );
@@ -142,6 +153,7 @@ export function StreamingPromptOutput({
       <textarea
         readOnly
         value={optimized}
+        placeholder="Your optimized prompt will stream here…"
         rows={12}
         aria-label="Optimized prompt output"
         className="min-h-[200px] w-full resize-y rounded-xl border border-zinc-300 bg-zinc-50 px-4 py-3.5 font-mono text-sm text-zinc-900 whitespace-pre-wrap break-words [word-break:break-word] overflow-wrap-anywhere dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
@@ -150,7 +162,17 @@ export function StreamingPromptOutput({
         {outLen} characters · est. {tokEst} tokens
       </p>
       {isStreaming && (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">Streaming…</p>
+        <p
+          role="status"
+          aria-live="polite"
+          className="flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400"
+        >
+          <span
+            aria-hidden
+            className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent"
+          />
+          Streaming…
+        </p>
       )}
     </div>
   );
