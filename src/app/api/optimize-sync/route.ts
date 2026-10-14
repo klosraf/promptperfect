@@ -11,7 +11,7 @@ import { createProvider, getProviderCallOptions, hasServerKey } from '@/lib/prov
 import { isUnlimitedMode } from '@/lib/localMode';
 import { getSystemPrompt } from '@/lib/prompts';
 import { parseOptimizeBody } from '@/lib/apiSchemas';
-import { getRequestId, logApi } from '@/lib/logger';
+import { getRequestId, logApi, logWarn } from '@/lib/logger';
 import type { OptimizationLogInsert } from '@/types/database';
 
 export const runtime = 'nodejs';
@@ -197,7 +197,7 @@ async function handlePost(req: NextRequest) {
       );
     }
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Invalid request';
-    return Response.json({ error: message }, { status: 400, headers: corsHeaders });
+    logWarn('optimize-sync', `request failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    return Response.json({ error: 'Invalid request' }, { status: 400, headers: corsHeaders });
   }
 }

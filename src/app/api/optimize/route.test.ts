@@ -37,7 +37,9 @@ describe("/api/optimize POST", () => {
     expect(res.status).toBe(200);
     expect(await res.text()).toBe("streamed-output");
     expect(streamText).toHaveBeenCalledTimes(1);
-    const call = streamText.mock.calls[0][0] as { prompt?: string };
+    const firstCall = streamText.mock.calls[0];
+    expect(firstCall).toBeDefined();
+    const call = (firstCall?.[0] ?? {}) as { prompt?: string };
     expect(call.prompt).toBe("Hello world");
   });
 

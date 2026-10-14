@@ -86,7 +86,9 @@ describe("ResultComplements", () => {
     const button = screen.getByRole("button", { name: /fix \d+ issues? & re-run/i });
     fireEvent.click(button);
     expect(onRemediate).toHaveBeenCalledTimes(1);
-    const block = onRemediate.mock.calls[0][0] as string;
+    const firstCall = onRemediate.mock.calls[0];
+    expect(firstCall).toBeDefined();
+    const block = firstCall?.[0] as string;
     expect(block).toContain("Refinement pass");
     expect(block).toContain("- Constraints:");
 

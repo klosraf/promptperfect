@@ -102,10 +102,14 @@ export function AppSettingsPanel({
           localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
         } catch {
           // swallow: JSON.parse failed on existing key blob — overwrite with single-provider object
-          localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify({ [localProvider]: localKey.trim() }),
-          );
+          try {
+            localStorage.setItem(
+              STORAGE_KEY,
+              JSON.stringify({ [localProvider]: localKey.trim() }),
+            );
+          } catch {
+            // swallow: quota / private mode — key stays in memory for the session
+          }
         }
       }
       writeEnginePrefs({

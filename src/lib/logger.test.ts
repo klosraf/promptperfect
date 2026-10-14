@@ -31,7 +31,9 @@ describe("logApi", () => {
       requestId: "r1",
     });
     expect(console.log).toHaveBeenCalledTimes(1);
-    const line = String(vi.mocked(console.log).mock.calls[0][0]);
+    const firstLog = vi.mocked(console.log).mock.calls[0];
+    expect(firstLog).toBeDefined();
+    const line = String(firstLog?.[0]);
     const parsed = JSON.parse(line) as Record<string, unknown>;
     expect(parsed).toMatchObject({
       level: "info",
@@ -46,7 +48,9 @@ describe("logApi", () => {
   it("marks 5xx as error level", () => {
     vi.stubEnv("NODE_ENV", "production");
     logApi("optimize", { status: 500, ms: 3, error: "boom" });
-    const line = String(vi.mocked(console.log).mock.calls[0][0]);
+    const errLog = vi.mocked(console.log).mock.calls[0];
+    expect(errLog).toBeDefined();
+    const line = String(errLog?.[0]);
     expect((JSON.parse(line) as { level: string }).level).toBe("error");
   });
 });

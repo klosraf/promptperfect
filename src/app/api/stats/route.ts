@@ -39,7 +39,7 @@ export async function GET(request: Request) {
         /optimize_session_id|schema cache|could not find/i.test(error.message);
       if (!fallback) {
         logWarn('stats', `history aggregate failed: ${error.message}`);
-        return Response.json({ error: error.message }, { status: 500 });
+        return Response.json({ error: 'Could not load stats' }, { status: 500 });
       }
       const { data: hist2, error: err2 } = await supabase
         .from('pp_optimization_history')
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
         .eq('user_id', identity.userId);
       if (err2) {
         logWarn('stats', `history fallback failed: ${err2.message}`);
-        return Response.json({ error: err2.message }, { status: 500 });
+        return Response.json({ error: 'Could not load stats' }, { status: 500 });
       }
       const rows = hist2 ?? [];
       const total = rows.length;

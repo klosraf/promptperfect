@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
   buildProjectDigest,
+  isBinaryPath,
   isSkippedPath,
+  looksLikeBinary,
   type AnalyzedFile,
 } from "./projectDigest";
 
@@ -10,11 +12,14 @@ function file(path: string, content = "x"): AnalyzedFile {
 }
 
 describe("isSkippedPath", () => {
-  it("skips deps, build output, vcs and binaries", () => {
+  it("skips deps, build output and vcs — but never binaries or media", () => {
     expect(isSkippedPath("node_modules/react/index.js")).toBe(true);
     expect(isSkippedPath(".git/config")).toBe(true);
     expect(isSkippedPath("dist/bundle.js")).toBe(true);
-    expect(isSkippedPath("logo.png")).toBe(true);
+    // Binaries are part of the structure: listed in the tree, just not read.
+    expect(isSkippedPath("logo.png")).toBe(false);
+    expect(isSkippedPath("photos/raw/IMG_0001.CR2".toLowerCase())).toBe(false);
+    expect(isSkippedPath("docs/report.pdf")).toBe(false);
     expect(isSkippedPath("src/app/page.tsx")).toBe(false);
   });
 
@@ -26,8 +31,49 @@ describe("isSkippedPath", () => {
   });
 
   it("caps depth", () => {
-    expect(isSkippedPath("a/b/c/d/e/f/g/h.ts")).toBe(true);
+    expect(isSkippedPath("a/b/c/d/e/f/g/h/i/j.ts")).toBe(true);
+    expect(isSkippedPath("a/b/c/d/e/f/g/h.ts")).toBe(false);
     expect(isSkippedPath("a/b/c.ts")).toBe(false);
+  });
+});
+
+describe("isBinaryPath", () => {
+  it("flags known binary extensions of any kind", () => {
+    for (const p of [
+      "logo.png",
+      "photo.dng",
+      "clip.mp4",
+      "song.flac",
+      "backup.zip",
+      "report.pdf",
+      "slides.pptx",
+      "font.woff2",
+      "app.exe",
+      "model.wasm",
+      "data.sqlite",
+      "design.fig",
+    ]) {
+      expect(isBinaryPath(p)).toBe(true);
+    }
+  });
+
+  it("treats text formats — including svg — as readable", () => {
+    for (const p of ["icon.svg", "notes.txt", "data.csv", "main.rs", "doc.md"]) {
+      expect(isBinaryPath(p)).toBe(false);
+    }
+  });
+});
+
+describe("looksLikeBinary", () => {
+  it("detects NUL bytes and control-char soup", () => {
+    expect(looksLikeBinary("abc\u0000def")).toBe(true);
+    expect(looksLikeBinary("\x01\x02\x03\x04\x05\x06\x07".repeat(20))).toBe(true);
+  });
+
+  it("accepts plain, unicode and empty text", () => {
+    expect(looksLikeBinary("hello world\n")).toBe(false);
+    expect(looksLikeBinary("úñïçødé — texto con acentos\t\n")).toBe(false);
+    expect(looksLikeBinary("")).toBe(false);
   });
 });
 
@@ -60,10 +106,59 @@ describe("buildProjectDigest", () => {
     expect(digest).toContain("TASK: write the integral master prompt");
   });
 
-  it("handles empty and binary-only listings", () => {
+  it("lists binary-only directories in the tree without reading them", () => {
     const digest = buildProjectDigest("empty", [file("a.png", "")]);
-    expect(digest).toContain("Files analyzed: 0");
+    expect(digest).toContain('DIRECTORY DIGEST — "empty"');
+    expect(digest).toContain("Files analyzed: 1 (0 text, 1 binary/listed-only)");
+    expect(digest).toContain("- a.png [binary]");
     expect(digest).toContain("TASK:");
+  });
+
+  it("analyzes non-project directories: any structure, any language", () => {
+    const digest = buildProjectDigest("misc", [
+      file("docs/README.txt", "Field notes archive."),
+      file("notes.txt", "ideas worth keeping"),
+      file("data/measurements.csv", "date,value\n2026-01-01,42"),
+      file("scripts/organize.sh", "#!/bin/sh\nls"),
+      file("photos/cat.png", ""),
+      file("video/clip.mp4", ""),
+      file("weird/data.po", 'msgid "hello"'),
+    ]);
+    expect(digest).toContain('DIRECTORY DIGEST — "misc"');
+    expect(digest).toContain("Files analyzed: 7 (5 text, 2 binary/listed-only)");
+    // every file appears in the structure, binaries marked
+    expect(digest).toContain("- photos/cat.png [binary]");
+    expect(digest).toContain("- video/clip.mp4 [binary]");
+    expect(digest).toContain("- notes.txt");
+    // readme variant found at depth; representative text content sampled
+    expect(digest).toContain("README (excerpt):");
+    expect(digest).toContain("Field notes archive.");
+    expect(digest).toContain("KEY FILES:");
+    expect(digest).toContain("--- notes.txt ---");
+    expect(digest).toContain("--- data/measurements.csv ---");
+    // unknown extension keeps its real label instead of "other"
+    expect(digest).toContain("po (1)");
+    // the task adapts to non-code material
+    expect(digest).toContain("it may not be a code project");
+  });
+
+  it("still detects code projects without a package.json", () => {
+    const digest = buildProjectDigest("scripts", [
+      file("main.py", "print('hi')"),
+      file("lib/util.py", "def f(): pass"),
+      file("run.sh", "#!/bin/sh"),
+    ]);
+    expect(digest).toContain('PROJECT DIGEST — "scripts"');
+    expect(digest).toContain("Python (2)");
+  });
+
+  it("reads svg and other text formats as content", () => {
+    const digest = buildProjectDigest("assets", [
+      file("icon.svg", "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"),
+      file("data.json", "{}"),
+    ]);
+    expect(digest).toContain("SVG (1)");
+    expect(digest).toContain("--- icon.svg ---");
   });
 
   it("caps the tree for huge repos", () => {
@@ -162,7 +257,7 @@ describe("buildProjectDigest", () => {
     const digest = buildProjectDigest("empty-content", [
       file("README.md", ""),
       file("tsconfig.json", "   "),
-      file("src/a.ts", "x"),
+      file("src/a.ts", ""),
     ]);
     expect(digest).not.toContain("README (excerpt):");
     expect(digest).not.toContain("KEY FILES:");

@@ -85,7 +85,9 @@ describe("HistoryPanel", () => {
       name: /delete from history/i,
     });
     expect(deletes).toHaveLength(1);
-    fireEvent.click(deletes[0]);
+    const del = deletes[0];
+    if (!del) throw new Error('expected one delete button');
+    fireEvent.click(del);
     await vi.waitFor(() => {
       expect(removeItem).toHaveBeenCalledWith("a");
     });

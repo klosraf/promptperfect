@@ -5,6 +5,7 @@ import {
   resolveIdentity,
 } from '@/lib/server/supabaseRequestIdentity';
 import { nextOffset, parseLimit, parseOffset } from '@/lib/pagination';
+import { logWarn } from '@/lib/logger';
 
 const MAX_TITLE = 200;
 const MAX_TEXT = 100_000;
@@ -56,11 +57,14 @@ export async function GET(request: Request) {
     const message = error?.message ?? countError?.message ?? '';
     const missing =
       /does not exist|could not find|schema cache|42P01/i.test(message);
+    if (!missing) {
+      logWarn('saved-prompts', `GET failed: ${message}`);
+    }
     return NextResponse.json(
       {
         error: missing
           ? 'Database table pp_saved_prompts is missing.'
-          : message,
+          : 'Could not load prompts',
         hint: missing
           ? 'Run supabase/migrations/20250406120000_pp_saved_prompts.sql in the Supabase SQL editor.'
           : undefined,
@@ -200,9 +204,12 @@ export async function POST(request: Request) {
 
   if (!row && lastError) {
     const fk = /pp_saved_prompts_user_id_fkey|foreign key/i.test(lastError.message);
+    logWarn('saved-prompts', `POST failed: ${lastError.message}`);
     return NextResponse.json(
       {
-        error: lastError.message,
+        error: fk
+          ? 'Your account must match Supabase Auth. Log out and log in again.'
+          : 'Could not save prompt',
         hint: fk
           ? 'Your account must match Supabase Auth. Log out and log in again.'
           : undefined,
@@ -251,7 +258,8 @@ export async function DELETE(request: Request) {
     .maybeSingle();
 
   if (selErr) {
-    return NextResponse.json({ error: selErr.message }, { status: 500 });
+    logWarn('saved-prompts', `DELETE lookup failed: ${selErr.message}`);
+    return NextResponse.json({ error: 'Could not delete prompt' }, { status: 500 });
   }
   if (!existing) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -264,7 +272,8 @@ export async function DELETE(request: Request) {
     .eq('user_id', identity.userId);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    logWarn('saved-prompts', `DELETE failed: ${error.message}`);
+    return NextResponse.json({ error: 'Could not delete prompt' }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

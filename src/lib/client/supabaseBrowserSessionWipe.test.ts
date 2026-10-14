@@ -14,7 +14,7 @@ function cookieNames(): string[] {
   return document.cookie
     .split(";")
     .map((p) => p.trim().split("=")[0])
-    .filter(Boolean);
+    .filter((s): s is string => typeof s === "string" && s.length > 0);
 }
 
 describe("wipeBrowserSupabaseSession", () => {

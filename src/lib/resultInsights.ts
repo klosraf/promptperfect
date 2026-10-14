@@ -27,7 +27,9 @@ export function findPlaceholders(text: string): string[] {
   const re = /\{\{\s*([A-Za-z0-9_ ]{1,60})\s*\}\}/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(text)) !== null) {
-    const name = m[1].trim();
+    const raw = m[1];
+    if (raw === undefined) continue;
+    const name = raw.trim();
     if (name && !seen.includes(name)) seen.push(name);
   }
   return seen;

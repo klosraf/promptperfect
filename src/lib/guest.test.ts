@@ -18,7 +18,7 @@ import {
 function mockStorage(): Storage {
   let store: Record<string, string> = {};
   return {
-    getItem: (k) => (k in store ? store[k] : null),
+    getItem: (k) => store[k] ?? null,
     setItem: (k, v) => {
       store[k] = v;
     },

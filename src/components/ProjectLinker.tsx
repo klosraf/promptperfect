@@ -4,7 +4,9 @@ import { useRef, useState } from 'react';
 import { FolderGit2, Loader2 } from 'lucide-react';
 import {
   buildProjectDigest,
+  isBinaryPath,
   isSkippedPath,
+  looksLikeBinary,
   type AnalyzedFile,
 } from '@/lib/projectDigest';
 
@@ -69,13 +71,28 @@ async function walkFsDir(
     seen.count += 1;
     try {
       const file = await entry.getFile();
-      if (file.size > 500_000) continue; // binary/artifact guard
-      out.push({ path: rel, content: await readFileCapped(file), size: file.size });
+      out.push(await toAnalyzedFile(rel, file));
       if (seen.count % 25 === 0) onProgress(seen.count);
     } catch {
       // unreadable file (permissions/lock) — skip silently
     }
   }
+}
+
+/**
+ * Build an AnalyzedFile for any file: binaries and oversized files are
+ * listed but never read; unknown extensions are content-sniffed so any
+ * directory (not just code projects) is safe to walk.
+ */
+async function toAnalyzedFile(rel: string, file: File): Promise<AnalyzedFile> {
+  if (file.size > 500_000 || isBinaryPath(rel)) {
+    return { path: rel, content: '', size: file.size, binary: true };
+  }
+  const content = await readFileCapped(file);
+  if (looksLikeBinary(content)) {
+    return { path: rel, content: '', size: file.size, binary: true };
+  }
+  return { path: rel, content, size: file.size };
 }
 
 export function ProjectLinker({ onDigest, disabled = false }: ProjectLinkerProps) {
@@ -90,9 +107,8 @@ export function ProjectLinker({ onDigest, disabled = false }: ProjectLinkerProps
     for (const { rel, file } of entries) {
       if (seen.count >= MAX_ENTRIES) break;
       if (isSkippedPath(rel)) continue;
-      if (file.size > 500_000) continue;
       seen.count += 1;
-      out.push({ path: rel, content: await readFileCapped(file), size: file.size });
+      out.push(await toAnalyzedFile(rel, file));
       if (seen.count % 25 === 0) setStatus({ kind: 'analyzing', files: seen.count });
     }
     setLastProject(projectName);
@@ -116,7 +132,7 @@ export function ProjectLinker({ onDigest, disabled = false }: ProjectLinkerProps
         onDigest(buildProjectDigest(dir.name || 'linked-project', out), dir.name || 'linked-project');
         return;
       }
-      // Fallback: classic directory input (Firefox/Safari).
+      // Fallback: classic directory input (Firefox/Safari or non-secure contexts).
       fallbackRef.current?.click();
       setStatus({ kind: 'idle' });
     } catch (e) {
@@ -125,7 +141,18 @@ export function ProjectLinker({ onDigest, disabled = false }: ProjectLinkerProps
         setStatus({ kind: 'idle' });
         return;
       }
-      setStatus({ kind: 'error', message: 'Could not read that directory.' });
+      // Surface the real reason instead of a generic message:
+      // SecurityError  → non-secure context (must be localhost or HTTPS) or
+      //                  protected directory; NotAllowedError → permission
+      //                  denied; TypeError/other → unsupported browser.
+      const name = e instanceof DOMException ? e.name : e instanceof Error ? e.name : '';
+      const msg =
+        name === 'SecurityError'
+          ? 'SecurityError: directory access requires a secure context (use http://localhost or https).'
+          : name === 'NotAllowedError'
+            ? 'NotAllowedError: permission to read that directory was denied.'
+            : 'Could not read that directory.';
+      setStatus({ kind: 'error', message: msg });
     }
   };
 
@@ -169,8 +196,9 @@ export function ProjectLinker({ onDigest, disabled = false }: ProjectLinkerProps
             : 'Link project directory'}
       </button>
       <p className="max-w-xs text-center text-[11px] leading-relaxed text-[#71717A]">
-        Reads the directory locally in your browser and builds a production-readiness digest.
-        Files stay on your device until you run Optimize.
+        Reads any directory locally in your browser — code, docs, data, media, or mixed
+        content in any language — and builds a structural digest. Files stay on your
+        device until you run Optimize.
       </p>
       {status.kind === 'error' ? (
         <p className="text-xs text-red-400" role="alert">

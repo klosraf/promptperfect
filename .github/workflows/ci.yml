@@ -22,6 +22,8 @@ jobs:
         run: npm run lint
       - name: Unit tests
         run: npx vitest run
+      - name: Core coverage gate (src/lib utilities + auth)
+        run: npm run test:coverage:core
       - name: Production build
         run: npm run build
 

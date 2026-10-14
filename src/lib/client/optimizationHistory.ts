@@ -71,11 +71,114 @@ function readLocalHistoryRows(): LocalHistoryRow[] {
   }
 }
 
+function isQuotaError(e: unknown): boolean {
+  if (typeof DOMException !== 'undefined' && e instanceof DOMException) {
+    return e.name === 'QuotaExceededError';
+  }
+  if (typeof e === 'object' && e !== null) {
+    const rec = e as Record<string, unknown>;
+    return rec.name === 'QuotaExceededError' || rec.code === 22 || rec.code === 1014;
+  }
+  return false;
+}
+
+/** Per-field cap so a single giant prompt can't blow the ~5MB localStorage quota. */
+const MAX_FIELD_CHARS = 20000;
+
+function truncateField(value: string): string {
+  return value.length > MAX_FIELD_CHARS ? value.slice(0, MAX_FIELD_CHARS) : value;
+}
+
+function truncateRow<T extends { prompt_original: string; prompt_optimized: string; explanation: string }>(row: T): T {
+  return {
+    ...row,
+    prompt_original: truncateField(row.prompt_original),
+    prompt_optimized: truncateField(row.prompt_optimized),
+    explanation: truncateField(row.explanation),
+  };
+}
+
+function truncateUnknownRow(row: Record<string, unknown>): Record<string, unknown> {
+  const next = { ...row };
+  for (const k of ['prompt_original', 'prompt_optimized', 'explanation'] as const) {
+    const v = next[k];
+    if (typeof v === 'string' && v.length > MAX_FIELD_CHARS) {
+      next[k] = v.slice(0, MAX_FIELD_CHARS);
+    }
+  }
+  return next;
+}
+
+function readRawRows(key: string): Array<Record<string, unknown>> {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? (parsed as Array<Record<string, unknown>>) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Quota-aware write with cross-key eviction. localStorage quota is per-origin,
+ * so when the primary key can't be written we also prune our other big key
+ * (history <-> library) oldest-first until the write fits. Never throws —
+ * local persistence is best-effort.
+ */
+function writeRowsWithEviction(
+  primaryKey: string,
+  primaryRows: Array<{ prompt_original: string; prompt_optimized: string; explanation: string }>,
+  secondaryKey: string,
+): void {
+  const primary = primaryRows.slice(0, LOCAL_HISTORY_CAP);
+  try {
+    localStorage.setItem(primaryKey, JSON.stringify(primary));
+    return;
+  } catch (e) {
+    if (!isQuotaError(e)) return;
+  }
+  // 1) Shrink primary oldest-first, truncating fields under pressure.
+  let candidate = primary.map(truncateRow);
+  while (candidate.length > 1) {
+    candidate = candidate.slice(0, Math.max(1, Math.ceil(candidate.length / 2)));
+    try {
+      localStorage.setItem(primaryKey, JSON.stringify(candidate));
+      return;
+    } catch (e) {
+      if (!isQuotaError(e)) return;
+    }
+  }
+  // 2) Primary is one truncated row and still doesn't fit: free per-origin
+  // space by pruning the secondary key oldest-first, retrying primary each step.
+  let secondary = readRawRows(secondaryKey);
+  while (secondary.length > 0) {
+    secondary = secondary.slice(0, Math.floor(secondary.length / 2)).map(truncateUnknownRow);
+    try {
+      localStorage.setItem(secondaryKey, JSON.stringify(secondary));
+    } catch {
+      // ignore — retry primary anyway; further pruning follows
+    }
+    try {
+      localStorage.setItem(primaryKey, JSON.stringify(candidate));
+      return;
+    } catch (e) {
+      if (!isQuotaError(e)) return;
+    }
+  }
+  // 3) Last resort: drop the secondary key entirely, then store primary.
+  try {
+    localStorage.removeItem(secondaryKey);
+    localStorage.removeItem(primaryKey);
+    localStorage.setItem(primaryKey, JSON.stringify(candidate));
+  } catch {
+    // swallow: storage unavailable/full — persistence is best-effort
+  }
+}
+
 function writeLocalHistoryRows(rows: LocalHistoryRow[]) {
-  localStorage.setItem(
-    LOCAL_HISTORY_KEY,
-    JSON.stringify(rows.slice(0, LOCAL_HISTORY_CAP)),
-  );
+  writeRowsWithEviction(LOCAL_HISTORY_KEY, rows, LOCAL_LIBRARY_KEY);
 }
 
 function saveToLocalHistory(
@@ -94,15 +197,19 @@ function saveToLocalHistory(
   const item: LocalHistoryRow = {
     id,
     session_id,
-    prompt_original: params.prompt_original,
-    prompt_optimized: params.prompt_optimized,
+    prompt_original: truncateField(params.prompt_original),
+    prompt_optimized: truncateField(params.prompt_optimized),
     mode: params.mode,
-    explanation: params.explanation,
+    explanation: truncateField(params.explanation),
     created_at: new Date().toISOString(),
   };
-  const list = readLocalHistoryRows();
-  list.unshift(item);
-  writeLocalHistoryRows(list);
+  try {
+    const list = readLocalHistoryRows();
+    list.unshift(item);
+    writeLocalHistoryRows(list);
+  } catch {
+    // swallow: localStorage unavailable/full — history save is best-effort
+  }
   return id;
 }
 
@@ -184,10 +291,10 @@ export function saveToLocalLibrary(params: {
   const row: LocalLibraryRow = {
     id,
     session_id: params.session_id,
-    prompt_original: params.prompt_original,
-    prompt_optimized: params.prompt_optimized,
+    prompt_original: truncateField(params.prompt_original),
+    prompt_optimized: truncateField(params.prompt_optimized),
     mode: params.mode,
-    explanation: params.explanation,
+    explanation: truncateField(params.explanation),
     title: params.title,
     provider: params.provider,
     history_id: params.history_id ?? null,
@@ -195,11 +302,7 @@ export function saveToLocalLibrary(params: {
   };
   const list = readLocalLibraryRows();
   list.unshift(row);
-  try {
-    localStorage.setItem(LOCAL_LIBRARY_KEY, JSON.stringify(list.slice(0, LOCAL_HISTORY_CAP)));
-  } catch {
-    // swallow: quota / private mode — save is best-effort
-  }
+  writeRowsWithEviction(LOCAL_LIBRARY_KEY, list, LOCAL_HISTORY_KEY);
   return id;
 }
 

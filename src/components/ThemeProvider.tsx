@@ -14,17 +14,26 @@ type Theme = "light" | "dark";
 const STORAGE_KEY = "promptperfect-theme";
 
 function getStoredTheme(): Theme | null {
-  if (typeof window === "undefined") return null;
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === "light" || stored === "dark") return stored;
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === 'light' || stored === 'dark') return stored;
+  } catch {
+    // swallow: storage blocked (private mode / disabled cookies) — fall back to system
+  }
   return null;
 }
 
 function getSystemTheme(): Theme {
-  if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  if (typeof window === 'undefined') return 'light';
+  try {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
+  } catch {
+    // swallow: matchMedia unavailable — default to light
+    return 'light';
+  }
 }
 
 function getInitialTheme(): Theme {
@@ -61,7 +70,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const setTheme = useCallback((next: Theme) => {
     setThemeState(next);
     applyTheme(next);
-    localStorage.setItem(STORAGE_KEY, next);
+    try {
+      localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      // swallow: quota / private mode — theme persists in memory for the session
+    }
   }, []);
 
   const toggleTheme = useCallback(() => {

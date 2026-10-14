@@ -6,6 +6,7 @@ import {
   jsonUnauthorizedDetails,
   resolveIdentity,
 } from '@/lib/server/supabaseRequestIdentity';
+import { logWarn } from '@/lib/logger';
 
 export async function POST(req: NextRequest) {
   const identity = await resolveIdentity(req);
@@ -78,8 +79,9 @@ export async function POST(req: NextRequest) {
     const shareUrl = `${req.nextUrl.origin}/s/${shareId}`;
     return NextResponse.json({ shareUrl, shareId });
   } catch (err) {
+    logWarn('share-generate', `request failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }

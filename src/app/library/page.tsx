@@ -1,516 +1,52 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Bookmark, BookmarkPlus, ChevronDown, ChevronUp, Search, Sparkles, Trash2 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { formatDistanceToNow } from 'date-fns';
-import { createSupabaseBrowserClient } from '@/lib/client/supabaseBrowser';
-import { getPromptPerfectAuthHeaders } from '@/lib/client/promptPerfectAuthHeaders';
-import { isUnlimitedMode } from '@/lib/localMode';
-import {
-  deleteLocalLibraryRow,
-  getLocalLibrary,
-  isInLocalLibrary,
-  saveToLocalLibrary,
-  type LocalLibraryRow,
-} from '@/lib/client/optimizationHistory';
-import {
-  PROMPT_TEMPLATES,
-  TEMPLATE_CATEGORIES,
-  type PromptTemplate,
-  type TemplateCategory,
-} from '@/lib/promptTemplates';
-import {
-  buildAppUserFromSupabaseUser,
-  readEnginePrefs,
-} from '@/lib/client/enginePrefsStorage';
-import { resolveAuthUserAndSession } from '@/lib/client/ppUserSync';
+import { useState } from 'react';
+import { ArrowLeft, Bookmark } from 'lucide-react';
+import { PROMPT_TEMPLATES } from '@/lib/promptTemplates';
+import { useSavedLibrary } from '@/hooks/useSavedLibrary';
+import { LibraryEmptyState, LibrarySkeleton, DeleteConfirmModal } from '@/components/library/LibraryStates';
+import { SavedPromptsTab } from '@/components/library/SavedPromptsTab';
+import { TemplatesTab } from '@/components/library/TemplatesTab';
 
-const REOPTIMIZE_SESSION_KEY = 'pp_reoptimize';
-const PREVIEW_LEN = 120;
-const PAGE_SIZE = 25;
-
-interface PPUser {
-  id: string;
-  name: string | null;
-  email: string;
-  provider: string;
-  model: string;
-}
-
-interface SavedPromptRow {
-  id: string;
-  user_id: string;
-  title: string;
-  original_prompt: string;
-  optimized_prompt: string;
-  explanation: string;
-  mode: string;
-  provider: string;
-  created_at: string;
-}
-
-// ── Timestamp ─────────────────────────────────────────────────────────────────
-function formatTimestamp(iso: string): string {
-  try {
-    const d = new Date(iso);
-    const ageMs = Date.now() - d.getTime();
-    if (ageMs < 24 * 60 * 60 * 1000) {
-      return formatDistanceToNow(d, { addSuffix: true });
-    }
-    return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(d);
-  } catch {
-    // swallow: invalid ISO string or Intl unavailable — return raw value
-    return iso;
-  }
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function previewText(text: string): string {
-  const t = text.trim().replace(/\s+/g, ' ');
-  if (t.length <= PREVIEW_LEN) return t || '—';
-  return `${t.slice(0, PREVIEW_LEN)}…`;
-}
-
-function rowMatchesSearch(row: SavedPromptRow, query: string): boolean {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
-  const title = (row.title ?? '').toLowerCase();
-  const orig  = (row.original_prompt ?? '').toLowerCase();
-  const opt   = (row.optimized_prompt ?? '').toLowerCase();
-  return title.includes(q) || orig.includes(q) || opt.includes(q);
-}
-
-type LibraryModeFilter = 'all' | 'better' | 'specific' | 'cot';
-
-function rowMatchesModeFilter(row: SavedPromptRow, filter: LibraryModeFilter): boolean {
-  if (filter === 'all') return true;
-  const m = (row.mode ?? '').trim().toLowerCase();
-  if (filter === 'better')   return m === 'better';
-  if (filter === 'specific') return m === 'specific';
-  if (filter === 'cot')      return m === 'cot' || m === 'chain-of-thought' || m === 'chain_of_thought';
-  return true;
-}
-
-function modeBadgeLabel(mode: string): string {
-  const m = mode.trim().toLowerCase();
-  if (m === 'cot' || m === 'chain-of-thought' || m === 'chain_of_thought') return 'CoT';
-  return mode;
-}
-
-// ── Skeleton loading rows ─────────────────────────────────────────────────────
-function LibrarySkeleton() {
-  return (
-    <ul className="flex flex-col gap-3" aria-busy="true" aria-label="Loading saved prompts">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <li
-          key={i}
-          className="animate-pulse rounded-xl border border-[#252525] bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4"
-        >
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1 space-y-2">
-              <div className="h-4 w-2/5 rounded bg-[#252525]" />
-              <div className="h-3 w-4/5 rounded bg-[#1e1e1e]" />
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <div className="h-5 w-12 rounded bg-[#252525]" />
-              <div className="h-3 w-16 rounded bg-[#1e1e1e]" />
-              <div className="h-4 w-4 rounded bg-[#1e1e1e]" />
-            </div>
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-// ── Empty state ───────────────────────────────────────────────────────────────
-function LibraryEmptyState({
-  message,
-  description,
-  children,
-}: {
-  message: string;
-  description?: string;
-  children?: ReactNode;
-}) {
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="flex flex-col items-center rounded-2xl border border-dashed border-[#2a2a2a] bg-gradient-to-b from-white/[0.03] to-transparent px-8 py-20 text-center"
-    >
-      <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#252525] bg-[#111]">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke="#4552FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </div>
-      <p className="font-[family-name:var(--font-space-grotesk),sans-serif] text-[17px] font-semibold text-[#E7E6D9]">
-        {message}
-      </p>
-      {description && (
-        <p className="mt-2 max-w-xs text-[13px] leading-relaxed text-[#71717A]">
-          {description}
-        </p>
-      )}
-      {children ? (
-        <div className="mt-8 flex flex-col items-center gap-3">{children}</div>
-      ) : null}
-    </div>
-  );
-}
-
-// ── Delete confirm modal ──────────────────────────────────────────────────────
-function DeleteConfirmModal({
-  onConfirm,
-  onCancel,
-}: {
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="delete-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-    >
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onCancel}
-        aria-hidden
-      />
-      <div className="relative w-full max-w-sm rounded-2xl border border-[#2a2a2a] bg-[#0e0e0e] p-6 shadow-2xl">
-        <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10">
-          <Trash2 className="h-5 w-5 text-red-400" aria-hidden />
-        </div>
-        <h2
-          id="delete-modal-title"
-          className="mt-3 font-[family-name:var(--font-space-grotesk),sans-serif] text-[16px] font-semibold text-[#E7E6D9]"
-        >
-          Delete saved prompt?
-        </h2>
-        <p className="mt-1 text-[13px] leading-relaxed text-[#71717A]">
-          This will permanently remove the prompt from your library. This action cannot be undone.
-        </p>
-        <div className="mt-5 flex gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex-1 rounded-[10px] border border-[#2a2a2a] bg-[#111] px-4 py-2.5 text-[13px] font-semibold text-[#ECECEC] transition-colors hover:border-[#3a3a3a] hover:bg-[#1a1a1a]"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="flex-1 rounded-[10px] border border-red-500/30 bg-red-500/15 px-4 py-2.5 text-[13px] font-semibold text-red-400 transition-colors hover:bg-red-500/25"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Local-mode mapping ────────────────────────────────────────────────────────
-function mapLocalLibraryRows(rows: LocalLibraryRow[]): SavedPromptRow[] {
-  return rows.map((r) => ({
-    id: r.id,
-    user_id: 'local',
-    title: r.title,
-    original_prompt: r.prompt_original,
-    optimized_prompt: r.prompt_optimized,
-    explanation: r.explanation,
-    mode: r.mode,
-    provider: r.provider,
-    created_at: r.created_at,
-  }));
-}
-
-// ── Page ──────────────────────────────────────────────────────────────────────
 export default function LibraryPage() {
-  const router = useRouter();
-  const [mounted, setMounted]       = useState(false);
-  const [authReady, setAuthReady]   = useState(false);
-  const [user, setUser]             = useState<PPUser | null>(null);
-  const [rows, setRows]             = useState<SavedPromptRow[]>([]);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [modeFilter, setModeFilter] = useState<LibraryModeFilter>('all');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const lib = useSavedLibrary();
   /** ID pending confirmation before delete; null = no modal open */
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [tab, setTab] = useState<'mine' | 'templates'>('mine');
-  const [tplCategory, setTplCategory] = useState<TemplateCategory | 'All'>('All');
-  const [tplExpandedId, setTplExpandedId] = useState<string | null>(null);
-  const [savedTplIds, setSavedTplIds] = useState<Set<string>>(new Set());
-  const [tplSavingId, setTplSavingId] = useState<string | null>(null);
-  const [tplError, setTplError] = useState<string | null>(null);
 
-  const filteredRows = useMemo(
-    () =>
-      rows.filter(
-        (row) =>
-          rowMatchesSearch(row, searchQuery) && rowMatchesModeFilter(row, modeFilter),
-      ),
-    [rows, searchQuery, modeFilter],
-  );
-
-  // Reset visible count whenever filters change so "Load more" starts fresh
-  useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
-  }, [searchQuery, modeFilter]);
-
-  const visibleRows = filteredRows.slice(0, visibleCount);
-  const hasMore     = filteredRows.length > visibleCount;
-
-  const loadSaved = useCallback(async (userId: string) => {
-    const client = createSupabaseBrowserClient();
-    if (!client) {
-      // Local mode without backend: library lives in localStorage.
-      if (isUnlimitedMode()) {
-        setLoading(true);
-        setError(null);
-        try {
-          setRows(mapLocalLibraryRows(getLocalLibrary()));
-        } catch {
-          setError('Could not load saved prompts.');
-          setRows([]);
-        } finally {
-          setLoading(false);
-        }
-        return;
-      }
-      setError('Library is unavailable.');
-      setRows([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    try {
-      const { data, error: qErr } = await client
-        .from('pp_saved_prompts')
-        .select(
-          'id,user_id,title,original_prompt,optimized_prompt,explanation,mode,provider,created_at',
-        )
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .order('id', { ascending: false })
-        .limit(500);
-
-      if (qErr) throw qErr;
-      setRows((data as SavedPromptRow[]) ?? []);
-    } catch {
-      setError('Could not load saved prompts.');
-      setRows([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const handleDeleteConfirmed = useCallback(async () => {
-    const id = deleteConfirmId;
-    setDeleteConfirmId(null);
-    if (!id || !user) return;
-
-    setError(null);
-    setRows((r) => r.filter((row) => row.id !== id));
-    setExpandedId((prev) => (prev === id ? null : prev));
-
-    // Local mode: delete from localStorage, no backend involved.
-    if (user.id === 'local') {
-      if (!deleteLocalLibraryRow(id)) {
-        setError('Could not delete prompt.');
-        setRows(mapLocalLibraryRows(getLocalLibrary()));
-      }
-      return;
-    }
-
-    const client = createSupabaseBrowserClient();
-    if (!client) {
-      setError('Library is unavailable.');
-      void loadSaved(user.id);
-      return;
-    }
-
-    const { error: delErr } = await client
-      .from('pp_saved_prompts')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', user.id);
-
-    if (delErr) {
-      setError('Could not delete prompt.');
-      void loadSaved(user.id);
-    }
-  }, [deleteConfirmId, user, loadSaved]);
-
-  const handleReoptimize = useCallback(
-    (row: SavedPromptRow) => {
-      try {
-        sessionStorage.setItem(
-          REOPTIMIZE_SESSION_KEY,
-          JSON.stringify({
-            text: row.original_prompt,
-            mode: row.mode,
-            autoOptimize: true,
-          }),
-        );
-      } catch {
-        // swallow: quota / private mode blocks draft storage
-      }
-      router.push('/app');
-    },
-    [router],
-  );
-
-  const filteredTemplates = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    return PROMPT_TEMPLATES.filter(
-      (t) =>
-        (tplCategory === 'All' || t.category === tplCategory) &&
-        (!q ||
-          `${t.title} ${t.description} ${t.category}`.toLowerCase().includes(q)),
-    );
-  }, [tplCategory, searchQuery]);
-
-  const templateCountByCategory = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const t of PROMPT_TEMPLATES) {
-      counts.set(t.category, (counts.get(t.category) ?? 0) + 1);
-    }
-    return counts;
-  }, []);
-
-  const isTplSaved = useCallback(
-    (id: string) =>
-      savedTplIds.has(id) ||
-      (user?.id === 'local' && isInLocalLibrary(`template:${id}`)),
-    [savedTplIds, user],
-  );
-
-  /** Fork a template into the optimizer (loaded for review, not auto-run). */
-  const handleUseTemplate = useCallback(
-    (tpl: PromptTemplate) => {
-      try {
-        sessionStorage.setItem(
-          REOPTIMIZE_SESSION_KEY,
-          JSON.stringify({
-            text: tpl.optimized_prompt,
-            mode: tpl.mode,
-            autoOptimize: false,
-          }),
-        );
-      } catch {
-        // swallow: quota / private mode blocks draft storage
-      }
-      router.push('/app');
-    },
-    [router],
-  );
-
-  const handleSaveTemplate = useCallback(
-    async (tpl: PromptTemplate) => {
-      if (!user || tplSavingId || isTplSaved(tpl.id)) return;
-      setTplSavingId(tpl.id);
-      setTplError(null);
-      try {
-        if (user.id === 'local') {
-          saveToLocalLibrary({
-            title: tpl.title,
-            prompt_original: tpl.original_prompt,
-            prompt_optimized: tpl.optimized_prompt,
-            explanation: tpl.explanation,
-            mode: tpl.mode,
-            provider: tpl.provider,
-            session_id: `template-${tpl.id}`,
-            history_id: `template:${tpl.id}`,
-          });
-        } else {
-          const client = createSupabaseBrowserClient();
-          if (!client) {
-            setTplError('Sign in to save templates.');
-            return;
-          }
-          const headers = await getPromptPerfectAuthHeaders(client);
-          if (!headers) {
-            setTplError('Sign in again to save templates.');
-            return;
-          }
-          const res = await fetch('/api/saved-prompts', {
-            method: 'POST',
-            headers: { ...headers, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              title: tpl.title,
-              original_prompt: tpl.original_prompt,
-              optimized_prompt: tpl.optimized_prompt,
-              explanation: tpl.explanation,
-              mode: tpl.mode,
-              provider: tpl.provider,
-            }),
-          });
-          if (!res.ok) {
-            const data = (await res.json().catch(() => ({}))) as { error?: string };
-            setTplError(
-              typeof data.error === 'string' && data.error
-                ? data.error
-                : 'Could not save template.',
-            );
-            return;
-          }
-        }
-        setSavedTplIds((prev) => new Set(prev).add(tpl.id));
-      } finally {
-        setTplSavingId(null);
-      }
-    },
-    [user, tplSavingId, isTplSaved],
-  );
-
-  useEffect(() => { setMounted(true); }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-    const client = createSupabaseBrowserClient();
-    if (!client) {
-      // Local mode without backend: library works off localStorage, no sign-in.
-      if (isUnlimitedMode()) {
-        setUser({ id: 'local', name: 'Local device', email: '', provider: '', model: '' });
-        void loadSaved('local');
-        setAuthReady(true);
-        return;
-      }
-      setUser(null);
-      setRows([]);
-      setLoading(false);
-      setAuthReady(true);
-      return;
-    }
-    let cancelled = false;
-    void resolveAuthUserAndSession(client).then(({ user }) => {
-      if (cancelled) return;
-      if (!user?.id) {
-        setUser(null);
-        setRows([]);
-        setLoading(false);
-        setAuthReady(true);
-        return;
-      }
-      const u = buildAppUserFromSupabaseUser(user, readEnginePrefs()) as PPUser;
-      setUser(u);
-      void loadSaved(u.id);
-      setAuthReady(true);
-    });
-    return () => { cancelled = true; };
-  }, [mounted, loadSaved]);
+  const {
+    mounted,
+    authReady,
+    user,
+    rows,
+    loading,
+    error,
+    searchQuery,
+    setSearchQuery,
+    modeFilter,
+    setModeFilter,
+    expandedId,
+    setExpandedId,
+    visibleRows,
+    filteredCount,
+    hasMore,
+    loadMore,
+    confirmDelete,
+    reoptimize,
+    tab,
+    setTab,
+    tplCategory,
+    setTplCategory,
+    tplExpandedId,
+    setTplExpandedId,
+    filteredTemplates,
+    templateCountByCategory,
+    tplSavingId,
+    tplError,
+    isTplSaved,
+    useTemplate,
+    saveTemplate,
+  } = lib;
 
   // ── Auth / mount gate ──────────────────────────────────────────────────────
   if (!mounted || !authReady) {
@@ -573,7 +109,7 @@ export default function LibraryPage() {
       {/* Delete confirm modal */}
       {deleteConfirmId && (
         <DeleteConfirmModal
-          onConfirm={() => void handleDeleteConfirmed()}
+          onConfirm={() => void confirmDelete(deleteConfirmId).finally(() => setDeleteConfirmId(null))}
           onCancel={() => setDeleteConfirmId(null)}
         />
       )}
@@ -629,314 +165,52 @@ export default function LibraryPage() {
           </div>
 
           {tab === 'mine' ? (
-          <>
-          {/* Search */}
-          <label className="relative mb-4 block">
-            <span className="sr-only">Search saved prompts</span>
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#71717A]"
-              aria-hidden
-            />
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search prompts…"
-              autoComplete="off"
-              className="w-full rounded-[12px] border border-[#252525] bg-[#0A0A0A] py-2.5 pl-10 pr-4 text-[14px] text-white outline-none placeholder:text-[#71717A] focus:border-[#4552FF]"
-            />
-          </label>
-
-          {/* Mode filter pills */}
-          <div
-            className="mb-4 flex flex-wrap gap-2"
-            role="group"
-            aria-label="Filter by optimization mode"
-          >
-            {(
-              [
-                { id: 'all' as const,      label: 'All' },
-                { id: 'better' as const,   label: 'Better' },
-                { id: 'specific' as const, label: 'Specific' },
-                { id: 'cot' as const,      label: 'CoT' },
-              ] as const
-            ).map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setModeFilter(id)}
-                aria-pressed={modeFilter === id}
-                className={`rounded-lg border px-3 py-1.5 text-[12px] font-medium transition-colors ${
-                  modeFilter === id
-                    ? 'border-[#4552FF] bg-[#4552FF]/20 text-[#ECECEC]'
-                    : 'border-[#2a2a2a] bg-[#0A0A0A] text-[#B0B0B0] hover:border-[#4552FF]/50'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Content area */}
-          {loading ? (
-            <LibrarySkeleton />
-          ) : error ? (
-            <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-center text-sm text-red-400">
-              {error}
-            </div>
-          ) : rows.length === 0 ? (
-            <LibraryEmptyState
-              message="No saved prompts yet"
-              description="Optimize a prompt to get started, then hit the bookmark icon to save it here for quick access."
-            >
-              <Link
-                href="/app"
-                className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#4552FF,#5c6aff)] px-5 py-2.5 text-[13px] font-semibold text-white transition hover:opacity-90"
-              >
-                Optimize a prompt to get started
-              </Link>
-            </LibraryEmptyState>
-          ) : filteredRows.length === 0 ? (
-            <p className="py-12 text-center text-sm text-[#71717A]">
-              No prompts match your filters.
-            </p>
-          ) : (
-            <>
-              <ul className="flex flex-col gap-3">
-                {visibleRows.map((row) => {
-                  const expanded = expandedId === row.id;
-                  return (
-                    <li
-                      key={row.id}
-                      className="rounded-xl border border-[#252525] bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4 transition hover:border-[#3F3F46]"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => setExpandedId(expanded ? null : row.id)}
-                        className="flex w-full items-start justify-between gap-2 text-left"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <h2 className="truncate font-[family-name:var(--font-space-grotesk),sans-serif] text-[15px] font-medium text-[#E7E6D9]">
-                            {row.title}
-                          </h2>
-                          <p className="mt-1 truncate text-[13px] text-[#aaa]">
-                            {previewText(row.original_prompt)}
-                          </p>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-2">
-                          <span
-                            className={`rounded px-2 py-0.5 text-[11px] font-medium ${
-                              row.mode === 'better'
-                                ? 'bg-[#4552FF]/20 text-[#4552FF]'
-                                : row.mode === 'specific'
-                                  ? 'bg-green-500/20 text-green-400'
-                                  : 'bg-orange-500/20 text-orange-400'
-                            }`}
-                          >
-                            {modeBadgeLabel(row.mode)}
-                          </span>
-                          <time
-                            dateTime={row.created_at}
-                            className="text-[11px] text-[#71717A]"
-                            title={new Date(row.created_at).toLocaleString()}
-                          >
-                            {formatTimestamp(row.created_at)}
-                          </time>
-                          {expanded ? (
-                            <ChevronUp className="h-4 w-4 text-[#71717A]" aria-hidden />
-                          ) : (
-                            <ChevronDown className="h-4 w-4 text-[#71717A]" aria-hidden />
-                          )}
-                        </div>
-                      </button>
-
-                      {expanded && (
-                        <div className="mt-4 border-t border-[#252525] pt-4">
-                          <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div>
-                              <p className="mb-1 text-[11px] text-[#71717A]">Original</p>
-                              <p className="whitespace-pre-wrap text-sm text-[#B0B0B0]">
-                                {row.original_prompt || '—'}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="mb-1 text-[11px] text-[#71717A]">Optimized</p>
-                              <p className="whitespace-pre-wrap text-sm text-[#ECECEC]">
-                                {row.optimized_prompt || '—'}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-3">
-                            <button
-                              type="button"
-                              onClick={() => handleReoptimize(row)}
-                              className="inline-flex items-center gap-1.5 text-sm text-[#4552FF] hover:underline"
-                            >
-                              <ArrowRight size={14} aria-hidden />
-                              Re-optimize
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setDeleteConfirmId(row.id)}
-                              className="inline-flex items-center gap-1.5 text-sm text-red-400 hover:underline"
-                            >
-                              <Trash2 size={14} aria-hidden />
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-
-              {/* Load more */}
-              {hasMore && (
-                <div className="mt-6 flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
-                    className="rounded-[10px] border border-[#2a2a2a] bg-[#111] px-6 py-2.5 text-[13px] font-semibold text-[#ECECEC] transition-colors hover:border-[#3a3a3a] hover:bg-[#1a1a1a]"
+            <SavedPromptsTab
+              totalCount={rows.length}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              modeFilter={modeFilter}
+              onModeFilterChange={setModeFilter}
+              loading={loading}
+              error={error}
+              visibleRows={visibleRows}
+              filteredCount={filteredCount}
+              hasMore={hasMore}
+              remainingCount={filteredCount - visibleRows.length}
+              onLoadMore={loadMore}
+              expandedId={expandedId}
+              onToggleExpand={setExpandedId}
+              onReoptimize={reoptimize}
+              onRequestDelete={setDeleteConfirmId}
+              skeleton={<LibrarySkeleton />}
+              emptyState={
+                <LibraryEmptyState
+                  message="No saved prompts yet"
+                  description="Optimize a prompt to get started, then hit the bookmark icon to save it here for quick access."
+                >
+                  <Link
+                    href="/app"
+                    className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#4552FF,#5c6aff)] px-5 py-2.5 text-[13px] font-semibold text-white transition hover:opacity-90"
                   >
-                    Load more
-                    <span className="ml-2 text-[#71717A]">
-                      ({filteredRows.length - visibleCount} remaining)
-                    </span>
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-          </>
+                    Optimize a prompt to get started
+                  </Link>
+                </LibraryEmptyState>
+              }
+            />
           ) : (
-          <>
-          {/* Templates: curated production-ready prompts, works offline */}
-          <div
-            className="mb-4 flex flex-wrap gap-2"
-            role="group"
-            aria-label="Filter templates by category"
-          >
-            {(['All', ...TEMPLATE_CATEGORIES] as const).map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setTplCategory(c)}
-                aria-pressed={tplCategory === c}
-                className={`rounded-lg border px-3 py-1.5 text-[12px] font-medium transition-colors ${
-                  tplCategory === c
-                    ? 'border-[#4552FF] bg-[#4552FF]/20 text-[#ECECEC]'
-                    : 'border-[#2a2a2a] bg-[#0A0A0A] text-[#B0B0B0] hover:border-[#4552FF]/50'
-                }`}
-              >
-                {c === 'All'
-                  ? `All (${PROMPT_TEMPLATES.length})`
-                  : `${c} (${templateCountByCategory.get(c) ?? 0})`}
-              </button>
-            ))}
-          </div>
-
-          {tplError ? (
-            <div
-              className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-5 py-3 text-center text-sm text-red-400"
-              role="alert"
-            >
-              {tplError}
-            </div>
-          ) : null}
-
-          {filteredTemplates.length === 0 ? (
-            <p className="py-12 text-center text-sm text-[#71717A]">
-              No templates match your filters.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {filteredTemplates.map((tpl) => {
-                const expanded = tplExpandedId === tpl.id;
-                const saved = isTplSaved(tpl.id);
-                const saving = tplSavingId === tpl.id;
-                return (
-                  <li
-                    key={tpl.id}
-                    className="rounded-xl border border-[#252525] bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4 transition hover:border-[#3F3F46]"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setTplExpandedId(expanded ? null : tpl.id)}
-                      className="flex w-full items-start justify-between gap-2 text-left"
-                      aria-expanded={expanded}
-                    >
-                      <div className="min-w-0 flex-1">
-                        <h2 className="truncate font-[family-name:var(--font-space-grotesk),sans-serif] text-[15px] font-medium text-[#E7E6D9]">
-                          {tpl.title}
-                        </h2>
-                        <p className="mt-1 truncate text-[13px] text-[#aaa]">
-                          {tpl.description}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        <span className="rounded bg-[#4552FF]/20 px-2 py-0.5 text-[11px] font-medium text-[#8B9AFF]">
-                          {tpl.category}
-                        </span>
-                        <span className="rounded bg-green-500/20 px-2 py-0.5 text-[11px] font-medium text-green-400">
-                          {modeBadgeLabel(tpl.mode)}
-                        </span>
-                        {expanded ? (
-                          <ChevronUp className="h-4 w-4 text-[#71717A]" aria-hidden />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 text-[#71717A]" aria-hidden />
-                        )}
-                      </div>
-                    </button>
-
-                    {expanded && (
-                      <div className="mt-4 border-t border-[#252525] pt-4">
-                        <p className="mb-1 text-[11px] text-[#71717A]">
-                          Built from starter
-                        </p>
-                        <p className="mb-3 text-[13px] italic text-[#888]">
-                          “{tpl.original_prompt}”
-                        </p>
-                        <p className="mb-1 text-[11px] text-[#71717A]">
-                          Template — fill the {'{{PLACEHOLDERS}}'} then optimize
-                        </p>
-                        <p className="whitespace-pre-wrap text-sm text-[#ECECEC]">
-                          {tpl.optimized_prompt}
-                        </p>
-                        <div className="mt-4 flex flex-wrap items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => handleUseTemplate(tpl)}
-                            className="inline-flex items-center gap-1.5 rounded-[10px] bg-[linear-gradient(135deg,#4552FF,#5c6aff)] px-4 py-2 text-[13px] font-semibold text-white transition hover:opacity-90"
-                          >
-                            <Sparkles size={14} aria-hidden />
-                            Use in optimizer
-                          </button>
-                          {saved ? (
-                            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#4552FF]">
-                              <Bookmark size={16} aria-hidden />
-                              Saved!
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => void handleSaveTemplate(tpl)}
-                              disabled={saving}
-                              className="inline-flex items-center gap-1.5 text-sm text-[#B0B0B0] transition hover:text-[#4552FF] disabled:opacity-50"
-                            >
-                              <BookmarkPlus size={16} aria-hidden />
-                              {saving ? 'Saving…' : 'Save to library'}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          </>
+            <TemplatesTab
+              filteredTemplates={filteredTemplates}
+              tplCategory={tplCategory}
+              onCategoryChange={setTplCategory}
+              templateCountByCategory={templateCountByCategory}
+              tplError={tplError}
+              tplExpandedId={tplExpandedId}
+              onToggleExpand={setTplExpandedId}
+              isTplSaved={isTplSaved}
+              tplSavingId={tplSavingId}
+              onUseTemplate={useTemplate}
+              onSaveTemplate={saveTemplate}
+            />
           )}
         </main>
       </div>

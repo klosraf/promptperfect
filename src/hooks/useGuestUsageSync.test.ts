@@ -42,7 +42,9 @@ describe('useGuestUsageSync', () => {
     const { onSynced } = setup();
     await waitFor(() => expect(onSynced).toHaveBeenCalledTimes(1));
     expect(getGuestCount()).toBe(5);
-    expect(String(fetchMock.mock.calls[0][0])).toContain(
+    const firstFetch = fetchMock.mock.calls[0];
+    expect(firstFetch).toBeDefined();
+    expect(String(firstFetch?.[0])).toContain(
       '/api/guest-usage?guestId=',
     );
   });

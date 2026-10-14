@@ -83,4 +83,15 @@ describe("/api/saved-prompts GET", () => {
     expect(json.code).toBe("LIBRARY_DB_ERROR");
     expect(json.hint).toMatch(/migrations/);
   });
+
+  it("never leaks non-missing internal DB errors to the client (generic 500)", async () => {
+    // Force the non-missing branch: message must NOT match the missing-table regex.
+    pageError = { message: "permission denied for table pp_saved_prompts" };
+    const res = await GET(get("http://localhost/api/saved-prompts"));
+    expect(res.status).toBe(500);
+    const json = (await res.json()) as { error?: string; code?: string };
+    expect(json.error).toBe("Could not load prompts");
+    expect(json.code).toBe("LIBRARY_DB_ERROR");
+    expect(JSON.stringify(json)).not.toMatch(/permission denied/i);
+  });
 });

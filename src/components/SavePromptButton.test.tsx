@@ -91,7 +91,9 @@ describe("SavePromptButton", () => {
       }),
     );
 
-    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    const firstFetch = fetchMock.mock.calls[0];
+    expect(firstFetch).toBeDefined();
+    const init = (firstFetch?.[1] ?? {}) as RequestInit;
     const body = JSON.parse(init.body as string);
     expect(body).toMatchObject({
       title: "My title",

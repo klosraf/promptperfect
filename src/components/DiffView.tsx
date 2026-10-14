@@ -29,13 +29,21 @@ function computeDiff(a: string[], b: string[]): Op[] {
     ];
   }
 
-  const dp = Array.from({ length: m + 1 }, () => new Uint32Array(n + 1));
+  const dp: number[][] = Array.from({ length: m + 1 }, () =>
+    new Array<number>(n + 1).fill(0),
+  );
   for (let i = 1; i <= m; i++) {
+    const row = dp[i];
+    const rowPrev = dp[i - 1];
+    const av = a[i - 1];
+    if (!row || !rowPrev || av === undefined) continue;
     for (let j = 1; j <= n; j++) {
-      dp[i][j] =
-        a[i - 1] === b[j - 1]
-          ? dp[i - 1][j - 1] + 1
-          : Math.max(dp[i - 1][j], dp[i][j - 1]);
+      const bv = b[j - 1];
+      if (bv === undefined) continue;
+      row[j] =
+        av === bv
+          ? (rowPrev[j - 1] ?? 0) + 1
+          : Math.max(rowPrev[j] ?? 0, row[j - 1] ?? 0);
     }
   }
 
@@ -43,15 +51,31 @@ function computeDiff(a: string[], b: string[]): Op[] {
   let i = m;
   let j = n;
   while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && a[i - 1] === b[j - 1]) {
-      ops.unshift({ type: "equal", value: a[i - 1] });
+    const av = a[i - 1];
+    const bv = b[j - 1];
+    if (i > 0 && j > 0 && av !== undefined && av === bv) {
+      ops.unshift({ type: "equal", value: av });
       i--;
       j--;
-    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-      ops.unshift({ type: "insert", value: b[j - 1] });
+      continue;
+    }
+    const row = i >= 0 ? dp[i] : undefined;
+    const rowPrev = i > 0 ? dp[i - 1] : undefined;
+    const goInsert =
+      j > 0 &&
+      (i === 0 ||
+        (row !== undefined &&
+          rowPrev !== undefined &&
+          (row[j - 1] ?? 0) >= (rowPrev[j] ?? 0)));
+    if (goInsert) {
+      // Unreachable when j === 0 (loop guard); break defensively instead of crashing.
+      if (bv === undefined) break;
+      ops.unshift({ type: "insert", value: bv });
       j--;
     } else {
-      ops.unshift({ type: "delete", value: a[i - 1] });
+      // Unreachable when i === 0 (insert branch takes it); same defensive break.
+      if (av === undefined) break;
+      ops.unshift({ type: "delete", value: av });
       i--;
     }
   }

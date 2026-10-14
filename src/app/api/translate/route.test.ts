@@ -46,7 +46,9 @@ describe("/api/translate POST", () => {
     const json = (await res.json()) as { translatedText?: string };
     expect(json.translatedText).toBe("Hola mundo");
     expect(generateText).toHaveBeenCalledTimes(1);
-    const call = generateText.mock.calls[0][0] as { system?: string };
+    const firstCall = generateText.mock.calls[0];
+    expect(firstCall).toBeDefined();
+    const call = (firstCall?.[0] ?? {}) as { system?: string };
     expect(call.system).toMatch(/Spanish/);
   });
 

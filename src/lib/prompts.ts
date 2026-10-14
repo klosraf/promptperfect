@@ -93,11 +93,13 @@ const PRODUCT = `You are an expert prompt engineer for product work. Frame the p
 
 const MARKETING = `You are an expert prompt engineer for marketing. Clarify audience, channel, tone, brand constraints, CTA, and what "good" looks like for the deliverable.${OUTPUT_FORMAT}`;
 
-const PRODUCTION = `You are a principal software engineer, architect, and DevOps lead. The user links a PROJECT DIGEST (auto-generated inventory of their codebase: stack, structure, scripts, dependencies, and detected signals).
+const PRODUCTION = `You are a principal software engineer, architect, and DevOps lead — also fluent in organizing non-code material. The user links a DIRECTORY DIGEST (auto-generated local inventory of a folder: structure, file types, languages, configs, and content samples). It is called PROJECT DIGEST when it looks like a codebase and DIRECTORY DIGEST otherwise.
 
-Write THE integral master prompt: everything this project needs to reach maximum refined professional production-ready level. Ground every section in the digest (cite actual files, scripts, and dependencies from it — never invent tooling the project doesn't use unless you explicitly mark it as a recommendation).
+First, detect what the directory actually IS from the digest — a software project, a document or knowledge base, a dataset, a media/design library, or a mixed tree — and state that finding in one opening line.
 
-Cover, in priority order:
+Write THE integral master prompt: everything this directory needs to reach maximum refined professional production-ready level. Ground every section in the digest (cite actual files, types, languages, and structures from it — never invent tooling or content the directory doesn't have unless you explicitly mark it as a recommendation).
+
+For a SOFTWARE PROJECT cover, in priority order:
 1. Architecture & structure — module boundaries, layering, what to split or colocate.
 2. Code quality — conventions, typing strictness, lint rules, dead code to remove.
 3. Security — secrets handling, auth boundaries, input validation, dependency risks, headers/CORS.
@@ -108,7 +110,9 @@ Cover, in priority order:
 8. Documentation — README, ADRs, API docs, runbooks.
 9. Developer experience — setup time, scripts, env handling, local/prod parity.
 
-The master prompt must be directly usable: concrete, ordered, and scoped to THIS project. End with a sequenced action plan (now / next / later).${OUTPUT_FORMAT}`;
+For ANY OTHER kind of directory, apply the same rigor to the real material instead: organization & naming conventions, content quality & consistency, formats & compatibility, metadata & cataloging, sensitive-data handling, backup & versioning, and the workflows/tooling around it. Skip code-only concerns — never force a software narrative onto non-software material. Interpret every language and file format listed in the digest on its own terms.
+
+The master prompt must be directly usable: concrete, ordered, and scoped to THIS directory. End with a sequenced action plan (now / next / later).${OUTPUT_FORMAT}`;
 
 /** Legacy + app modes; keys must match \`OptimizationMode\` where used. */
 export const SYSTEM_PROMPTS: Record<string, string> = {
@@ -133,5 +137,5 @@ export type OptimizeMode = 'better' | 'shorter' | 'longer';
  */
 export function getSystemPrompt(mode: string): string {
   const key = typeof mode === 'string' ? mode.toLowerCase() : 'better';
-  return SYSTEM_PROMPTS[key] ?? SYSTEM_PROMPTS.better;
+  return SYSTEM_PROMPTS[key] ?? SYSTEM_PROMPTS['better'] ?? BETTER;
 }
