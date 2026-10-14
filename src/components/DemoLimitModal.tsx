@@ -2,6 +2,7 @@
 
 import { useId } from 'react';
 import { useRouter } from 'next/navigation';
+import { Star } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { getGuestLimit } from '@/lib/guest';
 
@@ -19,9 +20,7 @@ export function DemoLimitModal({ isOpen, onClose }: DemoLimitModalProps) {
     <Modal isOpen={isOpen} onClose={onClose} titleId={titleId} maxWidthClass="max-w-md">
       <div className="mb-5">
         <div className="w-10 h-10 rounded-full bg-accent/15 flex items-center justify-center mb-4">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
-            <path d="M10 2L12.39 7.26L18 8.27L14 12.14L14.76 18L10 15.27L5.24 18L6 12.14L2 8.27L7.61 7.26L10 2Z" fill="#4552FF"/>
-          </svg>
+          <Star className="h-5 w-5 text-accent" fill="currentColor" aria-hidden />
         </div>
         <h2 id={titleId} className="text-[#E7E6D9] font-heading text-xl font-bold mb-2">
           You&apos;ve used all {limit} free optimizations
