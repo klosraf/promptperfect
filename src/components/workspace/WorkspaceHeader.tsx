@@ -38,7 +38,7 @@ export function WorkspaceHeader({
           <span className="text-lg font-bold tracking-tight text-[#E7E6D9]">
             PromptPerfect
           </span>
-          <span className="text-sm text-[#71717A]">by Beagle</span>
+          <span className="text-sm text-[#8a8a8a]">by Beagle</span>
         </Link>
         <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-3">
           {user ? (

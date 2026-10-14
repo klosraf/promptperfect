@@ -25,10 +25,15 @@
   --border: #252525;
   --input: #252525;
   --muted: #0f0f0f;
-  --muted-foreground: #71717a;
+  --muted-foreground: #8a8a8a;
 
-  /* radii */
+  /* radiuses */
   --radius: 0.5rem;
+
+  /* Text-safe accent: the brand #4552ff fails AA as small text on dark
+     backgrounds, so links/inline-accent text use this lighter variant while
+     buttons keep the true brand accent via bg-accent. */
+  --accent-text: #8b93ff;
 }
 
 .font-heading {
@@ -49,6 +54,10 @@
   --color-input: var(--input);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-accent-text: var(--accent-text);
+  /* AA-tuned muted greys (Tailwind's zinc-500/600 sit ~4.0:1 on near-black). */
+  --color-zinc-500: #8a8a8a;
+  --color-zinc-600: #7f7f88;
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 2px);

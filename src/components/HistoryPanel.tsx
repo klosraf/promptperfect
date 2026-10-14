@@ -54,7 +54,7 @@ export function HistoryPanel({
   return (
     <div className="flex h-full flex-col border-l border-[#1a1a1a] bg-[#0a0a0a]">
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[#1a1a1a] px-3 py-2">
-        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[#666]">
+        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[#808088]">
           History
         </span>
         {onNewPrompt ? (
@@ -84,7 +84,7 @@ export function HistoryPanel({
       )}
       <div className="min-h-0 flex-1 overflow-y-auto pp-history-scroll">
         {loading ? (
-          <p className="px-3 py-2 text-[13px] text-[#666]" aria-busy="true">Loading…</p>
+          <p className="px-3 py-2 text-[13px] text-[#808088]" aria-busy="true">Loading…</p>
         ) : rows.length === 0 ? (
           <EmptyState
             icon={History}
@@ -105,7 +105,7 @@ export function HistoryPanel({
                   <p className="line-clamp-2 text-[13px] leading-snug text-[#ccc]">
                     {previewPrompt(item.prompt_original)}
                   </p>
-                  <p className="mt-1 text-[11px] text-[#666]">
+                  <p className="mt-1 text-[11px] text-[#808088]">
                     {item.mode} · {formatHistoryTime(item.created_at)}
                   </p>
                 </button>

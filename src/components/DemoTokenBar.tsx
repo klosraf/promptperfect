@@ -28,7 +28,7 @@ export function DemoTokenBar({ isAuthenticated }: DemoTokenBarProps) {
             ? `${remaining} free optimization${remaining !== 1 ? 's' : ''} remaining`
             : 'Free limit reached — sign up for unlimited'}
         </span>
-        <span className="text-xs text-[#71717A]">
+        <span className="text-xs text-[#8a8a8a]">
           {count}/{limit}
         </span>
       </div>

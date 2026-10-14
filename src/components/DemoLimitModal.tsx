@@ -20,7 +20,7 @@ export function DemoLimitModal({ isOpen, onClose }: DemoLimitModalProps) {
     <Modal isOpen={isOpen} onClose={onClose} titleId={titleId} maxWidthClass="max-w-md">
       <div className="mb-5">
         <div className="w-10 h-10 rounded-full bg-accent/15 flex items-center justify-center mb-4">
-          <Star className="h-5 w-5 text-accent" fill="currentColor" aria-hidden />
+          <Star className="h-5 w-5 text-accent-text" fill="currentColor" aria-hidden />
         </div>
         <h2 id={titleId} className="text-[#E7E6D9] font-heading text-xl font-bold mb-2">
           You&apos;ve used all {limit} free optimizations
@@ -41,14 +41,14 @@ export function DemoLimitModal({ isOpen, onClose }: DemoLimitModalProps) {
         <button
           type="button"
           onClick={() => router.push('/login')}
-          className="w-full bg-transparent text-accent border border-accent py-2.5 rounded-lg font-heading font-semibold text-sm hover:bg-[#5B6CFF]/10 transition-colors"
+          className="w-full bg-transparent text-accent-text border border-accent py-2.5 rounded-lg font-heading font-semibold text-sm hover:bg-[#5B6CFF]/10 transition-colors"
         >
           Already have an account? Log in
         </button>
         <button
           type="button"
           onClick={onClose}
-          className="w-full text-[#71717A] text-xs hover:text-[#B0B0B0] transition-colors py-2"
+          className="w-full text-[#8a8a8a] text-xs hover:text-[#B0B0B0] transition-colors py-2"
         >
           Maybe later
         </button>

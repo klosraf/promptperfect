@@ -65,7 +65,7 @@ export function SavedPromptsTab({
       <label className="relative mb-4 block">
         <span className="sr-only">Search saved prompts</span>
         <Search
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#71717A]"
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a8a8a]"
           aria-hidden
         />
         <input
@@ -74,7 +74,7 @@ export function SavedPromptsTab({
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search prompts…"
           autoComplete="off"
-          className="w-full rounded-[12px] border border-[#252525] bg-[#0A0A0A] py-2.5 pl-10 pr-4 text-[14px] text-white outline-none placeholder:text-[#71717A] focus:border-accent"
+          className="w-full rounded-[12px] border border-[#252525] bg-[#0A0A0A] py-2.5 pl-10 pr-4 text-[14px] text-white outline-none placeholder:text-[#8a8a8a] focus:border-accent"
         />
       </label>
 
@@ -143,7 +143,7 @@ export function SavedPromptsTab({
                       <span
                         className={`rounded px-2 py-0.5 text-[11px] font-medium ${
                           row.mode === 'better'
-                            ? 'bg-accent/20 text-accent'
+                            ? 'bg-accent/20 text-accent-text'
                             : row.mode === 'specific'
                               ? 'bg-green-500/20 text-green-400'
                               : 'bg-orange-500/20 text-orange-400'
@@ -153,15 +153,15 @@ export function SavedPromptsTab({
                       </span>
                       <time
                         dateTime={row.created_at}
-                        className="text-[11px] text-[#71717A]"
+                        className="text-[11px] text-[#8a8a8a]"
                         title={new Date(row.created_at).toLocaleString()}
                       >
                         {formatTimestamp(row.created_at)}
                       </time>
                       {expanded ? (
-                        <ChevronUp className="h-4 w-4 text-[#71717A]" aria-hidden />
+                        <ChevronUp className="h-4 w-4 text-[#8a8a8a]" aria-hidden />
                       ) : (
-                        <ChevronDown className="h-4 w-4 text-[#71717A]" aria-hidden />
+                        <ChevronDown className="h-4 w-4 text-[#8a8a8a]" aria-hidden />
                       )}
                     </div>
                   </button>
@@ -170,13 +170,13 @@ export function SavedPromptsTab({
                     <div className="mt-4 border-t border-[#252525] pt-4">
                       <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
-                          <p className="mb-1 text-[11px] text-[#71717A]">Original</p>
+                          <p className="mb-1 text-[11px] text-[#8a8a8a]">Original</p>
                           <p className="whitespace-pre-wrap text-sm text-[#B0B0B0]">
                             {row.original_prompt || '—'}
                           </p>
                         </div>
                         <div>
-                          <p className="mb-1 text-[11px] text-[#71717A]">Optimized</p>
+                          <p className="mb-1 text-[11px] text-[#8a8a8a]">Optimized</p>
                           <p className="whitespace-pre-wrap text-sm text-[#ECECEC]">
                             {row.optimized_prompt || '—'}
                           </p>
@@ -186,7 +186,7 @@ export function SavedPromptsTab({
                         <button
                           type="button"
                           onClick={() => onReoptimize(row)}
-                          className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline"
+                          className="inline-flex items-center gap-1.5 text-sm text-accent-text hover:underline"
                         >
                           <ArrowRight size={14} aria-hidden />
                           Re-optimize
@@ -216,7 +216,7 @@ export function SavedPromptsTab({
                 className="rounded-[10px] border border-[#2a2a2a] bg-[#111] px-6 py-2.5 text-[13px] font-semibold text-[#ECECEC] transition-colors hover:border-[#3a3a3a] hover:bg-[#1a1a1a]"
               >
                 Load more
-                <span className="ml-2 text-[#71717A]">
+                <span className="ml-2 text-[#8a8a8a]">
                   ({remainingCount} remaining)
                 </span>
               </button>

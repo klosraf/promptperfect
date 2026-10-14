@@ -14,7 +14,7 @@ export function LandingHeader() {
             href="https://beaglecorp.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-medium text-accent underline-offset-2 hover:underline"
+            className="font-medium text-accent-text underline-offset-2 hover:underline"
           >
             Beagle
           </a>

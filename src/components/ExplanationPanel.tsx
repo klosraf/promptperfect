@@ -7,7 +7,7 @@ import { SegmentedToggle } from '@/components/ui/SegmentedToggle';
 
 const DiffViewLazy = dynamic(
   () => import('@/components/DiffView').then((m) => ({ default: m.DiffView })),
-  { ssr: false, loading: () => <p className="text-[13px] text-[#666]">Loading diff…</p> },
+  { ssr: false, loading: () => <p className="text-[13px] text-[#808088]">Loading diff…</p> },
 );
 
 interface ExplanationPanelProps {
@@ -53,13 +53,13 @@ export function ExplanationPanel({
           onClick={() => setExpanded((e) => !e)}
           className="flex min-w-0 flex-1 items-center justify-between text-left transition hover:bg-[#111]/50"
         >
-          <span className="text-[13px] font-medium uppercase tracking-[0.06em] text-[#666]">
+          <span className="text-[13px] font-medium uppercase tracking-[0.06em] text-[#808088]">
             What changed and why
           </span>
           {expanded ? (
-            <ChevronUp className="h-4 w-4 shrink-0 text-[#666]" />
+            <ChevronUp className="h-4 w-4 shrink-0 text-[#808088]" />
           ) : (
-            <ChevronDown className="h-4 w-4 shrink-0 text-[#666]" />
+            <ChevronDown className="h-4 w-4 shrink-0 text-[#808088]" />
           )}
         </button>
         {hasDiffInputs && (
@@ -80,7 +80,7 @@ export function ExplanationPanel({
             <DiffViewLazy original={original} optimized={optimized} />
           ) : trimmed ? (
             allBullets ? (
-              <ul className="list-disc space-y-1.5 pl-5 text-[14px] leading-[1.7] text-[#aaa] marker:text-[#666]">
+              <ul className="list-disc space-y-1.5 pl-5 text-[14px] leading-[1.7] text-[#aaa] marker:text-[#808088]">
                 {lines.map((line, i) => (
                   <li key={i}>{stripBullet(line)}</li>
                 ))}
@@ -95,7 +95,7 @@ export function ExplanationPanel({
               </div>
             )
           ) : (
-            <p className="text-[14px] text-[#666]">No explanation for this run.</p>
+            <p className="text-[14px] text-[#808088]">No explanation for this run.</p>
           )}
         </div>
       )}

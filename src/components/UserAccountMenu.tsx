@@ -30,7 +30,7 @@ function MenuAvatar({ src }: { src: string }) {
   const [broken, setBroken] = useState(false);
   if (broken) {
     return (
-      <User className="h-[18px] w-[18px] text-[#71717A]" aria-hidden strokeWidth={1.75} />
+      <User className="h-[18px] w-[18px] text-[#8a8a8a]" aria-hidden strokeWidth={1.75} />
     );
   }
   return (
@@ -202,11 +202,11 @@ export function UserAccountMenu({
           {rawAvatarUrl ? (
             <MenuAvatar key={rawAvatarUrl} src={rawAvatarUrl} />
           ) : (
-            <User className="h-[18px] w-[18px] text-[#71717A]" aria-hidden strokeWidth={1.75} />
+            <User className="h-[18px] w-[18px] text-[#8a8a8a]" aria-hidden strokeWidth={1.75} />
           )}
         </span>
         <ChevronDown
-          className={`h-4 w-4 shrink-0 text-[#71717A] transition ${open ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 shrink-0 text-[#8a8a8a] transition ${open ? 'rotate-180' : ''}`}
           aria-hidden
         />
       </button>

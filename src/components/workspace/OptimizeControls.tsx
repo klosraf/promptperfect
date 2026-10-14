@@ -36,7 +36,7 @@ export function OptimizeControls({
   return (
     <div className="shrink-0 px-6 py-5">
       <div className="mx-auto flex w-full max-w-4xl flex-col items-center">
-        <span className="mb-3 text-center text-[11px] font-medium uppercase tracking-[0.12em] text-[#71717A]">
+        <span className="mb-3 text-center text-[11px] font-medium uppercase tracking-[0.12em] text-[#8a8a8a]">
           Mode
         </span>
         <div className="flex w-full justify-center">

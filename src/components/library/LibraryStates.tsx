@@ -45,13 +45,13 @@ export function LibraryEmptyState({
       className="flex flex-col items-center rounded-2xl border border-dashed border-[#2a2a2a] bg-gradient-to-b from-white/[0.03] to-transparent px-8 py-20 text-center"
     >
       <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#252525] bg-[#111]">
-        <Bookmark className="h-6 w-6 text-accent" strokeWidth={1.5} aria-hidden />
+        <Bookmark className="h-6 w-6 text-accent-text" strokeWidth={1.5} aria-hidden />
       </div>
       <p className="font-[family-name:var(--font-space-grotesk),sans-serif] text-[17px] font-semibold text-[#E7E6D9]">
         {message}
       </p>
       {description && (
-        <p className="mt-2 max-w-xs text-[13px] leading-relaxed text-[#71717A]">
+        <p className="mt-2 max-w-xs text-[13px] leading-relaxed text-[#8a8a8a]">
           {description}
         </p>
       )}
@@ -92,7 +92,7 @@ export function DeleteConfirmModal({
         >
           Delete saved prompt?
         </h2>
-        <p className="mt-1 text-[13px] leading-relaxed text-[#71717A]">
+        <p className="mt-1 text-[13px] leading-relaxed text-[#8a8a8a]">
           This will permanently remove the prompt from your library. This action cannot be undone.
         </p>
         <div className="mt-5 flex gap-2">

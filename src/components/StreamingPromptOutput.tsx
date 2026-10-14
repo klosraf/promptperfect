@@ -111,7 +111,7 @@ export function StreamingPromptOutput({
           <p
             role="status"
             aria-live="polite"
-            className="mt-1 flex shrink-0 items-center gap-1.5 text-[13px] text-[#666]"
+            className="mt-1 flex shrink-0 items-center gap-1.5 text-[13px] text-[#808088]"
           >
             <span
               aria-hidden

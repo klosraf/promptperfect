@@ -151,7 +151,7 @@ export function DiffView({ original, optimized }: DiffViewProps) {
         <div className="flex flex-col">
           <div className="flex items-center gap-2 border-b border-[#161616] bg-[#0c0c0c] px-4 py-2.5">
             <span className="h-1.5 w-1.5 rounded-full bg-accent/80" />
-            <span className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-accent/80">
+            <span className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-accent-text/80">
               Optimized
             </span>
           </div>

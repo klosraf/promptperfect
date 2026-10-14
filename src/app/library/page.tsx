@@ -130,7 +130,7 @@ export default function LibraryPage() {
           </div>
           <div className="flex flex-col items-end gap-1 text-right">
             <span className="text-[13px] text-[#888]">{user.name || user.email}</span>
-            <span className="text-[12px] text-[#71717A]">{rows.length} saved</span>
+            <span className="text-[12px] text-[#8a8a8a]">{rows.length} saved</span>
           </div>
         </header>
 

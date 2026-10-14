@@ -195,7 +195,7 @@ export function ProjectLinker({ onDigest, disabled = false }: ProjectLinkerProps
             ? `Re-link project (last: ${lastProject})`
             : 'Link project directory'}
       </button>
-      <p className="max-w-xs text-center text-[11px] leading-relaxed text-[#71717A]">
+      <p className="max-w-xs text-center text-[11px] leading-relaxed text-[#8a8a8a]">
         Reads any directory locally in your browser — code, docs, data, media, or mixed
         content in any language — and builds a structural digest. Files stay on your
         device until you run Optimize.

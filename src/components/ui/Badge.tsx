@@ -6,7 +6,7 @@ const badgeVariants = cvaLite(
   {
     variants: {
       variant: {
-        default: 'border-accent/30 bg-accent/10 text-accent',
+        default: 'border-accent/30 bg-accent/10 text-accent-text',
         muted: 'border-border bg-muted text-muted-foreground',
         success: 'border-green-500/30 bg-green-500/10 text-green-400',
         warning: 'border-amber-500/30 bg-amber-500/10 text-amber-400',

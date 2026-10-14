@@ -70,7 +70,7 @@ export function TemplatesTab({
       ) : null}
 
       {filteredTemplates.length === 0 ? (
-        <p className="py-12 text-center text-sm text-[#71717A]">
+        <p className="py-12 text-center text-sm text-[#8a8a8a]">
           No templates match your filters.
         </p>
       ) : (
@@ -106,22 +106,22 @@ export function TemplatesTab({
                       {modeBadgeLabel(tpl.mode)}
                     </span>
                     {expanded ? (
-                      <ChevronUp className="h-4 w-4 text-[#71717A]" aria-hidden />
+                      <ChevronUp className="h-4 w-4 text-[#8a8a8a]" aria-hidden />
                     ) : (
-                      <ChevronDown className="h-4 w-4 text-[#71717A]" aria-hidden />
+                      <ChevronDown className="h-4 w-4 text-[#8a8a8a]" aria-hidden />
                     )}
                   </div>
                 </button>
 
                 {expanded && (
                   <div className="mt-4 border-t border-[#252525] pt-4">
-                    <p className="mb-1 text-[11px] text-[#71717A]">
+                    <p className="mb-1 text-[11px] text-[#8a8a8a]">
                       Built from starter
                     </p>
                     <p className="mb-3 text-[13px] italic text-[#888]">
                       “{tpl.original_prompt}”
                     </p>
-                    <p className="mb-1 text-[11px] text-[#71717A]">
+                    <p className="mb-1 text-[11px] text-[#8a8a8a]">
                       Template — fill the {'{{PLACEHOLDERS}}'} then optimize
                     </p>
                     <p className="whitespace-pre-wrap text-sm text-[#ECECEC]">
@@ -137,7 +137,7 @@ export function TemplatesTab({
                         Use in optimizer
                       </button>
                       {saved ? (
-                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-accent">
+                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-accent-text">
                           <Bookmark size={16} aria-hidden />
                           Saved!
                         </span>
@@ -146,7 +146,7 @@ export function TemplatesTab({
                           type="button"
                           onClick={() => void onSaveTemplate(tpl)}
                           disabled={saving}
-                          className="inline-flex items-center gap-1.5 text-sm text-[#B0B0B0] transition hover:text-accent disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 text-sm text-[#B0B0B0] transition hover:text-accent-text disabled:opacity-50"
                         >
                           <BookmarkPlus size={16} aria-hidden />
                           {saving ? 'Saving…' : 'Save to library'}

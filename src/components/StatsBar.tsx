@@ -42,7 +42,7 @@ function sleep(ms: number): Promise<void> {
 
 function StatLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#71717A]">
+    <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#8a8a8a]">
       {children}
     </span>
   );

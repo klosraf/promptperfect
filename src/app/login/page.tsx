@@ -419,7 +419,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => void handleResendConfirmation()}
-              className="text-sm font-medium text-accent underline-offset-2 hover:underline"
+              className="text-sm font-medium text-accent-text underline-offset-2 hover:underline"
             >
               Resend confirmation email
             </button>
@@ -454,7 +454,7 @@ export default function LoginPage() {
                 setMode('signup');
                 setVerificationSent(false);
               }}
-              className="font-medium text-accent transition hover:text-[#6b75ff]"
+              className="font-medium text-accent-text transition hover:text-[#6b75ff]"
             >
               Sign up
             </button>
@@ -468,7 +468,7 @@ export default function LoginPage() {
                 setMode('signin');
                 setVerificationSent(false);
               }}
-              className="font-medium text-accent transition hover:text-[#6b75ff]"
+              className="font-medium text-accent-text transition hover:text-[#6b75ff]"
             >
               Log in
             </button>

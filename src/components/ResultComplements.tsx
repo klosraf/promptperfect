@@ -94,7 +94,7 @@ export function ResultComplements({
           className={`rounded px-2 py-0.5 ${
             insights.placeholders.length > 0
               ? 'bg-amber-500/20 font-semibold text-amber-400'
-              : 'bg-white/[0.06] text-[#71717A]'
+              : 'bg-white/[0.06] text-[#8a8a8a]'
           }`}
         >
           {insights.placeholders.length > 0
@@ -138,7 +138,7 @@ export function ResultComplements({
 
       {/* Quality checklist */}
       <details className="mt-2 text-xs">
-        <summary className="cursor-pointer text-[#71717A] transition-colors hover:text-[#B0B0B0]">
+        <summary className="cursor-pointer text-[#8a8a8a] transition-colors hover:text-[#B0B0B0]">
           Quality checklist ({insights.passedCount}/{insights.checks.length} passed)
         </summary>
         <ul className="mt-2 space-y-1.5">
@@ -154,7 +154,7 @@ export function ResultComplements({
                   {c.label}
                 </span>
                 {!c.passed ? (
-                  <span className="block text-[#71717A]">{c.hint}</span>
+                  <span className="block text-[#8a8a8a]">{c.hint}</span>
                 ) : null}
               </span>
             </li>

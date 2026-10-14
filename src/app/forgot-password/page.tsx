@@ -186,16 +186,16 @@ export default function ForgotPasswordPage() {
           )}
           {recoveryLink && isLocalhost && (
             <div className="mt-4 rounded-lg border border-accent/30 bg-accent/10 p-4">
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#71717A]">
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#8a8a8a]">
                 Local dev — direct reset link
               </p>
               <a
                 href={recoveryLink}
-                className="break-all text-sm text-accent hover:underline"
+                className="break-all text-sm text-accent-text hover:underline"
               >
                 Open password reset link
               </a>
-              <p className="mt-2 text-xs text-[#71717A]">
+              <p className="mt-2 text-xs text-[#8a8a8a]">
                 Use this when Supabase email does not arrive. Link expires after
                 a short time.
               </p>

@@ -132,7 +132,7 @@ export function SavePromptButton({
         <button
           type="button"
           disabled
-          className="flex items-center gap-2 text-sm font-medium text-accent"
+          className="flex items-center gap-2 text-sm font-medium text-accent-text"
         >
           <BookmarkCheck size={16} strokeWidth={1} aria-hidden />
           Saved!
@@ -152,7 +152,7 @@ export function SavePromptButton({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Name this prompt…"
-            className="w-48 rounded-lg border border-[#252525] bg-[#0A0A0A] px-3 py-1.5 text-sm text-white placeholder-[#71717A] focus:border-accent focus:outline-none"
+            className="w-48 rounded-lg border border-[#252525] bg-[#0A0A0A] px-3 py-1.5 text-sm text-white placeholder-[#8a8a8a] focus:border-accent focus:outline-none"
             autoFocus
             disabled={saving}
             onKeyDown={(e) => {
@@ -163,7 +163,7 @@ export function SavePromptButton({
             type="button"
             onClick={() => void handleSave()}
             disabled={saving || !title.trim()}
-            className="text-sm text-accent hover:underline disabled:opacity-50"
+            className="text-sm text-accent-text hover:underline disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save'}
           </button>
@@ -174,7 +174,7 @@ export function SavePromptButton({
               setTitle('');
               setError(null);
             }}
-            className="text-sm text-[#71717A] hover:underline"
+            className="text-sm text-[#8a8a8a] hover:underline"
           >
             Cancel
           </button>
@@ -193,7 +193,7 @@ export function SavePromptButton({
       <button
         type="button"
         onClick={() => setShowTitleInput(true)}
-        className="flex items-center gap-2 text-sm text-[#B0B0B0] transition hover:text-accent"
+        className="flex items-center gap-2 text-sm text-[#B0B0B0] transition hover:text-accent-text"
       >
         <Bookmark size={16} strokeWidth={1} aria-hidden />
         Save to Library
