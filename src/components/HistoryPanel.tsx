@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, Trash2 } from 'lucide-react';
+import { History, Plus, Trash2 } from 'lucide-react';
 import { useOptimizationHistory } from '@/hooks/useOptimizationHistory';
 import {
   formatHistoryTime,
@@ -85,7 +85,16 @@ export function HistoryPanel({
         {loading ? (
           <p className="px-3 py-2 text-[13px] text-[#666]" aria-busy="true">Loading…</p>
         ) : rows.length === 0 ? (
-          <p className="px-3 py-2 text-[13px] text-[#666]">No history yet.</p>
+          <div className="flex flex-col items-center gap-2.5 px-6 py-10 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#1f1f1f] bg-[#0f0f0f]">
+              <History className="h-5 w-5 text-[#3a3a3a]" strokeWidth={1.5} aria-hidden />
+            </div>
+            <p className="text-[13px] font-medium text-[#B0B0B0]">No history yet</p>
+            <p className="max-w-[220px] text-[12px] leading-relaxed text-[#666]">
+              Run an optimization and it will show up here so you can revisit,
+              re-run, or save it to your library.
+            </p>
+          </div>
         ) : (
           <ul className="divide-y divide-[#1a1a1a]">
             {rows.map((item) => (
