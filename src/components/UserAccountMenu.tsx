@@ -193,6 +193,8 @@ export function UserAccountMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? `${menuId}-panel` : undefined}
+        aria-label={`Account menu, ${displayName}`}
+        title={`Account menu, ${displayName}`}
         onClick={() => setOpen((o) => !o)}
         className="flex h-10 max-w-[min(100vw-8rem,14rem)] items-center gap-2 rounded-full border border-[#2a2a2a] bg-[#0f0f0f] py-1 pl-1 pr-2 transition hover:border-[#3f3f3f] hover:bg-[#141414]"
       >

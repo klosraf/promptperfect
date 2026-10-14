@@ -30,6 +30,10 @@ describe('WorkspaceHeader', () => {
     expect(screen.getByRole('link', { name: 'Library' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
     expect(onOpenSettings).toHaveBeenCalledTimes(1);
+    // Icon-only account trigger must expose an accessible name.
+    expect(
+      screen.getByRole('button', { name: /account menu/i })
+    ).toBeInTheDocument();
   });
 
   it('renders guest auth links and gates the library', () => {
