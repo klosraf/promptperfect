@@ -104,4 +104,20 @@ describe("SavePromptButton", () => {
       provider: "gemini",
     });
   });
+
+  it("announces the saved state to screen readers via a status region", async () => {
+    render(
+      <SavePromptButton
+        originalPrompt="a"
+        optimizedPrompt="b"
+        explanation=""
+        mode="better"
+        provider="gemini"
+        userId="user-1"
+        alreadySaved
+      />,
+    );
+    expect(await screen.findByRole("button", { name: /saved!/i })).toBeDisabled();
+    expect(screen.getByRole("status")).toHaveTextContent(/saved to your library/i);
+  });
 });

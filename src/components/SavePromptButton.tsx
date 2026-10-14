@@ -128,14 +128,19 @@ export function SavePromptButton({
 
   if (showSavedState) {
     return (
-      <button
-        type="button"
-        disabled
-        className="flex items-center gap-2 text-sm font-medium text-accent"
-      >
-        <BookmarkCheck size={16} strokeWidth={1} aria-hidden />
-        Saved!
-      </button>
+      <div className="flex flex-col gap-1">
+        <button
+          type="button"
+          disabled
+          className="flex items-center gap-2 text-sm font-medium text-accent"
+        >
+          <BookmarkCheck size={16} strokeWidth={1} aria-hidden />
+          Saved!
+        </button>
+        <span role="status" aria-live="polite" className="sr-only">
+          Saved to your library
+        </span>
+      </div>
     );
   }
 
