@@ -2,6 +2,7 @@
 
 import { ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { createSupabaseBrowserClient } from '@/lib/client/supabaseBrowser';
 import { getPromptPerfectAuthHeaders } from '@/lib/client/promptPerfectAuthHeaders';
 import {
@@ -200,8 +201,37 @@ export function StatsBar({
 
   if (loading) {
     return (
-      <div className={shellClass}>
-        <span className="text-sm text-[#71717A]">Loading analytics…</span>
+      <div className={shellClass} role="region" aria-label="Analytics" aria-busy="true">
+        <span className="sr-only">Loading analytics…</span>
+        <div className="grid w-full grid-cols-1 divide-y divide-[#252525] md:grid-cols-3 md:divide-x md:divide-y-0">
+          <div className="flex items-center gap-6 pb-4 md:pb-0 md:pr-6">
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-6 w-12" />
+            </div>
+            <div className="ml-auto flex items-center gap-5">
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-6 w-10" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-6 w-10" />
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 py-4 md:py-0 md:px-6">
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-6 w-16" />
+          </div>
+          <div className="flex flex-col gap-2 pt-4 md:py-0 md:pl-6">
+            <Skeleton className="h-3 w-20" />
+            <div className="flex flex-wrap gap-2">
+              <Skeleton className="h-7 w-20" />
+              <Skeleton className="h-7 w-16" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
