@@ -1,36 +1,17 @@
-/**
- * Dependency-free class-name helper (shadcn/ui `cn` API).
- *
- * The repo pins a lockfile and `npm install` is known-broken upstream, so this
- * avoids adding clsx/tailwind-merge. It filters falsy values and joins the
- * rest; call order controls precedence (later classes are emitted last).
- */
-export type ClassValue =
-  | string
-  | number
-  | null
-  | undefined
-  | false
-  | ClassValue[]
-  | Record<string, unknown>;
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
+/**
+ * Canonical shadcn/ui class helper: `clsx` joins conditional classes and
+ * `tailwind-merge` de-duplicates conflicting Tailwind utilities so the
+ * last one wins. This lets primitives expose overridable variants (radius,
+ * spacing, colors) via `className` without conflicting-class bugs.
+ */
 export function cn(...inputs: ClassValue[]): string {
-  const out: string[] = [];
-  for (const input of inputs) {
-    if (!input && input !== 0) continue;
-    if (typeof input === 'string' || typeof input === 'number') {
-      out.push(String(input));
-    } else if (Array.isArray(input)) {
-      const nested = cn(...input);
-      if (nested) out.push(nested);
-    } else if (typeof input === 'object') {
-      for (const [key, value] of Object.entries(input)) {
-        if (value) out.push(key);
-      }
-    }
-  }
-  return out.join(' ');
+  return twMerge(clsx(inputs));
 }
+
+export type { ClassValue };
 
 type VariantShape = Record<string, Record<string, string | undefined>>;
 
@@ -40,7 +21,6 @@ interface VariantConfig<V extends VariantShape> {
     Partial<Record<keyof V, string>> & { class?: string; className?: string }
   >;
   defaultVariants?: Partial<Record<keyof V, string>>;
-  base?: string;
 }
 
 /**

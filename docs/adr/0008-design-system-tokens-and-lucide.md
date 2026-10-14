@@ -41,13 +41,12 @@ beside Lucide icons. The theme layer still carried dead light-mode code
 - **Two empty-state components coexist** (`EmptyState` compact and
   `LibraryEmptyState` for the library's heroic/CTA states). Unifying would
   regress one of the two looks, so it is deferred intentionally.
-- `cn` is dependency-free (no `clsx`/`tailwind-merge`): `npm install` is
-  broken in this repo and CI uses `npm ci` with a pinned lockfile, so adding
-  deps would desync the lockfile. `cn` therefore does **not** resolve
-  conflicting Tailwind utilities; primitives avoid relying on className
-  overrides that conflict with their base variants (e.g. `compact` uses a
-  single padding token, not a `py-*` override). Revisit if `npm install` is
-  restored.
+- `cn` is the canonical `clsx` + `tailwind-merge` helper (dependency-free
+  `npm install` reify is broken in this environment, so the two deps were
+  added via `npm install --package-lock-only` + `npm ci`; the lockfile stays
+  `npm ci`-consistent). This restores real Tailwind conflict resolution, so
+  primitive variants can be overridden via `className` safely. Revisit the
+  broken `npm install` separately if it blocks future dependency edits.
 - WCAG: secondary greys (`#666`, `#71717A`) remain below 4.5:1; flagged as a
   design-owned contrast decision, not auto-changed.
 

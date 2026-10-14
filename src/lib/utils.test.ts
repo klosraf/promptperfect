@@ -21,6 +21,15 @@ describe('cn', () => {
   it('returns empty string when nothing is provided', () => {
     expect(cn()).toBe('');
   });
+
+  it('resolves conflicting Tailwind utilities, last one wins', () => {
+    // tailwind-merge may reorder, so compare as a set (px-2 is dropped).
+    expect(cn('px-2 py-1', 'px-4').split(' ').sort()).toEqual([
+      'px-4',
+      'py-1',
+    ]);
+    expect(cn('rounded-md', 'rounded-full')).toBe('rounded-full');
+  });
 });
 
 describe('cvaLite', () => {
