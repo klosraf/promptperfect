@@ -103,7 +103,10 @@ describe('SavedPromptsTab', () => {
     expect(screen.getByTestId('empty')).toBeInTheDocument();
 
     rerender(<SavedPromptsTab {...BASE} visibleRows={[]} filteredCount={0} />);
-    expect(screen.getByText('No prompts match your filters.')).toBeInTheDocument();
+    expect(screen.getByText('No prompts match your filters')).toBeInTheDocument();
+    expect(
+      screen.getByText('Try a different search term or reset the mode filter.')
+    ).toBeInTheDocument();
 
     const onLoadMore = vi.fn();
     rerender(

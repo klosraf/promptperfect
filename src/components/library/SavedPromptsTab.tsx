@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, ChevronDown, ChevronUp, Search, Trash2 } from 'lucide-react';
+import { ArrowRight, ChevronDown, ChevronUp, Search, SearchX, Trash2 } from 'lucide-react';
 import {
   formatTimestamp,
   modeBadgeLabel,
@@ -8,6 +8,7 @@ import {
   type LibraryModeFilter,
   type SavedPromptRow,
 } from '@/lib/library';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 const MODE_FILTERS = [
   { id: 'all' as const, label: 'All' },
@@ -110,9 +111,11 @@ export function SavedPromptsTab({
       ) : totalCount === 0 ? (
         emptyState
       ) : filteredCount === 0 ? (
-        <p className="py-12 text-center text-sm text-[#71717A]">
-          No prompts match your filters.
-        </p>
+        <EmptyState
+          icon={SearchX}
+          title="No prompts match your filters"
+          description="Try a different search term or reset the mode filter."
+        />
       ) : (
         <>
           <ul className="flex flex-col gap-3">
