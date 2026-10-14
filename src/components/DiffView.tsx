@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { Minus, Plus } from "lucide-react";
 
 export interface DiffViewProps {
   original: string;
@@ -111,15 +112,11 @@ export function DiffView({ original, optimized }: DiffViewProps) {
         </span>
         <div className="mx-1 h-3 w-px bg-[#222]" />
         <span className="flex items-center gap-1 rounded-md bg-rose-950/50 px-2 py-0.5 text-[11.5px] font-medium text-rose-400 ring-1 ring-inset ring-rose-900/40">
-          <svg width="9" height="9" viewBox="0 0 9 9" fill="none" className="shrink-0">
-            <path d="M1.5 4.5h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-          </svg>
+          <Minus className="h-[9px] w-[9px] shrink-0" strokeWidth={1.6} aria-hidden />
           {removedCount} removed
         </span>
         <span className="flex items-center gap-1 rounded-md bg-accent/10 px-2 py-0.5 text-[11.5px] font-medium text-[#7C86FF] ring-1 ring-inset ring-accent/20">
-          <svg width="9" height="9" viewBox="0 0 9 9" fill="none" className="shrink-0">
-            <path d="M4.5 1.5v6M1.5 4.5h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-          </svg>
+          <Plus className="h-[9px] w-[9px] shrink-0" strokeWidth={1.6} aria-hidden />
           {addedCount} added
         </span>
       </div>
