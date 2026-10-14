@@ -1,6 +1,6 @@
 'use client';
 
-import { Trash2 } from 'lucide-react';
+import { Bookmark, Trash2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 /** Pulsing placeholder rows while saved prompts load. */
@@ -45,9 +45,7 @@ export function LibraryEmptyState({
       className="flex flex-col items-center rounded-2xl border border-dashed border-[#2a2a2a] bg-gradient-to-b from-white/[0.03] to-transparent px-8 py-20 text-center"
     >
       <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#252525] bg-[#111]">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke="#4552FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
+        <Bookmark className="h-6 w-6 text-accent" strokeWidth={1.5} aria-hidden />
       </div>
       <p className="font-[family-name:var(--font-space-grotesk),sans-serif] text-[17px] font-semibold text-[#E7E6D9]">
         {message}
