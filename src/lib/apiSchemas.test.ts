@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  parseClaimGuestHistoryBody,
   parseFeedbackBody,
   parseLoginBody,
   parseMode,
@@ -57,6 +58,27 @@ describe("parseUpdateUserBody", () => {
     const r = parseUpdateUserBody({});
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.value).toEqual({});
+  });
+});
+
+describe("parseClaimGuestHistoryBody", () => {
+  const valid = {
+    guestId: "guest-abc-123",
+    targetSessionId: "550e8400-e29b-41d4-a716-446655440000",
+  };
+
+  it("accepts a well-formed payload", () => {
+    expect(parseClaimGuestHistoryBody(valid)).toEqual({ ok: true, value: valid });
+  });
+
+  it.each([
+    ["empty", {}],
+    ["malformed guestId", { ...valid, guestId: "!!!" }],
+    ["missing target", { guestId: valid.guestId }],
+    ["oversized target", { ...valid, targetSessionId: "x".repeat(201) }],
+    ["self-claim", { guestId: valid.guestId, targetSessionId: valid.guestId }],
+  ])("returns Invalid payload on %s", (_label, body) => {
+    expect(parseClaimGuestHistoryBody(body)).toEqual({ ok: false, error: "Invalid payload" });
   });
 });
 

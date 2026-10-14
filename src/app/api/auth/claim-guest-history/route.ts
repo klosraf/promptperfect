@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdminClient } from '@/lib/server/supabase';
 import { createRouteHandlerClient } from '@/lib/server/supabase';
-import { assertGuestId } from '@/lib/guest';
+import { parseClaimGuestHistoryBody } from '@/lib/apiSchemas';
 import { logWarn } from '@/lib/logger';
 
 export async function POST(request: Request) {
@@ -21,20 +21,11 @@ export async function POST(request: Request) {
       string,
       unknown
     > | null;
-    const guestId = assertGuestId(body?.guestId);
-    const targetSessionId =
-      typeof body?.targetSessionId === 'string'
-        ? body.targetSessionId.trim()
-        : '';
-
-    if (
-      !guestId ||
-      !targetSessionId ||
-      targetSessionId.length > 200 ||
-      guestId === targetSessionId
-    ) {
-      return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+    const parsed = parseClaimGuestHistoryBody(body);
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
+    const { guestId, targetSessionId } = parsed.value;
 
     const admin = getSupabaseAdminClient();
     if (!admin) {
