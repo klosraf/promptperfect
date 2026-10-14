@@ -47,20 +47,39 @@ export function AppSettingsPanel({
   const [localProvider, setLocalProvider] = useState<Provider>(provider);
   const [localKey, setLocalKey] = useState(() => apiKey || loadStoredKey(provider));
   const [saving, setSaving] = useState(false);
-  const [verified, setVerified] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyState, setVerifyState] = useState<'idle' | 'valid' | 'invalid'>('idle');
   const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
     setLocalProvider(provider);
     setLocalKey(apiKey || loadStoredKey(provider));
-    setVerified(false);
+    setVerifyState('idle');
     setSaveError('');
   }, [open, provider, apiKey]);
 
-  const handleVerifyKey = () => {
-    if (localProvider === 'gemini') return;
-    setVerified(true);
-    setTimeout(() => setVerified(false), 3000);
+  const handleVerifyKey = async () => {
+    if (localProvider === 'gemini' || !localKey.trim()) return;
+    setVerifying(true);
+    try {
+      const res = await fetch('/api/verify-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          provider: localProvider,
+          apiKey: localKey.trim(),
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as
+        | { ok?: boolean }
+        | null;
+      setVerifyState(res.ok && data?.ok ? 'valid' : 'invalid');
+    } catch {
+      setVerifyState('invalid');
+    } finally {
+      setVerifying(false);
+    }
   };
 
   const handleSave = async () => {
@@ -188,20 +207,26 @@ export function AppSettingsPanel({
               <input
                 type="password"
                 value={localKey}
-                onChange={(e) => setLocalKey(e.target.value)}
+                onChange={(e) => {
+                  setLocalKey(e.target.value);
+                  setVerifyState('idle');
+                }}
                 placeholder="Paste your API key"
                 className="w-full rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-[#ECECEC] placeholder-zinc-500 focus:border-[#4552FF] focus:outline-none"
               />
               <button
                 type="button"
                 onClick={handleVerifyKey}
-                disabled={!localKey.trim()}
+                disabled={!localKey.trim() || verifying}
                 className="mt-2 rounded-lg border border-zinc-600 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800 disabled:opacity-50"
               >
-                Verify
+                {verifying ? 'Verifying…' : 'Verify'}
               </button>
-              {verified && (
-                <p className="mt-1 text-xs text-green-500">Key format looks valid.</p>
+              {verifyState === 'valid' && (
+                <p className="mt-1 text-xs text-green-500">Key verified successfully.</p>
+              )}
+              {verifyState === 'invalid' && !verifying && (
+                <p className="mt-1 text-xs text-red-400">Could not verify this key. Check it and try again.</p>
               )}
             </div>
           )}

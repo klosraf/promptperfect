@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { LandingHeader } from '@/components/LandingHeader';
+import { Button } from '@/components/ui/Button';
 
 const steps = [
   {
@@ -62,9 +63,11 @@ export default function Page() {
 
           <Link
             href="/app"
-            className="animate-fade-in animate-fade-in-delay-5 mt-10 inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl bg-[#4552FF] px-6 py-3 text-base font-medium text-white shadow-sm transition-colors hover:opacity-90 active:scale-[0.98] sm:mt-12"
+            className="animate-fade-in animate-fade-in-delay-5 mt-10 inline-block sm:mt-12"
           >
-            Try for Free - Get Started!
+            <Button size="lg" className="active:scale-[0.98]">
+              Try for Free - Get Started!
+            </Button>
           </Link>
         </section>
 
@@ -94,11 +97,10 @@ export default function Page() {
                 Full optimizer workspace: paste a prompt, pick a mode, and learn why the rewrite
                 works.
               </p>
-              <Link
-                href="/app"
-                className="mt-6 inline-flex min-h-[40px] items-center justify-center rounded-xl border border-[#4552FF] px-4 py-2 text-sm font-medium text-[#4552FF] transition-colors hover:bg-[#4552FF]/10"
-              >
-                Open web app
+              <Link href="/app" className="mt-6 inline-block">
+                <Button size="md" variant="secondary">
+                  Open web app
+                </Button>
               </Link>
             </article>
 
@@ -111,11 +113,8 @@ export default function Page() {
               <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-400">
                 Optimize prompts where you already work—ChatGPT, Gmail, and more.
               </p>
-              <Link
-                href="/docs#chrome-extension"
-                className="mt-6 inline-flex min-h-[40px] items-center justify-center rounded-xl bg-[#4552FF] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
-              >
-                Add to Chrome
+              <Link href="/docs#chrome-extension" className="mt-6 inline-block">
+                <Button size="md">Add to Chrome</Button>
               </Link>
               <p className="mt-3 text-xs text-zinc-500">
                 Load unpacked or install from the Web Store—see{' '}
@@ -136,11 +135,10 @@ export default function Page() {
                 POST your draft prompt and stream back an optimized version from your backend or
                 scripts.
               </p>
-              <Link
-                href="/docs"
-                className="mt-6 inline-flex min-h-[40px] items-center justify-center rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-[#4552FF] transition-colors hover:border-[#4552FF]/50 hover:bg-[#4552FF]/5"
-              >
-                Read the Docs →
+              <Link href="/docs" className="mt-6 inline-block">
+                <Button size="md" variant="outline">
+                  Read the Docs →
+                </Button>
               </Link>
             </article>
           </div>
