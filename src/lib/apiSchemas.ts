@@ -295,3 +295,52 @@ export function parseClaimGuestHistoryBody(
   }
   return { ok: true, value: { guestId, targetSessionId } };
 }
+
+export interface SaveHistoryBodyValue {
+  session_id: string;
+  prompt_original: string;
+  prompt_optimized: string;
+  mode: string;
+  explanation: string;
+  provider: string | null;
+  optimize_session_id: string | null;
+}
+
+/**
+ * Shared parser for `/api/save-history`. Extracts the history row fields and
+ * bounds `prompt_original`/`prompt_optimized` against the same budget as
+ * `parseOptimizeBody` (DoS defense) — the route previously had no cap.
+ */
+export function parseSaveHistoryBody(
+  body: unknown,
+): { ok: true; value: SaveHistoryBodyValue } | { ok: false; error: string } {
+  if (typeof body !== 'object' || body === null) {
+    return { ok: false, error: 'Invalid JSON' };
+  }
+  const b = body as Record<string, unknown>;
+  const session_id = typeof b.session_id === 'string' ? b.session_id.trim() : '';
+  const prompt_original = typeof b.prompt_original === 'string' ? b.prompt_original : '';
+  const prompt_optimized = typeof b.prompt_optimized === 'string' ? b.prompt_optimized : '';
+  if (!session_id || !prompt_original || !prompt_optimized) {
+    return { ok: false, error: 'Missing required fields' };
+  }
+  if (prompt_original.length > MAX_PROMPT_CHARS || prompt_optimized.length > MAX_PROMPT_CHARS) {
+    return {
+      ok: false,
+      error: `Prompt is too long (max ${MAX_PROMPT_CHARS.toLocaleString()} characters)`,
+    };
+  }
+  return {
+    ok: true,
+    value: {
+      session_id,
+      prompt_original,
+      prompt_optimized,
+      mode: typeof b.mode === 'string' ? b.mode : 'better',
+      explanation: typeof b.explanation === 'string' ? b.explanation : '',
+      provider: typeof b.provider === 'string' ? b.provider : null,
+      optimize_session_id:
+        typeof b.optimize_session_id === 'string' ? b.optimize_session_id : null,
+    },
+  };
+}

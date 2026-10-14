@@ -6,6 +6,7 @@ import {
   parseMode,
   parseOptimizeBody,
   parseProvider,
+  parseSaveHistoryBody,
   parseTranslateBody,
   parseUpdateUserBody,
 } from "./apiSchemas";
@@ -79,6 +80,45 @@ describe("parseClaimGuestHistoryBody", () => {
     ["self-claim", { guestId: valid.guestId, targetSessionId: valid.guestId }],
   ])("returns Invalid payload on %s", (_label, body) => {
     expect(parseClaimGuestHistoryBody(body)).toEqual({ ok: false, error: "Invalid payload" });
+  });
+});
+
+describe("parseSaveHistoryBody", () => {
+  const base = {
+    session_id: "s1",
+    prompt_original: "orig",
+    prompt_optimized: "opt",
+  };
+
+  it("extracts fields with defaults (mode=better, provider/optimize null)", () => {
+    const r = parseSaveHistoryBody(base);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.value).toMatchObject({
+        session_id: "s1",
+        prompt_original: "orig",
+        prompt_optimized: "opt",
+        mode: "better",
+        explanation: "",
+        provider: null,
+        optimize_session_id: null,
+      });
+    }
+  });
+
+  it("requires session_id, prompt_original and prompt_optimized", () => {
+    expect(parseSaveHistoryBody({})).toEqual({ ok: false, error: "Missing required fields" });
+    expect(parseSaveHistoryBody({ prompt_original: "a", prompt_optimized: "b" }).ok).toBe(false);
+  });
+
+  it("bounds oversized prompts (DoS defense aligned with parseOptimizeBody)", () => {
+    const r = parseSaveHistoryBody({ ...base, prompt_original: "x".repeat(100_001) });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toMatch(/too long/i);
+  });
+
+  it("rejects non-objects as Invalid JSON", () => {
+    expect(parseSaveHistoryBody(null)).toEqual({ ok: false, error: "Invalid JSON" });
   });
 });
 
