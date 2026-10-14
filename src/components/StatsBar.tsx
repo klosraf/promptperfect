@@ -1,8 +1,9 @@
 'use client';
 
-import { ThumbsDown, ThumbsUp } from 'lucide-react';
+import { BarChart3, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { createSupabaseBrowserClient } from '@/lib/client/supabaseBrowser';
 import { getPromptPerfectAuthHeaders } from '@/lib/client/promptPerfectAuthHeaders';
 import {
@@ -262,9 +263,12 @@ export function StatsBar({
   if (entirelyEmpty) {
     return (
       <div className={shellClass}>
-        <p className="text-center text-sm leading-relaxed text-[#71717A]">
-          Analytics will appear here after you run optimizations and submit feedback.
-        </p>
+        <EmptyState
+          compact
+          icon={BarChart3}
+          title="No analytics yet"
+          description="Analytics will appear here after you run optimizations and submit feedback."
+        />
       </div>
     );
   }
