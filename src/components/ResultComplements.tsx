@@ -20,7 +20,7 @@ interface ResultComplementsProps {
 
 const GRADE_STYLES: Record<string, string> = {
   A: 'bg-green-500/20 text-green-400',
-  B: 'bg-[#4552FF]/20 text-[#8B9AFF]',
+  B: 'bg-accent/20 text-[#8B9AFF]',
   C: 'bg-amber-500/20 text-amber-400',
   D: 'bg-red-500/20 text-red-400',
 };
@@ -107,7 +107,7 @@ export function ResultComplements({
         <button
           type="button"
           onClick={() => downloadMarkdown(`promptperfect-${mode}-${date}.md`, markdown)}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-[#2a2a2a] px-2.5 py-1 font-medium text-[#B0B0B0] transition hover:border-[#4552FF]/50 hover:text-[#ECECEC]"
+          className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-[#2a2a2a] px-2.5 py-1 font-medium text-[#B0B0B0] transition hover:border-accent/50 hover:text-[#ECECEC]"
         >
           <Download className="h-3.5 w-3.5" aria-hidden />
           Download .md
@@ -119,7 +119,7 @@ export function ResultComplements({
         <button
           type="button"
           onClick={() => onRemediate(buildRemediationBlock(failedIds))}
-          className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#4552FF]/15 px-3 py-2 text-xs font-semibold text-[#8B9AFF] transition hover:bg-[#4552FF]/25"
+          className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-accent/15 px-3 py-2 text-xs font-semibold text-[#8B9AFF] transition hover:bg-accent/25"
         >
           <Wand2 className="h-3.5 w-3.5" aria-hidden />
           Fix {failedIds.length} issue{failedIds.length === 1 ? '' : 's'} & re-run

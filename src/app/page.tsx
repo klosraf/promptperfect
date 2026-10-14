@@ -45,7 +45,7 @@ export default function Page() {
                 key={label}
                 className={`animate-fade-in flex min-w-0 flex-col items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-6 sm:px-6 sm:py-7 ${i === 0 ? 'animate-fade-in-delay-2' : i === 1 ? 'animate-fade-in-delay-3' : 'animate-fade-in-delay-4'}`}
               >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-[#4552FF]">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-accent">
                   <Icon className="h-6 w-6" aria-hidden />
                 </div>
                 <span className="break-words text-center text-sm font-medium leading-snug text-[#ECECEC] sm:text-base">
@@ -89,7 +89,7 @@ export default function Page() {
           <div className="mx-auto mt-10 grid w-full max-w-5xl grid-cols-1 items-stretch gap-6 sm:grid-cols-3 sm:gap-6">
             {/* Web App */}
             <article className="flex min-w-0 flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 text-left">
-              <div className="mb-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-[#4552FF]">
+              <div className="mb-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-accent">
                 <Globe className="h-5 w-5" aria-hidden />
               </div>
               <h3 className="text-base font-semibold text-[#ECECEC]">Web App</h3>
@@ -106,7 +106,7 @@ export default function Page() {
 
             {/* Chrome Extension */}
             <article className="flex min-w-0 flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 text-left">
-              <div className="mb-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-[#4552FF]">
+              <div className="mb-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-accent">
                 <Puzzle className="h-5 w-5" aria-hidden />
               </div>
               <h3 className="text-base font-semibold text-[#ECECEC]">Chrome Extension</h3>
@@ -118,7 +118,7 @@ export default function Page() {
               </Link>
               <p className="mt-3 text-xs text-zinc-500">
                 Load unpacked or install from the Web Store—see{' '}
-                <Link href="/docs#chrome-extension" className="text-[#4552FF] hover:underline">
+                <Link href="/docs#chrome-extension" className="text-accent hover:underline">
                   docs
                 </Link>
                 .
@@ -127,7 +127,7 @@ export default function Page() {
 
             {/* API */}
             <article className="flex min-w-0 flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 text-left">
-              <div className="mb-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-[#4552FF]">
+              <div className="mb-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-accent">
                 <Code2 className="h-5 w-5" aria-hidden />
               </div>
               <h3 className="text-base font-semibold text-[#ECECEC]">API</h3>

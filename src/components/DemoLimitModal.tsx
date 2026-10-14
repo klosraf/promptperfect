@@ -18,7 +18,7 @@ export function DemoLimitModal({ isOpen, onClose }: DemoLimitModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} titleId={titleId} maxWidthClass="max-w-md">
       <div className="mb-5">
-        <div className="w-10 h-10 rounded-full bg-[#4552FF]/15 flex items-center justify-center mb-4">
+        <div className="w-10 h-10 rounded-full bg-accent/15 flex items-center justify-center mb-4">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
             <path d="M10 2L12.39 7.26L18 8.27L14 12.14L14.76 18L10 15.27L5.24 18L6 12.14L2 8.27L7.61 7.26L10 2Z" fill="#4552FF"/>
           </svg>
@@ -35,14 +35,14 @@ export function DemoLimitModal({ isOpen, onClose }: DemoLimitModalProps) {
         <button
           type="button"
           onClick={() => router.push('/signup')}
-          className="w-full bg-[#4552FF] text-white py-2.5 rounded-lg font-heading font-semibold text-sm hover:bg-[#5B6CFF] transition-colors"
+          className="w-full bg-accent text-white py-2.5 rounded-lg font-heading font-semibold text-sm hover:bg-[#5B6CFF] transition-colors"
         >
           Sign Up Free
         </button>
         <button
           type="button"
           onClick={() => router.push('/login')}
-          className="w-full bg-transparent text-[#4552FF] border border-[#4552FF] py-2.5 rounded-lg font-heading font-semibold text-sm hover:bg-[#5B6CFF]/10 transition-colors"
+          className="w-full bg-transparent text-accent border border-accent py-2.5 rounded-lg font-heading font-semibold text-sm hover:bg-[#5B6CFF]/10 transition-colors"
         >
           Already have an account? Log in
         </button>

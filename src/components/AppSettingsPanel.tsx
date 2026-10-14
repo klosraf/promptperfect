@@ -188,7 +188,7 @@ export function AppSettingsPanel({
                   }}
                   className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
                     localProvider === p
-                      ? 'border-[#4552FF] bg-[#4552FF]/10 text-[#ECECEC]'
+                      ? 'border-accent bg-accent/10 text-[#ECECEC]'
                       : 'border-zinc-600 text-zinc-400 hover:border-zinc-500'
                   }`}
                 >
@@ -212,7 +212,7 @@ export function AppSettingsPanel({
                   setVerifyState('idle');
                 }}
                 placeholder="Paste your API key"
-                className="w-full rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-[#ECECEC] placeholder-zinc-500 focus:border-[#4552FF] focus:outline-none"
+                className="w-full rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-[#ECECEC] placeholder-zinc-500 focus:border-accent focus:outline-none"
               />
               <button
                 type="button"
@@ -239,7 +239,7 @@ export function AppSettingsPanel({
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="w-full rounded-lg bg-[#4552FF] py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+            className="w-full rounded-lg bg-accent py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save'}
           </button>

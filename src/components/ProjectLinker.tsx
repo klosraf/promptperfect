@@ -182,7 +182,7 @@ export function ProjectLinker({ onDigest, disabled = false }: ProjectLinkerProps
         type="button"
         onClick={() => void handlePick()}
         disabled={disabled || analyzing}
-        className="inline-flex items-center gap-2 rounded-[12px] border border-dashed border-[#3a3a3a] bg-transparent px-4 py-2 text-[13px] font-medium text-[#B0B0B0] transition-colors hover:border-[#4552FF] hover:text-[#ECECEC] disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded-[12px] border border-dashed border-[#3a3a3a] bg-transparent px-4 py-2 text-[13px] font-medium text-[#B0B0B0] transition-colors hover:border-accent hover:text-[#ECECEC] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {analyzing ? (
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

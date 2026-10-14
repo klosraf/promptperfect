@@ -49,8 +49,8 @@ export function TemplatesTab({
             aria-pressed={tplCategory === c}
             className={`rounded-lg border px-3 py-1.5 text-[12px] font-medium transition-colors ${
               tplCategory === c
-                ? 'border-[#4552FF] bg-[#4552FF]/20 text-[#ECECEC]'
-                : 'border-[#2a2a2a] bg-[#0A0A0A] text-[#B0B0B0] hover:border-[#4552FF]/50'
+                ? 'border-accent bg-accent/20 text-[#ECECEC]'
+                : 'border-[#2a2a2a] bg-[#0A0A0A] text-[#B0B0B0] hover:border-accent/50'
             }`}
           >
             {c === 'All'
@@ -99,7 +99,7 @@ export function TemplatesTab({
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <span className="rounded bg-[#4552FF]/20 px-2 py-0.5 text-[11px] font-medium text-[#8B9AFF]">
+                    <span className="rounded bg-accent/20 px-2 py-0.5 text-[11px] font-medium text-[#8B9AFF]">
                       {tpl.category}
                     </span>
                     <span className="rounded bg-green-500/20 px-2 py-0.5 text-[11px] font-medium text-green-400">
@@ -137,7 +137,7 @@ export function TemplatesTab({
                         Use in optimizer
                       </button>
                       {saved ? (
-                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#4552FF]">
+                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-accent">
                           <Bookmark size={16} aria-hidden />
                           Saved!
                         </span>
@@ -146,7 +146,7 @@ export function TemplatesTab({
                           type="button"
                           onClick={() => void onSaveTemplate(tpl)}
                           disabled={saving}
-                          className="inline-flex items-center gap-1.5 text-sm text-[#B0B0B0] transition hover:text-[#4552FF] disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 text-sm text-[#B0B0B0] transition hover:text-accent disabled:opacity-50"
                         >
                           <BookmarkPlus size={16} aria-hidden />
                           {saving ? 'Saving…' : 'Save to library'}

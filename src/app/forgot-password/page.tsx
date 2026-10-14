@@ -185,13 +185,13 @@ export default function ForgotPasswordPage() {
             <p className="mt-3 text-center text-sm text-[#B0B0B0]">{googleHint}</p>
           )}
           {recoveryLink && isLocalhost && (
-            <div className="mt-4 rounded-lg border border-[#4552FF]/30 bg-[#4552FF]/10 p-4">
+            <div className="mt-4 rounded-lg border border-accent/30 bg-accent/10 p-4">
               <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#71717A]">
                 Local dev — direct reset link
               </p>
               <a
                 href={recoveryLink}
-                className="break-all text-sm text-[#4552FF] hover:underline"
+                className="break-all text-sm text-accent hover:underline"
               >
                 Open password reset link
               </a>

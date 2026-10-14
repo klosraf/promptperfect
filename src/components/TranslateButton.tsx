@@ -68,7 +68,7 @@ export function TranslateButton({
         onClick={() => void handleClick()}
         disabled={!canTranslate}
         title={translateButtonLabel(text)}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-[#2a2a2a] bg-transparent px-2.5 py-1.5 text-xs font-medium text-[#B0B0B0] transition hover:border-[#4552FF]/50 hover:text-[#ECECEC] disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-[#2a2a2a] bg-transparent px-2.5 py-1.5 text-xs font-medium text-[#B0B0B0] transition hover:border-accent/50 hover:text-[#ECECEC] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {translating ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />

@@ -28,8 +28,8 @@ export function SignInRequiredModal({
       <div className="p-0">
         {/* Icon */}
         <div className="mb-5 flex flex-col items-center gap-3 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#4552FF]/10 ring-1 ring-[#4552FF]/20">
-            <Bookmark className="h-5 w-5 text-[#4552FF]" strokeWidth={2} />
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 ring-1 ring-accent/20">
+            <Bookmark className="h-5 w-5 text-accent" strokeWidth={2} />
           </div>
           <div>
             <h2

@@ -87,7 +87,7 @@ export function WorkspaceHeader({
               </Link>
               <Link
                 href="/signup"
-                className="rounded-lg bg-[#4552FF] px-3 py-1.5 text-sm font-semibold text-white transition hover:opacity-95"
+                className="rounded-lg bg-accent px-3 py-1.5 text-sm font-semibold text-white transition hover:opacity-95"
               >
                 Sign up
               </Link>

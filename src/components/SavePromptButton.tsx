@@ -131,7 +131,7 @@ export function SavePromptButton({
       <button
         type="button"
         disabled
-        className="flex items-center gap-2 text-sm font-medium text-[#4552FF]"
+        className="flex items-center gap-2 text-sm font-medium text-accent"
       >
         <BookmarkCheck size={16} strokeWidth={1} aria-hidden />
         Saved!
@@ -147,7 +147,7 @@ export function SavePromptButton({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Name this prompt…"
-            className="w-48 rounded-lg border border-[#252525] bg-[#0A0A0A] px-3 py-1.5 text-sm text-white placeholder-[#71717A] focus:border-[#4552FF] focus:outline-none"
+            className="w-48 rounded-lg border border-[#252525] bg-[#0A0A0A] px-3 py-1.5 text-sm text-white placeholder-[#71717A] focus:border-accent focus:outline-none"
             autoFocus
             disabled={saving}
             onKeyDown={(e) => {
@@ -158,7 +158,7 @@ export function SavePromptButton({
             type="button"
             onClick={() => void handleSave()}
             disabled={saving || !title.trim()}
-            className="text-sm text-[#4552FF] hover:underline disabled:opacity-50"
+            className="text-sm text-accent hover:underline disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save'}
           </button>
@@ -188,7 +188,7 @@ export function SavePromptButton({
       <button
         type="button"
         onClick={() => setShowTitleInput(true)}
-        className="flex items-center gap-2 text-sm text-[#B0B0B0] transition hover:text-[#4552FF]"
+        className="flex items-center gap-2 text-sm text-[#B0B0B0] transition hover:text-accent"
       >
         <Bookmark size={16} strokeWidth={1} aria-hidden />
         Save to Library

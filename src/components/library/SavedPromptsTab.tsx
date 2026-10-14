@@ -73,7 +73,7 @@ export function SavedPromptsTab({
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search prompts…"
           autoComplete="off"
-          className="w-full rounded-[12px] border border-[#252525] bg-[#0A0A0A] py-2.5 pl-10 pr-4 text-[14px] text-white outline-none placeholder:text-[#71717A] focus:border-[#4552FF]"
+          className="w-full rounded-[12px] border border-[#252525] bg-[#0A0A0A] py-2.5 pl-10 pr-4 text-[14px] text-white outline-none placeholder:text-[#71717A] focus:border-accent"
         />
       </label>
 
@@ -91,8 +91,8 @@ export function SavedPromptsTab({
             aria-pressed={modeFilter === id}
             className={`rounded-lg border px-3 py-1.5 text-[12px] font-medium transition-colors ${
               modeFilter === id
-                ? 'border-[#4552FF] bg-[#4552FF]/20 text-[#ECECEC]'
-                : 'border-[#2a2a2a] bg-[#0A0A0A] text-[#B0B0B0] hover:border-[#4552FF]/50'
+                ? 'border-accent bg-accent/20 text-[#ECECEC]'
+                : 'border-[#2a2a2a] bg-[#0A0A0A] text-[#B0B0B0] hover:border-accent/50'
             }`}
           >
             {label}
@@ -140,7 +140,7 @@ export function SavedPromptsTab({
                       <span
                         className={`rounded px-2 py-0.5 text-[11px] font-medium ${
                           row.mode === 'better'
-                            ? 'bg-[#4552FF]/20 text-[#4552FF]'
+                            ? 'bg-accent/20 text-accent'
                             : row.mode === 'specific'
                               ? 'bg-green-500/20 text-green-400'
                               : 'bg-orange-500/20 text-orange-400'
@@ -183,7 +183,7 @@ export function SavedPromptsTab({
                         <button
                           type="button"
                           onClick={() => onReoptimize(row)}
-                          className="inline-flex items-center gap-1.5 text-sm text-[#4552FF] hover:underline"
+                          className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline"
                         >
                           <ArrowRight size={14} aria-hidden />
                           Re-optimize

@@ -74,7 +74,7 @@ export default function LibraryPage() {
               Back to optimizer
             </Link>
           </div>
-          <Bookmark className="mx-auto mb-4 h-16 w-16 text-[#4552FF]" strokeWidth={1} aria-hidden />
+          <Bookmark className="mx-auto mb-4 h-16 w-16 text-accent" strokeWidth={1} aria-hidden />
           <h2 className="mb-2 font-[family-name:var(--font-space-grotesk),sans-serif] text-2xl font-bold text-[#E7E6D9]">
             Your Prompt Library
           </h2>
@@ -155,8 +155,8 @@ export default function LibraryPage() {
                 onClick={() => setTab(id)}
                 className={`rounded-lg border px-4 py-2 text-[13px] font-medium transition-colors ${
                   tab === id
-                    ? 'border-[#4552FF] bg-[#4552FF]/20 text-[#ECECEC]'
-                    : 'border-[#2a2a2a] bg-[#0A0A0A] text-[#B0B0B0] hover:border-[#4552FF]/50'
+                    ? 'border-accent bg-accent/20 text-[#ECECEC]'
+                    : 'border-[#2a2a2a] bg-[#0A0A0A] text-[#B0B0B0] hover:border-accent/50'
                 }`}
               >
                 {label}

@@ -116,7 +116,7 @@ export function DiffView({ original, optimized }: DiffViewProps) {
           </svg>
           {removedCount} removed
         </span>
-        <span className="flex items-center gap-1 rounded-md bg-[#4552FF]/10 px-2 py-0.5 text-[11.5px] font-medium text-[#7C86FF] ring-1 ring-inset ring-[#4552FF]/20">
+        <span className="flex items-center gap-1 rounded-md bg-accent/10 px-2 py-0.5 text-[11.5px] font-medium text-[#7C86FF] ring-1 ring-inset ring-accent/20">
           <svg width="9" height="9" viewBox="0 0 9 9" fill="none" className="shrink-0">
             <path d="M4.5 1.5v6M1.5 4.5h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
           </svg>
@@ -153,8 +153,8 @@ export function DiffView({ original, optimized }: DiffViewProps) {
         {/* After */}
         <div className="flex flex-col">
           <div className="flex items-center gap-2 border-b border-[#161616] bg-[#0c0c0c] px-4 py-2.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#4552FF]/80" />
-            <span className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[#4552FF]/80">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent/80" />
+            <span className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-accent/80">
               Optimized
             </span>
           </div>
@@ -163,7 +163,7 @@ export function DiffView({ original, optimized }: DiffViewProps) {
             tok.type === "insert" ? (
               <mark
                 key={`i-${i}`}
-                className="rounded-[3px] bg-[#4552FF]/[0.12] px-[1px] text-[#818cf8]"
+                className="rounded-[3px] bg-accent/[0.12] px-[1px] text-[#818cf8]"
               >
                 {tok.value}
               </mark>
@@ -184,7 +184,7 @@ export function DiffView({ original, optimized }: DiffViewProps) {
           removed
         </span>
         <span className="flex items-center gap-1.5 text-[11px] text-[#444]">
-          <mark className="rounded-[3px] bg-[#4552FF]/[0.12] px-1 text-[#818cf8]">
+          <mark className="rounded-[3px] bg-accent/[0.12] px-1 text-[#818cf8]">
             word
           </mark>
           added
