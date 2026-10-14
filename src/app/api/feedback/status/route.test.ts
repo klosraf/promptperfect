@@ -34,6 +34,17 @@ describe('/api/feedback/status GET', () => {
     expect(await res.json()).toEqual({ submitted: false, feedback: null });
   });
 
+  it('returns submitted:false for an over-long session id without querying', async () => {
+    const from = vi.fn();
+    mockGetServiceClient.mockReturnValue({ from });
+    const res = await GET(
+      get(`http://localhost/api/feedback/status?session_id=${'x'.repeat(129)}`),
+    );
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ submitted: false, feedback: null });
+    expect(from).not.toHaveBeenCalled();
+  });
+
   it('returns submitted:false when Supabase is not configured', async () => {
     mockGetServiceClient.mockReturnValue(null);
     const res = await GET(get('http://localhost/api/feedback/status?session_id=abc'));

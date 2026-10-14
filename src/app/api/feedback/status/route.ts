@@ -2,10 +2,13 @@ import { getServiceClient } from '@/lib/server/supabase';
 
 export const runtime = 'nodejs';
 
+/** Bound untrusted query input (ids are ≤80 chars; 128 is generous). */
+const MAX_SESSION_ID = 128;
+
 /** Whether optimization_logs already has feedback for this per-run optimize session id. */
 export async function GET(request: Request) {
   const sid = new URL(request.url).searchParams.get('session_id')?.trim();
-  if (!sid) {
+  if (!sid || sid.length > MAX_SESSION_ID) {
     return Response.json({ submitted: false, feedback: null as string | null });
   }
 
