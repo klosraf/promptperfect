@@ -36,6 +36,8 @@ jobs:
         run: npm run test:run
       - name: Core coverage gate (src/lib utilities + auth)
         run: npm run test:coverage:core
+      - name: Critical-path coverage gate (per-file thresholds)
+        run: npm run test:coverage:critical
 
   # Production build (Turbopack). Independent of tests.
   build:
