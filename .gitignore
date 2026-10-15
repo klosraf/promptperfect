@@ -49,3 +49,6 @@ next-env.d.ts
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# Playwright MCP browser artifacts
+/.playwright-mcp/
