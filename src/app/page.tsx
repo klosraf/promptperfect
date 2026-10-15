@@ -118,7 +118,7 @@ export default function Page() {
               </Link>
               <p className="mt-3 text-xs text-zinc-500">
                 Load unpacked or install from the Web Store—see{' '}
-                <Link href="/docs#chrome-extension" className="text-accent-text hover:underline">
+                <Link href="/docs#chrome-extension" className="text-accent-text underline">
                   docs
                 </Link>
                 .

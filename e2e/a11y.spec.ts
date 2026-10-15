@@ -37,27 +37,47 @@ async function analyzeViolations(page: import('@playwright/test').Page) {
 const PATHS = ['/', '/login', '/docs'];
 
 /**
- * Real-browser accessibility. We GATE on `critical` violations (unnamed
- * controls, broken ARIA/roles). color-contrast reports as serious and
- * depends on the still-open muted-grey design decision, so serious results
- * are attached to the report for review instead of failing the build.
+ * Real-browser accessibility, gated at WCAG 2.1 level AA.
+ *
+ * The original gate only failed on `critical`, leaving `serious` — which
+ * includes color-contrast, an explicit AA requirement — as an attachment
+ * nobody had to act on. The contrast fix in f23082b landed without the gate
+ * ever being tightened, so AA compliance was unenforced.
+ *
+ * `critical` and `serious` now both fail the build. `moderate` and `minor`
+ * stay attached as report-only, since AA does not require them and gating on
+ * them would block releases on non-blocking findings.
  */
 for (const path of PATHS) {
-  test(`axe: no critical violations on ${path}`, async ({ page }, testInfo) => {
+  test(`axe: no critical or serious violations on ${path}`, async ({
+    page,
+  }, testInfo) => {
+    // Collapse entrance animations before measuring. The landing page fades
+    // elements in with staggered delays, and axe samples mid-animation, where
+    // an element still ramping from opacity 0 reports a contrast ratio far
+    // below its final one. Emulating reduced motion collapses the animations
+    // to ~0ms (the app already honours the media query), so we measure the
+    // settled state — and we exercise that accessibility path at the same time.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto(path);
     await page.waitForLoadState('load');
 
     const violations = await analyzeViolations(page);
 
-    const critical = violations.filter((v) => v.impact === 'critical');
+    const blocking = violations.filter(
+      (v) => v.impact === 'critical' || v.impact === 'serious',
+    );
     expect(
-      critical.map((v) => ({ id: v.id, help: v.help })),
-      `critical axe violations on ${path}`,
+      blocking.map((v) => ({ id: v.id, impact: v.impact, help: v.help })),
+      `WCAG AA (critical+serious) axe violations on ${path}`,
     ).toEqual([]);
 
-    const serious = violations.filter((v) => v.impact === 'serious');
-    await testInfo.attach(`axe-serious-${path}`, {
-      body: JSON.stringify(serious, null, 2),
+    // Report-only tiers, kept as evidence for the next pass.
+    const advisory = violations.filter(
+      (v) => v.impact === 'moderate' || v.impact === 'minor',
+    );
+    await testInfo.attach(`axe-advisory-${path}`, {
+      body: JSON.stringify(advisory, null, 2),
       contentType: 'application/json',
     });
   });

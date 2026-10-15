@@ -420,7 +420,7 @@ print(data["changes"])`}</DocsCodeBlock>
 
         <footer className="mt-16 border-t border-zinc-800 pt-8 text-center text-xs text-zinc-500">
           PromptPerfect API docs ·{' '}
-          <Link href="/" className="text-accent-text hover:underline">
+          <Link href="/" className="text-accent-text underline">
             Home
           </Link>
         </footer>
