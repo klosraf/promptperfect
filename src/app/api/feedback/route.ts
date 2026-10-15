@@ -2,7 +2,7 @@ import { normalizeModeForDb } from '@/lib/optimization-logs';
 import { getServiceClient } from '@/lib/server/supabase';
 import { resolveIdentity } from '@/lib/server/supabaseRequestIdentity';
 import { parseFeedbackBody } from '@/lib/apiSchemas';
-import { checkRateLimit } from '@/lib/auth/rateLimit';
+import { checkRateLimit, rateLimitKey } from '@/lib/auth/rateLimit';
 import { logWarn } from '@/lib/logger';
 
 export const runtime = 'nodejs';
@@ -14,9 +14,7 @@ function isMissingColumnError(message: string): boolean {
 }
 
 export async function POST(req: Request) {
-  const ip =
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  if (!checkRateLimit(ip, 30)) {
+  if (!checkRateLimit(rateLimitKey('feedback', req), 30)) {
     return Response.json(
       { error: 'Too many requests. Please slow down.' },
       { status: 429 },

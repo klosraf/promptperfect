@@ -1,7 +1,7 @@
 import { generateText } from 'ai';
 import { NextResponse } from 'next/server';
 
-import { checkRateLimit } from '@/lib/auth/rateLimit';
+import { checkRateLimit, rateLimitKey } from '@/lib/auth/rateLimit';
 import { createRouteHandlerClient } from '@/lib/server/supabase';
 import { createProvider, hasServerKey } from '@/lib/providers';
 import { isUnlimitedMode } from '@/lib/localMode';
@@ -26,9 +26,7 @@ export async function POST(request: Request) {
 }
 
 async function handlePost(request: Request) {
-  const ip =
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  if (!checkRateLimit(ip, 30)) {
+  if (!checkRateLimit(rateLimitKey('translate', request), 30)) {
     return NextResponse.json(
       { error: 'Too many requests. Please slow down.' },
       { status: 429 },

@@ -65,4 +65,29 @@ describe("/api/optimize POST", () => {
     );
     expect(res.status).toBe(400);
   });
+
+  it("throttles an IP that exceeds the per-minute budget", async () => {
+    // 20 requests per minute are allowed; without a BYOK key the route would
+    // otherwise spend the server's own provider quota on every call.
+    const ip = "198.51.100.7";
+    const req = () =>
+      new Request("http://localhost/api/optimize", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-forwarded-for": ip,
+        },
+        body: JSON.stringify({ prompt: "Hello world", mode: "better" }),
+      });
+
+    let last: Response | undefined;
+    for (let i = 0; i < 20; i++) {
+      last = await POST(req());
+      expect(last.status).toBe(200);
+    }
+
+    const blocked = await POST(req());
+    expect(blocked.status).toBe(429);
+    expect(streamText).toHaveBeenCalledTimes(20);
+  });
 });

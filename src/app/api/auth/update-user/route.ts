@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdminClient } from '@/lib/server/supabase';
 import { createRouteHandlerClient } from '@/lib/server/supabase';
-import { checkRateLimit } from '@/lib/auth/rateLimit';
+import { checkRateLimit, rateLimitKey } from '@/lib/auth/rateLimit';
 import { logWarn } from '@/lib/logger';
 import { parseUpdateUserBody } from '@/lib/apiSchemas';
 
 export async function POST(request: Request) {
   try {
-    const ip =
-      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    if (!checkRateLimit(ip, 20)) {
+    if (!checkRateLimit(rateLimitKey('auth/update-user', request), 20)) {
       return NextResponse.json(
         { error: 'Too many requests. Please slow down.' },
         { status: 429 },

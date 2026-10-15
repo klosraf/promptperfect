@@ -1,5 +1,5 @@
 import { validatePassword, validateEmail } from '@/lib/auth/validation'
-import { checkRateLimit } from '@/lib/auth/rateLimit'
+import { checkRateLimit, rateLimitKey } from '@/lib/auth/rateLimit'
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import {
@@ -25,9 +25,7 @@ function looksLikeDuplicateAuthError(message: string): boolean {
 }
 
 export async function POST(request: Request) {
-  const ip =
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-  if (!checkRateLimit(ip)) {
+  if (!checkRateLimit(rateLimitKey('auth/signup', request))) {
     return NextResponse.json(
       { error: 'Too many attempts. Please wait a minute.' },
       { status: 429 },

@@ -18,9 +18,11 @@ vi.mock('@/lib/server/optimizationLogStats', () => ({
   }),
 }));
 
-vi.mock('@/lib/auth/rateLimit', () => ({
-  checkRateLimit: () => true,
-}));
+vi.mock('@/lib/auth/rateLimit', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@/lib/auth/rateLimit')>();
+  return { ...actual, checkRateLimit: () => true };
+});
 
 const IDENTITY = { userId: 'user-1', email: 'u@example.com', token: 'tok' };
 

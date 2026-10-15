@@ -8,9 +8,18 @@ import { getSystemPrompt } from '@/lib/prompts';
 import { parseOptimizeBody } from '@/lib/apiSchemas';
 import { getServiceClient } from '@/lib/server/supabase';
 import { getRequestId, logApi, logWarn } from '@/lib/logger';
+import { enforceRateLimit } from '@/lib/auth/rateLimit';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
+
+/**
+ * Public streaming endpoint. Without a BYOK key it falls back to the server's
+ * own provider key, so an unauthenticated caller can otherwise burn the
+ * project's LLM quota one request at a time. Throttle per IP before any
+ * provider work happens.
+ */
+const OPTIMIZE_RATE_LIMIT = 20;
 
 export async function POST(request: Request) {
   const started = Date.now();
@@ -26,6 +35,9 @@ export async function POST(request: Request) {
 }
 
 async function handlePost(request: Request) {
+  const limited = enforceRateLimit('optimize', request, OPTIMIZE_RATE_LIMIT);
+  if (limited) return limited;
+
   try {
     let rawBody: unknown;
     try {

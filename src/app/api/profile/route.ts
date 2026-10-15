@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdminClient } from '@/lib/server/supabase';
-import { checkRateLimit } from '@/lib/auth/rateLimit';
+import { checkRateLimit, rateLimitKey } from '@/lib/auth/rateLimit';
 import {
   isUniqueViolation,
   mapProfileUniqueViolation,
@@ -334,9 +334,7 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const ip =
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  if (!checkRateLimit(ip, 20)) {
+  if (!checkRateLimit(rateLimitKey('profile', request), 20)) {
     return NextResponse.json(
       { error: 'Too many requests. Please slow down.' },
       { status: 429 },

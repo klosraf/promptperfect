@@ -19,9 +19,14 @@ const {
   mockCreateClient: vi.fn(),
 }));
 
-vi.mock('@/lib/auth/rateLimit', () => ({
-  checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
-}));
+vi.mock('@/lib/auth/rateLimit', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@/lib/auth/rateLimit')>();
+  return {
+    ...actual,
+    checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
+  };
+});
 
 vi.mock('@/lib/server/supabase', () => ({
   getSupabaseUrl: (...args: unknown[]) => mockGetSupabaseUrl(...args),

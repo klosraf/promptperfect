@@ -2,7 +2,7 @@ import { generateText } from 'ai';
 import type { NextRequest } from 'next/server';
 
 import { getSupabaseAdminClient } from '@/lib/server/supabase';
-import { checkRateLimit } from '@/lib/auth/rateLimit';
+import { checkRateLimit, rateLimitKey } from '@/lib/auth/rateLimit';
 import { createRouteHandlerClient } from '@/lib/server/supabase';
 import { splitOptimizedOutput } from '@/lib/delimiter';
 import { normalizeModeForDb, parsePromptScore } from '@/lib/optimization-logs';
@@ -77,9 +77,7 @@ export async function POST(req: NextRequest) {
 async function handlePost(req: NextRequest) {
   const corsHeaders = corsHeadersForRequest(req);
 
-  const ip =
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  if (!checkRateLimit(ip, 30)) {
+  if (!checkRateLimit(rateLimitKey('optimize-sync', req), 30)) {
     return Response.json(
       { error: 'Too many requests. Please slow down.' },
       { status: 429, headers: corsHeaders },

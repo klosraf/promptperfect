@@ -14,9 +14,11 @@ vi.mock('@/lib/server/supabase', () => ({
   getSupabaseAdminClient: (...args: unknown[]) => mockGetAdminClient(...args),
 }));
 
-vi.mock('@/lib/auth/rateLimit', () => ({
-  checkRateLimit: () => true,
-}));
+vi.mock('@/lib/auth/rateLimit', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@/lib/auth/rateLimit')>();
+  return { ...actual, checkRateLimit: () => true };
+});
 
 function post(body: unknown) {
   return new Request('http://localhost/api/auth/update-user', {

@@ -15,9 +15,11 @@ vi.mock('@/lib/server/supabaseRequestIdentity', () => ({
   resolveIdentity: (...args: unknown[]) => mockResolveIdentity(...args),
 }));
 
-vi.mock('@/lib/auth/rateLimit', () => ({
-  checkRateLimit: () => true,
-}));
+vi.mock('@/lib/auth/rateLimit', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@/lib/auth/rateLimit')>();
+  return { ...actual, checkRateLimit: () => true };
+});
 
 function post(body: unknown, ip = '10.0.0.1') {
   return new Request('http://localhost/api/feedback', {

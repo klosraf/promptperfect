@@ -6,9 +6,14 @@ const { mockCheckRateLimit, mockCreateClient } = vi.hoisted(() => ({
   mockCreateClient: vi.fn(),
 }));
 
-vi.mock('@/lib/auth/rateLimit', () => ({
-  checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
-}));
+vi.mock('@/lib/auth/rateLimit', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@/lib/auth/rateLimit')>();
+  return {
+    ...actual,
+    checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
+  };
+});
 
 vi.mock('@supabase/supabase-js', () => ({
   createClient: (...args: unknown[]) => mockCreateClient(...args),

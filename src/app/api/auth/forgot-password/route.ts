@@ -1,4 +1,4 @@
-import { checkRateLimit } from '@/lib/auth/rateLimit';
+import { checkRateLimit, rateLimitKey } from '@/lib/auth/rateLimit';
 import {
   mapPasswordResetEmailError,
   resolvePasswordResetRedirect,
@@ -28,9 +28,7 @@ function isLocalRedirect(redirectTo: string): boolean {
  * when Supabase email is rate-limited or undelivered.
  */
 export async function POST(request: Request) {
-  const ip =
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  if (!checkRateLimit(ip, 8)) {
+  if (!checkRateLimit(rateLimitKey('auth/forgot-password', request), 8)) {
     return NextResponse.json(
       { error: 'Too many attempts. Please wait a minute.' },
       { status: 429 },

@@ -1,4 +1,4 @@
-import { checkRateLimit } from '@/lib/auth/rateLimit'
+import { checkRateLimit, rateLimitKey } from '@/lib/auth/rateLimit'
 import { jsonLoginSuccess } from '@/lib/auth/jsonLoginSuccess'
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
@@ -6,9 +6,7 @@ import { getSupabaseAdminClient } from '@/lib/server/supabase'
 import { parseLoginBody } from '@/lib/apiSchemas'
 
 export async function POST(request: Request) {
-  const ip =
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-  if (!checkRateLimit(ip)) {
+  if (!checkRateLimit(rateLimitKey('auth/login', request))) {
     return NextResponse.json(
       { error: 'Too many attempts. Please wait a minute.' },
       { status: 429 }
