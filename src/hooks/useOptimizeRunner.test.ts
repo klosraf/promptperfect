@@ -331,4 +331,98 @@ describe('useOptimizeRunner', () => {
       expect.objectContaining({ userId: 'u-1', sessionId: 'sess-browser' }),
     );
   });
+
+  it('handleProjectDigest resets the composer and arms an auto-run', () => {
+    // Arming the auto-run schedules a real optimize pass, which calls the
+    // guest-usage endpoint. Stub it or the relative URL never resolves in
+    // jsdom and the run rejects unhandled.
+    vi.stubGlobal('fetch', guestFetch(() => ({ ok: true, status: 200, json: async () => ({ count: 1 }) })));
+
+    const { result } = setup();
+
+    // Leave some run state behind so we can prove the reset happened.
+    act(() => {
+      result.current.setInputText('draft prompt');
+      result.current.handleHistorySelect({
+        id: 'h1',
+        session_id: 's1',
+        prompt_original: 'orig',
+        prompt_optimized: 'opt',
+        mode: 'specific',
+        explanation: 'why',
+        created_at: new Date().toISOString(),
+        optimize_session_id: 'run-1',
+      });
+    });
+
+    const digest = 'PROJECT DIGEST\n- package.json\n- src/';
+    act(() => {
+      result.current.handleProjectDigest(digest);
+    });
+
+    // The digest replaces the input wholesale, not appends.
+    expect(result.current.inputText).toBe(digest);
+    // Production mode is the only mode that consumes a digest.
+    expect(result.current.selectedMode).toBe('production');
+    // Prior selection is cleared so the run is not attributed to old history.
+    expect(result.current.selectedHistoryItem).toBeNull();
+    expect(result.current.sessionId).toBeNull();
+  });
+
+  it('handleHistoryDeleted refreshes both lists and clears a matching selection', () => {
+    const { result } = setup();
+
+    act(() => {
+      result.current.handleHistorySelect({
+        id: 'h-del',
+        session_id: 's-del',
+        prompt_original: 'orig',
+        prompt_optimized: 'opt',
+        mode: 'better',
+        explanation: 'why',
+        created_at: new Date().toISOString(),
+        optimize_session_id: 'run-del',
+      });
+    });
+    const statsBefore = result.current.statsRefresh;
+    const historyBefore = result.current.historyRefresh;
+    expect(result.current.sessionId).toBe('run-del');
+
+    act(() => {
+      result.current.handleHistoryDeleted('h-del');
+    });
+
+    // Both panels poll again, otherwise a deleted row lingers in the UI.
+    expect(result.current.historyRefresh).toBe(historyBefore + 1);
+    expect(result.current.statsRefresh).toBe(statsBefore + 1);
+    // The deleted item was the selected one, so selection and its run id go.
+    expect(result.current.selectedHistoryItem).toBeNull();
+    expect(result.current.sessionId).toBeNull();
+  });
+
+  it('handleHistoryDeleted keeps the selection when another row is deleted', () => {
+    const { result } = setup();
+
+    act(() => {
+      result.current.handleHistorySelect({
+        id: 'h-keep',
+        session_id: 's-keep',
+        prompt_original: 'orig',
+        prompt_optimized: 'opt',
+        mode: 'better',
+        explanation: 'why',
+        created_at: new Date().toISOString(),
+        optimize_session_id: 'run-keep',
+      });
+    });
+
+    act(() => {
+      result.current.handleHistoryDeleted('some-other-id');
+    });
+
+    // Deleting an unrelated row must not drop what the user is looking at.
+    expect(result.current.selectedHistoryItem?.id).toBe('h-keep');
+    expect(result.current.sessionId).toBe('run-keep');
+    expect(result.current.historyRefresh).toBeGreaterThan(0);
+  });
 });
