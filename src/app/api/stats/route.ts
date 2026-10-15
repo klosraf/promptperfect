@@ -2,6 +2,14 @@ import { getSupabaseAdminClient } from '@/lib/server/supabase';
 import { computeOptimizationFeedbackAnalytics } from '@/lib/server/optimizationLogStats';
 import { resolveIdentity } from '@/lib/server/supabaseRequestIdentity';
 import { logWarn } from '@/lib/logger';
+import { enforceRateLimit } from '@/lib/auth/rateLimit';
+
+/**
+ * Aggregates across history and feedback tables, so each call is one of the
+ * heavier reads in the API. 60/min is plenty for a dashboard that loads once
+ * and polls occasionally.
+ */
+const STATS_RATE_LIMIT = 60;
 
 /**
  * Analytics for the signed-in user only (cookie session or Bearer via `resolveIdentity`).
@@ -9,6 +17,11 @@ import { logWarn } from '@/lib/logger';
  * whose `session_id` still matches a row in that history (`id` or `optimize_session_id`).
  */
 export async function GET(request: Request) {
+  // Before `resolveIdentity`, so an unauthenticated flood is stopped without
+  // paying for JWT verification on every request.
+  const limited = enforceRateLimit('stats', request, STATS_RATE_LIMIT);
+  if (limited) return limited;
+
   const identity = await resolveIdentity(request);
   const supabase = getSupabaseAdminClient();
 

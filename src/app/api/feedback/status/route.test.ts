@@ -66,4 +66,24 @@ describe('/api/feedback/status GET', () => {
     const res = await GET(get('http://localhost/api/feedback/status?session_id=s1'));
     expect(await res.json()).toEqual({ submitted: false, feedback: null });
   });
+
+  it('throttles an IP that exceeds the per-minute budget', async () => {
+    mockGetServiceClient.mockReturnValue(chainFeedback({ data: null, error: null }));
+    // Own IP so this test cannot spend another test's budget.
+    const req = () =>
+      new Request('http://localhost/api/feedback/status?session_id=s1', {
+        method: 'GET',
+        headers: { 'x-forwarded-for': '198.51.100.23' },
+      });
+
+    let last: Response | undefined;
+    for (let i = 0; i < 60; i++) last = await GET(req());
+    expect(last?.status).toBe(200);
+
+    const blocked = await GET(req());
+    expect(blocked.status).toBe(429);
+    expect(await blocked.json()).toEqual({
+      error: 'Too many requests. Please slow down.',
+    });
+  });
 });

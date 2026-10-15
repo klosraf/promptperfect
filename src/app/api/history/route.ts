@@ -6,6 +6,14 @@ import {
   resolveIdentity,
 } from '@/lib/server/supabaseRequestIdentity';
 import { logWarn } from '@/lib/logger';
+import { enforceRateLimit } from '@/lib/auth/rateLimit';
+
+/**
+ * Authenticated, but the rows carry `prompt_original` and `prompt_optimized`
+ * in full, so a single page is an expensive read. 60/min covers the UI
+ * refreshing the panel without letting a session pull the table down.
+ */
+const HISTORY_RATE_LIMIT = 60;
 
 const ROW_SELECT_FULL =
   'id,session_id,optimize_session_id,prompt_original,prompt_optimized,mode,explanation,created_at';
@@ -26,6 +34,12 @@ type HistoryListRow = {
 };
 
 export async function GET(request: Request) {
+  // Throttle before resolving identity: verifying the JWT costs a Supabase
+  // round trip, so a flood of unauthenticated requests would otherwise spend
+  // that budget before ever reaching the limiter.
+  const limited = enforceRateLimit('history', request, HISTORY_RATE_LIMIT);
+  if (limited) return limited;
+
   const identity = await resolveIdentity(request);
   if (!identity) {
     return NextResponse.json(await jsonUnauthorizedDetails(request), {

@@ -93,4 +93,29 @@ describe('/api/stats GET', () => {
     expect(json.error).toBe('Could not load stats');
     expect(JSON.stringify(json)).not.toMatch(/relation|does not exist/i);
   });
+
+  it('throttles an IP before spending JWT verification', async () => {
+    const spy = vi
+      .spyOn(auth, 'resolveIdentity')
+      .mockResolvedValue(undefined);
+    const req = () =>
+      new Request('http://localhost/api/stats', {
+        method: 'GET',
+        headers: { 'x-forwarded-for': '198.51.100.47' },
+      });
+
+    // Unauthenticated here, and this route answers 200 with zeroed stats
+    // rather than 401 — the status is not the point, the call count is.
+    let last: Response | undefined;
+    for (let i = 0; i < 60; i++) {
+      last = await GET(req());
+      expect(last.status).not.toBe(429);
+    }
+    expect(spy.mock.calls.length).toBe(60);
+
+    const blocked = await GET(req());
+    expect(blocked.status).toBe(429);
+    // Cut by the limiter: identity was never resolved for the 61st call.
+    expect(spy.mock.calls.length).toBe(60);
+  });
 });
