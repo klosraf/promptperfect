@@ -31,6 +31,10 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.ts ./
+# `next.config.ts` is TypeScript: without the compiler in the runner, Next
+# auto-installs `typescript` at boot (+29s, network-dependent, non-hermetic).
+# Ship just the compiler from the builder (no source change needed).
+COPY --from=builder /app/node_modules/typescript ./node_modules/typescript
 
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
