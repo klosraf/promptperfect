@@ -37,7 +37,6 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       enabled: true,
-      all: true,
       reporter: ["text"],
       include: [
         "src/hooks/useOptimizeRunner.ts",

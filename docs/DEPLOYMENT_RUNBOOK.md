@@ -18,7 +18,9 @@ Minimum production env: `GOOGLE_GENERATIVE_AI_API_KEY`,
 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
 `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SITE_URL`, `ALLOWED_ORIGINS`.
 Keep `NEXT_PUBLIC_UNLIMITED_MODE` **unset** (it disables quota, rate limits,
-and auth gates).
+and auth gates). Never set `LOCAL_SCAN_DIRS` in production — `/api/local-scan`
+(ADR-0009) is a dev-only filesystem oracle and returns 404 unless unlimited mode
+is on; `/tmp` probes return 403 outside the allow-list.
 
 ## 2. Database — migrate, then verify (every deploy)
 
@@ -62,6 +64,7 @@ npm run typecheck          # strict + noUncheckedIndexedAccess + noUnusedLocals/
 npm run lint
 npm run test:run           # full Vitest suite
 npm run test:coverage:core # ≥85% lines / ≥80% branches / ≥90% funcs on src/lib + auth
+npm run test:coverage:critical # per-file gate (vitest.critical.config.ts): lines 80 / branches 60 / funcs 65
 npm run build
 ```
 

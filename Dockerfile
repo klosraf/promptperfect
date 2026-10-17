@@ -8,6 +8,9 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
+# `postinstall` runs `node scripts/fix-supabase-js-types.mjs`, so the script
+# must exist before `npm ci` triggers it (otherwise MODULE_NOT_FOUND).
+COPY scripts ./scripts
 # `npm ci` (locked) — plain `npm install` is known-broken upstream
 # (ai@6 pins a provider-utils version missing from the registry).
 RUN npm ci
@@ -23,6 +26,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 COPY --from=builder /app/package.json /app/package-lock.json ./
+COPY --from=builder /app/scripts ./scripts
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
