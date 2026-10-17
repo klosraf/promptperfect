@@ -52,3 +52,6 @@ next-env.d.ts
 
 # Playwright MCP browser artifacts
 /.playwright-mcp/
+
+# skill-router: per-machine auto-generated skill activation (regenerate locally)
+.agents/ACTIVE_SKILLS.md

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { FolderGit2, Loader2 } from 'lucide-react';
+import { FolderGit2, HardDrive, Loader2 } from 'lucide-react';
 import {
   buildProjectDigest,
   isBinaryPath,
@@ -98,6 +98,8 @@ async function toAnalyzedFile(rel: string, file: File): Promise<AnalyzedFile> {
 export function ProjectLinker({ onDigest, disabled = false }: ProjectLinkerProps) {
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
   const [lastProject, setLastProject] = useState<string | null>(null);
+  const [localDir, setLocalDir] = useState('/Users/klosraf');
+  const [showLocal, setShowLocal] = useState(false);
   const fallbackRef = useRef<HTMLInputElement>(null);
 
   const analyzeFiles = async (projectName: string, entries: { rel: string; file: File }[]) => {
@@ -176,6 +178,36 @@ export function ProjectLinker({ onDigest, disabled = false }: ProjectLinkerProps
 
   const analyzing = status.kind === 'analyzing';
 
+  const handleLocalScan = async (systemAudit: boolean) => {
+    const dir = localDir.trim();
+    if (!dir || analyzing || disabled) return;
+    setStatus({ kind: 'analyzing', files: 0 });
+    try {
+      const res = await fetch('/api/local-scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(systemAudit ? { dir, audit: 'system' } : { dir }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        digest?: string;
+        projectName?: string;
+        error?: string;
+      };
+      if (!res.ok || !data.digest) {
+        setStatus({
+          kind: 'error',
+          message: data.error ?? 'Could not read that directory.',
+        });
+        return;
+      }
+      setLastProject(data.projectName ?? dir);
+      setStatus({ kind: 'idle' });
+      onDigest(data.digest, data.projectName ?? dir);
+    } catch {
+      setStatus({ kind: 'error', message: 'Could not read that directory.' });
+    }
+  };
+
   return (
     <div className="flex flex-col items-center gap-1.5">
       <button
@@ -204,6 +236,50 @@ export function ProjectLinker({ onDigest, disabled = false }: ProjectLinkerProps
         <p className="text-xs text-red-400" role="alert">
           {status.message}
         </p>
+      ) : null}
+      <button
+        type="button"
+        onClick={() => setShowLocal((v) => !v)}
+        disabled={disabled || analyzing}
+        className="inline-flex items-center gap-1.5 text-[12px] text-[#8a8a8a] transition-colors hover:text-[#ECECEC] disabled:opacity-50"
+      >
+        <HardDrive className="h-3.5 w-3.5" aria-hidden />
+        {showLocal ? 'Hide local-disk scan' : 'Scan a local-disk path'}
+      </button>
+      {showLocal ? (
+        <div className="flex w-full max-w-xs flex-col gap-1.5">
+          <label htmlFor="local-scan-dir" className="text-[11px] text-[#8a8a8a]">
+            Local dev only — scanned by the Next.js server, never uploaded
+          </label>
+          <div className="flex gap-1.5">
+            <input
+              id="local-scan-dir"
+              type="text"
+              value={localDir}
+              onChange={(e) => setLocalDir(e.target.value)}
+              placeholder="/Users/klosraf"
+              disabled={disabled || analyzing}
+              className="min-w-0 flex-1 rounded-[10px] border border-[#3a3a3a] bg-[#0A0A0A] px-3 py-1.5 text-[12px] text-[#ECECEC] outline-none placeholder:text-[#555] focus:border-accent disabled:opacity-50"
+            />
+            <button
+              type="button"
+              onClick={() => void handleLocalScan(false)}
+              disabled={disabled || analyzing || !localDir.trim()}
+              className="shrink-0 rounded-[10px] border border-[#3a3a3a] px-3 py-1.5 text-[12px] font-semibold text-[#B0B0B0] transition hover:border-accent hover:text-[#ECECEC] disabled:opacity-50"
+            >
+              {analyzing ? 'Scanning…' : 'Scan'}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleLocalScan(true)}
+              disabled={disabled || analyzing || !localDir.trim()}
+              title="Solo configs del sistema y apps: dotfiles, Brewfile, bin, LaunchAgents, Preferences, LaunchDaemons, inventario brew. Excluye datos, proyectos, cachés y secretos."
+              className="shrink-0 rounded-[10px] cta-gradient px-3 py-1.5 text-[12px] font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+            >
+              {analyzing ? 'Auditing…' : 'Audit system'}
+            </button>
+          </div>
+        </div>
       ) : null}
       {/* Fallback for browsers without showDirectoryPicker */}
       <input

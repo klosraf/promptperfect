@@ -240,6 +240,7 @@ const CODE_LANGS = new Set([
 export function buildProjectDigest(
   projectName: string,
   files: AnalyzedFile[],
+  opts: { configPriority?: string[] } = {},
 ): string {
   const usable = files
     .filter((f) => !isSkippedPath(f.path))
@@ -342,7 +343,7 @@ export function buildProjectDigest(
 
   // Key content: code-project configs first, then representative samples of
   // ANY other text file so non-code directories still carry real content.
-  const configPriority = [
+  const configPriority = opts.configPriority ?? [
     'package.json',
     'tsconfig.json',
     'next.config.ts',
@@ -355,12 +356,16 @@ export function buildProjectDigest(
   const included: string[] = [];
   const usedPaths = new Set<string>();
   for (const name of configPriority) {
-    const f = byPath.get(name);
+    const f =
+      byPath.get(name) ??
+      [...byPath.values()].find(
+        (c) => c.path === name || c.path.endsWith(`/${name}`),
+      );
     if (!f?.content.trim() || budget <= 0) continue;
     const chunk = f.content.slice(0, budget);
     budget -= chunk.length;
-    usedPaths.add(name);
-    included.push(`--- ${name} ---\n${chunk}`);
+    usedPaths.add(f.path);
+    included.push(`--- ${f.path} ---\n${chunk}`);
   }
   if (budget > 0) {
     const samples = textFiles

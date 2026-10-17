@@ -13,6 +13,7 @@ import { assertGuestId } from '@/lib/guest';
 export const MAX_PROMPT_CHARS = 100_000;
 export const MAX_ID_CHARS = 200;
 export const MAX_TEXT_CHARS = 50_000;
+export const MAX_PATH_CHARS = 1024;
 
 const APP_MODES: readonly string[] = [
   'better',
@@ -269,7 +270,6 @@ export interface ClaimGuestHistoryBodyValue {
   guestId: string;
   targetSessionId: string;
 }
-
 /**
  * Shared parser for `/api/auth/claim-guest-history`. Validates the guest id
  * via `assertGuestId`, requires a bounded `targetSessionId`, and rejects the
@@ -305,12 +305,38 @@ export interface SaveHistoryBodyValue {
   provider: string | null;
   optimize_session_id: string | null;
 }
-
 /**
  * Shared parser for `/api/save-history`. Extracts the history row fields and
  * bounds `prompt_original`/`prompt_optimized` against the same budget as
  * `parseOptimizeBody` (DoS defense) — the route previously had no cap.
  */
+export interface LocalScanBodyValue {
+  dir: string;
+  audit?: 'system';
+}
+
+/**
+ * Shared parser for `/api/local-scan`. `dir` is a bounded absolute-path
+ * string (resolution + allowlist happen in the route); `audit` is an
+ * allow-listed literal — anything else is ignored so unknown modes can
+ * never widen the scan surface.
+ */
+export function parseLocalScanBody(
+  body: unknown,
+): { ok: true; value: LocalScanBodyValue } | { ok: false; error: string } {
+  if (typeof body !== 'object' || body === null) {
+    return { ok: false, error: 'Invalid request body' };
+  }
+  const b = body as Record<string, unknown>;
+  const dir = typeof b.dir === 'string' ? b.dir.trim() : '';
+  if (!dir || dir.length > MAX_PATH_CHARS) {
+    return { ok: false, error: 'Missing or invalid dir' };
+  }
+  const value: LocalScanBodyValue = { dir };
+  if (b.audit === 'system') value.audit = 'system';
+  return { ok: true, value };
+}
+
 export function parseSaveHistoryBody(
   body: unknown,
 ): { ok: true; value: SaveHistoryBodyValue } | { ok: false; error: string } {

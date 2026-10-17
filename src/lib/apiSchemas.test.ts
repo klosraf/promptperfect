@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   parseClaimGuestHistoryBody,
+  parseLocalScanBody,
   parseFeedbackBody,
   parseLoginBody,
   parseMode,
@@ -227,5 +228,23 @@ describe("parseFeedbackBody", () => {
       expect(r.value.inputLength).toBe(12);
       expect(r.value.provider).toBe("gemini");
     }
+  });
+});
+
+describe("parseLocalScanBody", () => {
+  it("accepts a bounded dir and allow-listed audit", () => {
+    const r = parseLocalScanBody({ dir: "  /tmp/x  ", audit: "system" });
+    expect(r).toEqual({ ok: true, value: { dir: "/tmp/x", audit: "system" } });
+  });
+  it("drops unknown audit modes instead of widening the scan", () => {
+    const r = parseLocalScanBody({ dir: "/tmp", audit: "full" });
+    expect(r).toEqual({ ok: true, value: { dir: "/tmp" } });
+  });
+  it("rejects missing, empty, oversized and non-object bodies", () => {
+    expect(parseLocalScanBody(null)).toEqual({ ok: false, error: "Invalid request body" });
+    expect(parseLocalScanBody({})).toEqual({ ok: false, error: "Missing or invalid dir" });
+    expect(parseLocalScanBody({ dir: "  " })).toEqual({ ok: false, error: "Missing or invalid dir" });
+    expect(parseLocalScanBody({ dir: 123 })).toEqual({ ok: false, error: "Missing or invalid dir" });
+    expect(parseLocalScanBody({ dir: "x".repeat(1025) })).toEqual({ ok: false, error: "Missing or invalid dir" });
   });
 });
