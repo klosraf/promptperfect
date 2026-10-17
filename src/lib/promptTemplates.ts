@@ -82,6 +82,18 @@ export const TEMPLATE_CATEGORIES = [
   'Sports Coaching',
   'Architecture',
   'Customer Onboarding',
+  'Linux Hardening',
+  'Linux Performance',
+  'Windows Server',
+  'macOS Management',
+  'Systemd & Services',
+  'Kernel & Sysctl',
+  'Filesystem & Storage',
+  'Network & DNS',
+  'Backup & Recovery',
+  'Observability',
+  'Container Host',
+  'IaC Provisioning',
 ] as const;
 
 export type TemplateCategory = (typeof TEMPLATE_CATEGORIES)[number];
@@ -1152,6 +1164,162 @@ export const PROMPT_TEMPLATES: PromptTemplate[] = [
       'Success: activation from {{BASELINE}} to {{TARGET}} within the trial window.',
     explanation:
       'Job-ordered sequence with stop-on-activation and single CTAs.',
+  },
+  {
+    id: 'linux-hardening-baseline',
+    title: 'Linux Hardening Baseline',
+    category: 'Linux Hardening',
+    description: 'CIS-aligned hardening baseline with audit and rollback.',
+    mode: 'production',
+    provider: 'gemini',
+    original_prompt: 'Harden my Linux server.',
+    optimized_prompt:
+      'You are a Linux security engineer writing a hardening baseline for {{DISTRO}} {{VERSION}} (role {{SERVER_ROLE}}, env {{ENVIRONMENT}}, compliance {{COMPLIANCE_FRAMEWORK}}). Deliver: (1) inventory + threat model (exposure {{EXPOSURE}}, data {{DATA_CLASS}}); (2) ordered steps - users/sudo ({{ADMIN_USERS}}), SSH key-only Port {{SSH_PORT}} AllowUsers {{SSH_ALLOW_USERS}}, firewall {{FIREWALL}} default-deny open only {{ALLOWED_PORTS}}, auto-updates {{UPDATE_POLICY}}, blacklist {{BLACKLIST_MODULES}}, auditd {{AUDIT_SCOPE}}, AIDE {{FIM_POLICY}}, SELinux/AppArmor {{MAC_MODE}}, PAM {{PASSWORD_POLICY}}, chrony {{NTP_SOURCES}}, umask {{UMASK}}; (3) verify cmds per control with expected output; (4) rollback per change window {{MAINTENANCE_WINDOW}}. Rules: least privilege, no chmod 777, secrets in {{SECRETS_STORE}}. Success: {{SCANNER}} score >= {{TARGET_SCORE}} zero highs reboot-safe.',
+    explanation:
+      'Maps CIS/NIST controls to ordered steps with verification, rollback, and scan targets.',
+  },
+  {
+    id: 'linux-performance-tuning',
+    title: 'Linux Performance Tuning',
+    category: 'Linux Performance',
+    description: 'Measure-first tuning for CPU, memory, I/O, and network.',
+    mode: 'developer',
+    provider: 'gemini',
+    original_prompt: 'Optimize my Linux server performance.',
+    optimized_prompt:
+      'You are a Linux performance engineer tuning {{DISTRO}} on {{HARDWARE}} ({{CPU}} / {{RAM}} / {{DISK_TYPE}}, workload {{WORKLOAD_TYPE}} {{APP_STACK}}, SLO p99 {{SLO_P99}}). Deliver: (1) measurement plan - baseline {{BENCH_TOOLS}} workload {{BENCH_WORKLOAD}} flame graphs; (2) ordered tunables - tuned {{TUNED_PROFILE}}, NUMA {{NUMA_POLICY}}, THP {{THP_MODE}}, swappiness {{SWAPPINESS}} zswap {{ZSWAP_POLICY}}, scheduler {{IO_SCHEDULER}} readahead {{READAHEAD_KB}}, mounts {{MOUNT_OPTS}}, TCP BBR {{BBR_MODE}} backlog {{BACKLOG}} buffers {{TCP_BUFFERS}}, limits nofile {{NOFILE_LIMIT}} nproc {{NPROC_LIMIT}}; (3) gain/risk/revert per change; (4) before-after report. Rules: one variable at a time, sysctl.d persistence, mitigations {{MITIGATION_POLICY}}. Success: p99 {{BASELINE_P99}} to {{TARGET_P99}} at {{TARGET_RPS}} rps CPU < {{CPU_BUDGET}}%.',
+    explanation:
+      'Enforces measure-first tuning with persisted sysctl, per-change revert, and SLO targets.',
+  },
+  {
+    id: 'windows-server-baseline',
+    title: 'Windows Server Baseline',
+    category: 'Windows Server',
+    description: 'Secure, patched, and auditable Windows Server build.',
+    mode: 'production',
+    provider: 'gemini',
+    original_prompt: 'Configure Windows Server securely.',
+    optimized_prompt:
+      'You are a Windows Server engineer baselining {{WINDOWS_VERSION}} (roles {{SERVER_ROLES}}, domain {{DOMAIN_MODE}} {{AD_DOMAIN}}, env {{ENVIRONMENT}}). Deliver: (1) Defender {{AV_POLICY}}, update ring {{UPDATE_RING}} reboot {{REBOOT_WINDOW}}; (2) hardening - LAPS {{LAPS_MODE}}, RDP NLA port {{RDP_PORT}} group {{RDP_GROUP}}, WinRM {{WINRM_SCOPE}}, SMB {{SMB_POLICY}}, UAC {{UAC_LEVEL}}, PS {{PS_POLICY}}, allowlist {{APP_CONTROL}}; (3) firewall WFAS for {{ALLOWED_PORTS}}, audit {{AUDIT_POLICY}} to SIEM {{SIEM}}; (4) DSC/GPO {{CONFIG_TOOL}} {{GPO_NAMES}} drift + rollback. Rules: no shared admin, no RDP 0.0.0.0/0, secrets {{SECRETS_STORE}}. Success: CIS clean {{SCAN_DATE}} patch >= {{PATCH_TARGET}}%.',
+    explanation:
+      'Binds Defender, LAPS, RDP/WinRM scoping, and audit forwarding to drift control.',
+  },
+  {
+    id: 'macos-fleet-baseline',
+    title: 'macOS Fleet Baseline',
+    category: 'macOS Management',
+    description: 'Zero-touch macOS fleet with MDM guardrails.',
+    mode: 'production',
+    provider: 'gemini',
+    original_prompt: 'Set up our Macs consistently.',
+    optimized_prompt:
+      'You are a macOS fleet admin standardizing {{FLEET_SIZE}} Macs on {{MACOS_VERSION}} via MDM {{MDM_PLATFORM}} zero-touch {{ZERO_TOUCH}}. Deliver: (1) enrollment SSO {{SSO_PROVIDER}} FileVault escrow {{ESCROW}} EDR {{EDR_TOOL}}; (2) profiles - Gatekeeper {{GATEKEEPER_POLICY}}, Firewall {{FIREWALL_POLICY}}, updates deferral {{UPDATE_DEFERRAL}} RSR {{RSR_POLICY}}, auth {{AUTH_POLICY}}, TCC for {{MANAGED_APPS}}; (3) apps {{DEPLOY_TOOL}} VPP {{VPP_APPS}} brew {{BREW_POLICY}} Rosetta {{ROSETTA_POLICY}}; (4) compliance osquery {{OSQUERY_PACKS}} CIS {{CIS_LEVEL}} remediation offboard {{OFFBOARDING}}. Rules: {{ADMIN_POLICY}} no admin-by-default elevation {{ELEVATION_TOOL}}, backups {{BACKUP_TOOL}}. Success: {{COMPLIANCE_TARGET}}% encrypted patched {{PATCH_SLA}}d checkin {{CHECKIN_TARGET}}%.',
+    explanation:
+      'Zero-touch enrollment with FileVault escrow, profile guardrails, and CIS checks.',
+  },
+  {
+    id: 'systemd-service-design',
+    title: 'Systemd Service Design',
+    category: 'Systemd & Services',
+    description: 'Hardened systemd units with safe rollout.',
+    mode: 'developer',
+    provider: 'gemini',
+    original_prompt: 'Create a systemd service for my app.',
+    optimized_prompt:
+      'You are a Linux platform engineer packaging {{APP_NAME}} {{RUNTIME}} {{APP_VERSION}} binary {{BINARY_PATH}} args {{APP_ARGS}} user {{SERVICE_USER}} dir {{WORK_DIR}} on {{DISTRO}}. Deliver: (1) {{APP_NAME}}.service Type={{SERVICE_TYPE}} ExecStart/Reload {{RELOAD_CMD}} Restart={{RESTART_POLICY}} RestartSec {{RESTART_SEC}} LimitNOFILE={{NOFILE_LIMIT}} NPROC={{NPROC_LIMIT}} EnvFile={{ENV_FILE}}; (2) hardening - NoNewPrivileges ProtectSystem={{PROTECT_SYSTEM}} ProtectHome={{PROTECT_HOME}} PrivateTmp/Device/Users={{PRIVATE_FLAGS}} RestrictSUID/Namespaces {{NAMESPACE_POLICY}} SyscallFilter={{SYSCALL_FILTER}} Caps={{CAPABILITIES}} RWPaths={{RW_PATHS}}; (3) logging journald {{LOG_LIMITS}} to {{LOG_SINK}} timer {{TIMER_SPEC}}; (4) rollout daemon-reload enable-now health {{HEALTH_CHECK}} {{HEALTH_URL}} rollback {{PREVIOUS_VERSION}}. Rules: least caps no root {{ROOT_JUSTIFICATION}} secrets {{SECRETS_STORE}}. Success: systemd-analyze security >= {{SECURITY_SCORE}} zero restarts {{STABLE_WINDOW}}.',
+    explanation:
+      'Pairs a complete unit with systemd-analyze hardening, logging, and rollback checks.',
+  },
+  {
+    id: 'kernel-sysctl-tuning',
+    title: 'Kernel and Sysctl Plan',
+    category: 'Kernel & Sysctl',
+    description: 'Versioned sysctl baseline with persistence and revert.',
+    mode: 'developer',
+    provider: 'gemini',
+    original_prompt: 'Tune sysctl for my workload.',
+    optimized_prompt:
+      'You are a kernel engineer writing sysctl baseline for {{KERNEL_VERSION}} on {{DISTRO}} workload {{WORKLOAD_TYPE}} RAM {{RAM}} NIC {{NIC_SPEED}} role {{SERVER_ROLE}}. Deliver: (1) /etc/sysctl.d/{{SYSCTL_FILE}} - VM swappiness {{SWAPPINESS}} overcommit {{OVERCOMMIT}} dirty {{DIRTY_RATIOS}} THP {{THP_MODE}}, net BBR {{BBR_MODE}} somaxconn {{SOMAXCONN}} backlog {{BACKLOG}} keepalive {{KEEPALIVE}} forward {{IP_FORWARD}} rpfilter {{RP_FILTER}}, sec kptr {{KPTR}} dmesg {{DMESG}} bpf {{BPF_POLICY}} kexec {{KEXEC_POLICY}} ASLR {{ASLR_MODE}}, fs filemax {{FILE_MAX}} inotify {{INOTIFY_LIMITS}}; (2) apply sysctl --system verify {{SYSCTL_KEYS}} reboot test; (3) rationale+revert per key; (4) change {{CHANGE_DATE}} owner {{OWNER}} ticket {{TICKET}}. Rules: sysctl.d only mitigations {{MITIGATION_POLICY}}. Success: {{PERF_TARGET}} no OOM {{OBS_WINDOW}}.',
+    explanation:
+      'Versioned sysctl.d baseline with rationale, verify commands, and per-key reverts.',
+  },
+  {
+    id: 'filesystem-storage-layout',
+    title: 'Filesystem and Storage Layout',
+    category: 'Filesystem & Storage',
+    description: 'Partitioning, LVM, mount hardening, and growth plan.',
+    mode: 'specific',
+    provider: 'gemini',
+    original_prompt: 'Design disk layout for a Linux server.',
+    optimized_prompt:
+      'You are a storage engineer designing layout for {{HOST}} disks {{DISKS}} {{DISK_TYPE}} {{DISK_SIZE}} RAID {{RAID_LEVEL}} workload {{WORKLOAD_TYPE}} growth {{GROWTH_PER_MONTH}}. Deliver: (1) LVM map - / {{ROOT_SIZE}} /var {{VAR_SIZE}} /var/log {{LOG_SIZE}} /home {{HOME_SIZE}} /tmp {{TMP_SIZE}} swap {{SWAP_POLICY}} data VG {{DATA_VG}} LVs {{DATA_LVS}} fs {{FS_TYPE}} mkfs {{MKFS_OPTS}}; (2) mount hardening nodev/nosuid/noexec {{HARDENED_MOUNTS}} defaults {{DEFAULT_MOUNTS}} fstab UUID nofail timeout {{DEVICE_TIMEOUT}}; (3) ops TRIM {{TRIM_POLICY}} SMART scrub {{SCRUB_SCHEDULE}} snapshots {{SNAPSHOT_POLICY}} quota {{QUOTA_POLICY}} extend at {{GROWTH_TRIGGER}}%; (4) validate lsblk df findmnt fio {{FIO_PROFILE}}. Rules: separate /var/log LUKS {{LUKS_POLICY}} escrow {{KEY_ESCROW}}. Success: survives {{FILL_TEST}}% fill extends < {{EXTEND_SLA}}min.',
+    explanation:
+      'Separates blast-radius partitions with mount hardening, snapshot and growth runbooks.',
+  },
+  {
+    id: 'network-dns-baseline',
+    title: 'Network and DNS Baseline',
+    category: 'Network & DNS',
+    description: 'Deterministic networking and split-DNS that survives reboot.',
+    mode: 'specific',
+    provider: 'gemini',
+    original_prompt: 'Configure networking and DNS on Linux.',
+    optimized_prompt:
+      'You are a network engineer standardizing {{HOST}} on {{DISTRO}} manager {{NET_MANAGER}} NICs {{NICS}} VLANs {{VLANS}} env {{ENVIRONMENT}}. Deliver: (1) addressing {{ADDR_MODE}} IP {{IP_ADDR}}/{{PREFIX}} gw {{GATEWAY}} routes {{EXTRA_ROUTES}} hostname {{HOSTNAME}} ifaces {{IFACE_POLICY}}; (2) DNS resolver {{RESOLVER}} servers {{DNS_SERVERS}} search {{SEARCH_DOMAINS}} DNSSEC {{DNSSEC}} DoT {{DOT_POLICY}} split {{SPLIT_ZONES}} negTTL {{NEG_TTL}}; (3) firewall+fail2ban {{FAIL2BAN_JAILS}} rpfilter {{RP_FILTER}} forward {{IP_FORWARD}}; (4) verify ip resolvectl dig {{TEST_DOMAIN}} mtr {{PROBE_TARGET}} reboot {{RESILIENCE_TEST}}. Rules: git-versioned {{NET_CONFIG_PATH}} IPv6 {{IPV6_POLICY}}. Success: DNS < {{DNS_SLA_MS}}ms zero flaps {{OBS_WINDOW}}.',
+    explanation:
+      'Versioned addressing plus split-DNS, DNSSEC/DoT, and reboot verification.',
+  },
+  {
+    id: 'backup-recovery-plan',
+    title: 'Backup and Recovery Plan',
+    category: 'Backup & Recovery',
+    description: '3-2-1 backups with tested restores and RPO/RTO.',
+    mode: 'production',
+    provider: 'gemini',
+    original_prompt: 'Set up backups for my server.',
+    optimized_prompt:
+      'You are a resilience engineer writing 3-2-1 plan for {{SYSTEM}} data {{DATA_PATHS}} DB {{DB_TYPE}} {{DB_NAME}} size {{DATA_SIZE}} churn {{CHANGE_RATE}} RPO {{RPO}} RTO {{RTO}} retention {{RETENTION}} d{{DAILY_KEEP}}/w{{WEEKLY_KEEP}}/m{{MONTHLY_KEEP}}. Deliver: (1) tool {{BACKUP_TOOL}} full {{FULL_SCHEDULE}} incr {{INCR_SCHEDULE}} hooks {{HOOKS}} encrypt {{ENCRYPTION}} key {{KEY_ID}} offsite {{OFFSITE}} bucket {{BUCKET}} local {{LOCAL_COPY}}; (2) restore runbook file/full-disk/PITR on {{RESTORE_HOST}} verify {{VERIFY_QUERIES}}; (3) drills {{DRILL_CADENCE}} chaos {{CHAOS_TEST}} sign {{SIGN_OFF}}; (4) monitor {{ALERT_SINK}} missed {{MISSED_SLA}} forecast {{CAPACITY_FORECAST}}. Rules: untested=none last {{LAST_DRILL}} immutable {{IMMUTABILITY}}. Success: {{RESTORE_SCOPE}} < {{RTO}} RPO <= {{RPO}} drill {{DRILL_DATE}}.',
+    explanation:
+      'Enforces 3-2-1 with encryption, immutability, restore drills, and RPO/RTO evidence.',
+  },
+  {
+    id: 'observability-baseline',
+    title: 'Observability Baseline',
+    category: 'Observability',
+    description: 'Metrics, logs, and alerts with SLO burn-rate paging.',
+    mode: 'production',
+    provider: 'gemini',
+    original_prompt: 'Add monitoring to my servers.',
+    optimized_prompt:
+      'You are an SRE shipping observability for {{FLEET}} {{HOST_COUNT}} hosts {{DISTROS}} apps {{APP_STACK}} SLO avail {{AVAIL_SLO}} p99 {{LAT_SLO}}. Deliver: (1) metrics {{METRICS_STACK}} exporters {{TEXTFILE_JOBS}} blackbox {{BLACKBOX_TARGETS}} dashboards {{DASHBOARDS}}; (2) logs journald to {{LOG_PIPELINE}} sink {{LOG_SINK}} retention {{LOG_RETENTION}} redact {{REDACT_FIELDS}}; (3) traces OTEL {{OTEL_POLICY}} profiler {{PROFILER}}; (4) alerts burn-rate page {{PAGE_POLICY}} warn {{TICKET_ALERTS}} runbooks {{RUNBOOK_BASE}} oncall {{ONCALL_SCHEDULE}} silence {{SILENCE_POLICY}}. Rules: owner {{ALERT_OWNER}} per alert cardinality {{CARDINALITY_BUDGET}}. Success: MTTD < {{MTTD_TARGET}} pages <= {{PAGE_BUDGET}}/wk.',
+    explanation:
+      'Stacks USE/RED metrics, log pipeline, and burn-rate alerts with runbook discipline.',
+  },
+  {
+    id: 'container-host-tuning',
+    title: 'Container Host Tuning',
+    category: 'Container Host',
+    description: 'Production container runtime with cgroup and seccomp guardrails.',
+    mode: 'developer',
+    provider: 'gemini',
+    original_prompt: 'Optimize a server for Docker containers.',
+    optimized_prompt:
+      'You are a platform engineer hardening container host {{RUNTIME}} Docker {{DOCKER_VERSION}} containerd {{CONTAINERD_VERSION}} orch {{ORCHESTRATOR}} {{K8S_DISTRO}} workload {{WORKLOAD_TYPE}}. Deliver: (1) host cgroup {{CGROUP_VERSION}} driver {{STORAGE_DRIVER}} logs {{LOG_DRIVER}} rotate {{LOG_ROTATE}} live-restore {{LIVE_RESTORE}} userns {{USERNS_POLICY}} insecure {{INSECURE_REGISTRIES}}; (2) daemon {{DAEMON_JSON}} seccomp {{SECCOMP_PROFILE}} TLS {{TLS_POLICY}}; (3) guardrails limits cpu {{CPU_LIMIT}} mem {{MEM_LIMIT}} readonly {{READONLY_POLICY}} caps {{DROP_CAPS}} apparmor {{APPARMOR_PROFILE}} pin {{PIN_POLICY}} scan {{SCAN_TOOL}}; (4) ops GC {{GC_SCHEDULE}} volumes {{VOLUME_BACKUP}} upgrade {{UPGRADE_PROCEDURE}}. Rules: no privileged {{PRIV_JUSTIFICATION}} no latest secrets {{SECRETS_STORE}}. Success: CIS Docker >= {{TARGET_SCORE}} load {{LOAD_TEST}}.',
+    explanation:
+      'Hardens daemon plus workloads with cgroup v2, seccomp, and resource guardrails.',
+  },
+  {
+    id: 'iac-provisioning-module',
+    title: 'IaC Provisioning Module',
+    category: 'IaC Provisioning',
+    description: 'Idempotent OS provisioning with drift control.',
+    mode: 'developer',
+    provider: 'gemini',
+    original_prompt: 'Automate OS setup with code.',
+    optimized_prompt:
+      'You are a platform engineer writing IaC to provision {{OS}} {{OS_VERSION}} on {{PLATFORM}} {{CLOUD_OR_ONPREM}} {{PROVIDER_DETAIL}} hosts {{HOST_PATTERN}} tool {{IAC_TOOL}} ansible {{ANSIBLE_VERSION}} tf {{TERRAFORM_VERSION}} packer {{PACKER_TEMPLATE}}. Deliver: (1) layout {{REPO_LAYOUT}} inventory {{INVENTORY}} vars {{VARS_HIERARCHY}} pins {{PINNED_VERSIONS}}; (2) idempotent base users/SSH/fw/updates {{UPDATE_POLICY}} harden {{HARDENING_ROLE}} CIS {{CIS_LEVEL}} app {{APP_ROLE}} handlers {{HANDLERS}} check-diff proof; (3) secrets {{SECRETS_BACKEND}} state {{STATE_BACKEND}} lock {{LOCKING}}; (4) pipeline lint {{LINT_TOOLS}} test {{TEST_SUITE}} gates {{APPROVAL_GATE}} drift {{DRIFT_SCHEDULE}} rollback {{ROLLBACK_PLAY}}. Rules: gitops {{GITOPS_TOOL}} immutable {{IMMUTABLE_POLICY}}. Success: converge < {{CONVERGE_SLA}}min rerun 0 changes {{ALLOWED_DRIFT}}.',
+    explanation:
+      'Idempotent roles and modules with secret hygiene, plan gates, and drift loops.',
   },
 ];
 export function getTemplateById(id: string): PromptTemplate | undefined {
