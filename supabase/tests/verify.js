@@ -11,6 +11,9 @@
  *      trigger functions are SECURITY DEFINER with explicit search_path.
  *   4. Trigger workflow — inserting into auth.users auto-creates a
  *      pp_user_profiles row via handle_new_user().
+ *   5. Adversarial RLS — no allow-all SELECT/UPDATE/DELETE policies on
+ *      history/profiles, anon cannot touch another user's rows,
+ *      anon cannot spoof user_id on log insert.
  *
  * Usage:
  *   DATABASE_URL=postgresql://... node supabase/tests/verify.js
@@ -244,7 +247,93 @@ async function main() {
       await client.query('ROLLBACK');
     }
 
-    console.log('\n6️⃣  Signup-trigger workflow (auth.users → profile)');
+    console.log('\n6️⃣  Adversarial RLS (policy content + anon probes, rolled back)');
+    // 7a. Policy content: no permissive USING/WITH CHECK outside the
+    // guarded guest INSERTs. Catalog-level, role-independent.
+    async function expectNoPolicies(name, sql, params = []) {
+      const { rows } = await client.query(sql, params);
+      if (rows.length === 0) ok(name);
+      else fail(name, `found: ${rows.map((r) => r.policyname).join(', ')}`);
+    }
+    await expectNoPolicies(
+      'no SELECT/UPDATE/DELETE policies on pp_optimization_history',
+      `SELECT policyname FROM pg_policies WHERE schemaname='public'
+       AND tablename='pp_optimization_history' AND cmd IN ('SELECT','UPDATE','DELETE')`,
+    );
+    await expectNoPolicies(
+      'history INSERT policies all constrain session_id',
+      `SELECT policyname FROM pg_policies WHERE schemaname='public'
+       AND tablename='pp_optimization_history' AND cmd='INSERT'
+       AND (with_check IS NULL OR position('session_id' in with_check)=0)`,
+    );
+    await expectNoPolicies(
+      'no uid-less SELECT/UPDATE policies on pp_user_profiles',
+      `SELECT policyname FROM pg_policies WHERE schemaname='public'
+       AND tablename='pp_user_profiles' AND cmd IN ('SELECT','UPDATE','DELETE')
+       AND (qual IS NULL OR position('uid()' in qual)=0)`,
+    );
+    // 7b. Behavioral probes as anon. Needs the Supabase anon role;
+    // skip (informational) on stub instances without it.
+    await client.query('BEGIN');
+    try {
+      const { rowCount: anonExists } = await client.query(
+        `SELECT 1 FROM pg_roles WHERE rolname='anon'`,
+      );
+      if (anonExists === 0) {
+        console.log('  ℹ️  no anon role on this instance — anon probes skipped');
+      } else {
+        await client.query(
+          `INSERT INTO public.pp_optimization_history
+             (session_id, prompt_original, prompt_optimized, mode)
+           VALUES ('adv-victim', 'original prompt', 'optimized prompt', 'better')`,
+        );
+        await client.query('SET LOCAL ROLE anon');
+        const upd = await client.query(
+          `UPDATE public.pp_optimization_history SET prompt_original='pwned'
+           WHERE session_id='adv-victim'`,
+        );
+        if (upd.rowCount === 0) ok("anon cannot UPDATE another user's history row");
+        else fail("anon cannot UPDATE another user's history row", `${upd.rowCount} row(s) touched`);
+        const sel = await client.query(
+          `SELECT id FROM public.pp_optimization_history WHERE session_id='adv-victim'`,
+        );
+        if (sel.rowCount === 0) ok('anon cannot SELECT history rows');
+        else fail('anon cannot SELECT history rows', `${sel.rowCount} row(s) visible`);
+        const del = await client.query(
+          `DELETE FROM public.pp_optimization_history WHERE session_id='adv-victim'`,
+        );
+        if (del.rowCount === 0) ok('anon cannot DELETE history rows');
+        else fail('anon cannot DELETE history rows', `${del.rowCount} row(s) deleted`);
+        const prof = await client.query(`SELECT id FROM public.pp_user_profiles LIMIT 1`);
+        if (prof.rowCount === 0) ok('anon cannot SELECT profiles (0 rows visible)');
+        else fail('anon cannot SELECT profiles', `${prof.rowCount} row(s) visible`);
+        await client.query('RESET ROLE');
+        // user_id spoofing on log insert (WITH CHECK violation raises).
+        await client.query('SET LOCAL ROLE anon');
+        try {
+          await client.query(
+            `INSERT INTO public.optimization_logs
+               (session_id, mode, version, provider, model, prompt_length, user_id)
+             VALUES ('adv-spoof', 'better', 'v', 'gemini', 'test-model', 10,
+                     '22222222-2222-4222-8222-222222222222')`,
+          );
+          fail('anon cannot spoof user_id on log insert');
+        } catch {
+          ok('anon cannot spoof user_id on log insert');
+        }
+        await client.query(
+          `INSERT INTO public.optimization_logs
+             (session_id, mode, version, provider, model, prompt_length, user_id)
+           VALUES ('adv-guest', 'better', 'v', 'gemini', 'test-model', 10, NULL)`,
+        );
+        ok('anon guest log insert (NULL user_id) still accepted');
+        await client.query('RESET ROLE');
+      }
+    } finally {
+      await client.query('ROLLBACK');
+    }
+
+    console.log('\n7️⃣  Signup-trigger workflow (auth.users → profile)');
     await client.query('BEGIN');
     try {
       const { rows } = await client.query(

@@ -16,8 +16,15 @@ export {
   normalizeSupabaseUrl,
 } from '@/lib/env';
 
-/** True when the unlimited local-dev mode flag is set. Safe on server and client. */
+/**
+ * True when the unlimited local-dev mode flag is set AND the runtime is not
+ * production. The NODE_ENV guard is load-bearing: without it a leaked flag
+ * in production env would disable ALL server rate limits (see rateLimit.ts)
+ * and open `/api/local-scan`. Never remove the guard; see localMode.test.ts.
+ * Safe on server and client.
+ */
 export function isUnlimitedMode(): boolean {
+  if (process.env.NODE_ENV === 'production') return false;
   const raw = process.env.NEXT_PUBLIC_UNLIMITED_MODE?.trim().toLowerCase();
   return raw === 'true' || raw === '1' || raw === 'yes';
 }

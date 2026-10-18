@@ -7,10 +7,14 @@ import {
 
 const ENV_KEY = "NEXT_PUBLIC_UNLIMITED_MODE";
 const prev = process.env[ENV_KEY];
+// NODE_ENV is typed readonly in @types/node; mutate via index signature.
+const mutableEnv = process.env as Record<string, string | undefined>;
+const prevNodeEnv = mutableEnv.NODE_ENV;
 
 afterEach(() => {
   if (prev === undefined) delete process.env[ENV_KEY];
   else process.env[ENV_KEY] = prev;
+  mutableEnv.NODE_ENV = prevNodeEnv;
 });
 
 describe("isUnlimitedMode", () => {
@@ -28,6 +32,14 @@ describe("isUnlimitedMode", () => {
 
   it("is false for other values", () => {
     for (const v of ["false", "0", "no", ""]) {
+      process.env[ENV_KEY] = v;
+      expect(isUnlimitedMode()).toBe(false);
+    }
+  });
+
+  it("is always false in production, even with the flag set (no prod escape)", () => {
+    mutableEnv.NODE_ENV = "production";
+    for (const v of ["true", "1", "yes"]) {
       process.env[ENV_KEY] = v;
       expect(isUnlimitedMode()).toBe(false);
     }
