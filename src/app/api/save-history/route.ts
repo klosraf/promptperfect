@@ -5,8 +5,15 @@ import {
 } from '@/lib/server/supabase';
 import { logWarn } from '@/lib/logger';
 import { parseSaveHistoryBody } from '@/lib/apiSchemas';
+import { enforceRateLimit } from '@/lib/auth/rateLimit';
+
+/** Authenticated DB write: throttle before paying for JWT verification. */
+const SAVE_HISTORY_RATE_LIMIT = 30;
 
 export async function POST(request: Request) {
+  const limited = enforceRateLimit('save-history', request, SAVE_HISTORY_RATE_LIMIT);
+  if (limited) return limited;
+
   const routeSupabase = await createRouteHandlerClient();
   const {
     data: { user },

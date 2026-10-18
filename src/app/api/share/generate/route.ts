@@ -7,8 +7,15 @@ import {
   resolveIdentity,
 } from '@/lib/server/supabaseRequestIdentity';
 import { logWarn } from '@/lib/logger';
+import { enforceRateLimit } from '@/lib/auth/rateLimit';
+
+/** Share-link minting: throttle before identity + DB work. */
+const SHARE_GENERATE_RATE_LIMIT = 30;
 
 export async function POST(req: NextRequest) {
+  const limited = enforceRateLimit('share-generate', req, SHARE_GENERATE_RATE_LIMIT);
+  if (limited) return limited;
+
   const identity = await resolveIdentity(req);
   if (!identity) {
     return NextResponse.json(await jsonUnauthorizedDetails(req), {

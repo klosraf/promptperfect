@@ -3,9 +3,20 @@ import { getSupabaseAdminClient } from '@/lib/server/supabase';
 import { createRouteHandlerClient } from '@/lib/server/supabase';
 import { parseClaimGuestHistoryBody } from '@/lib/apiSchemas';
 import { logWarn } from '@/lib/logger';
+import { enforceRateLimit } from '@/lib/auth/rateLimit';
+
+/** History adoption reassigns guest rows: strictest throttle, checked first. */
+const CLAIM_GUEST_HISTORY_RATE_LIMIT = 20;
 
 export async function POST(request: Request) {
   try {
+    const limited = enforceRateLimit(
+      'claim-guest-history',
+      request,
+      CLAIM_GUEST_HISTORY_RATE_LIMIT,
+    );
+    if (limited) return limited;
+
     const authClient = await createRouteHandlerClient();
     const {
       data: { user },

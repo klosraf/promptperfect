@@ -6,6 +6,7 @@ import {
 } from '@/lib/server/supabaseRequestIdentity';
 import { nextOffset, parseLimit, parseOffset } from '@/lib/pagination';
 import { logWarn } from '@/lib/logger';
+import { enforceRateLimit } from '@/lib/auth/rateLimit';
 
 const MAX_TITLE = 200;
 const MAX_TEXT = 100_000;
@@ -17,6 +18,9 @@ function isMissingSourceHistoryColumn(message: string): boolean {
 }
 
 export async function GET(request: Request) {
+  const limited = enforceRateLimit('saved-prompts', request, 60);
+  if (limited) return limited;
+
   const identity = await resolveIdentity(request);
   if (!identity) {
     return NextResponse.json(await jsonUnauthorizedDetails(request), {
@@ -82,6 +86,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const limited = enforceRateLimit('saved-prompts-write', request, 30);
+  if (limited) return limited;
+
   const identity = await resolveIdentity(request);
   if (!identity) {
     return NextResponse.json(await jsonUnauthorizedDetails(request), {
@@ -230,6 +237,9 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const limited = enforceRateLimit('saved-prompts-write', request, 30);
+  if (limited) return limited;
+
   const identity = await resolveIdentity(request);
   if (!identity) {
     return NextResponse.json(await jsonUnauthorizedDetails(request), {

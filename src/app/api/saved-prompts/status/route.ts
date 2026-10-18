@@ -5,6 +5,7 @@ import {
   resolveIdentity,
 } from '@/lib/server/supabaseRequestIdentity';
 import { logWarn } from '@/lib/logger';
+import { enforceRateLimit } from '@/lib/auth/rateLimit';
 
 /** PostgREST rejects filters on unknown columns until migration adds them. */
 function isSourceHistoryColumnUnavailable(message: string): boolean {
@@ -14,6 +15,9 @@ function isSourceHistoryColumnUnavailable(message: string): boolean {
 }
 
 export async function GET(request: Request) {
+  const limited = enforceRateLimit('saved-prompts-status', request, 60);
+  if (limited) return limited;
+
   const identity = await resolveIdentity(request);
   if (!identity) {
     return NextResponse.json(await jsonUnauthorizedDetails(request), {
