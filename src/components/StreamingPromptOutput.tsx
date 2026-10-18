@@ -104,7 +104,7 @@ export function StreamingPromptOutput({
             <div className="mt-2 w-full shrink-0">{afterTextarea}</div>
           ) : null}
         </div>
-        <p className="mt-2 shrink-0 text-[11px] text-[#5a5a5a]">
+        <p className="mt-2 shrink-0 text-[11px] text-zinc-500 dark:text-zinc-400">
           {outLen} characters -- {tokEst} tokens
         </p>
         {isStreaming && (

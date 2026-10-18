@@ -34,7 +34,7 @@ async function analyzeViolations(page: import('@playwright/test').Page) {
   });
 }
 
-const PATHS = ['/', '/login', '/docs'];
+const PATHS = ['/', '/login', '/docs', '/app', '/library'];
 
 /**
  * Real-browser accessibility, gated at WCAG 2.1 level AA.

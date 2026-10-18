@@ -70,7 +70,7 @@ export function PromptInput({
           className={optimizerTextarea}
           rows={1}
         />
-        <p className="mt-2 shrink-0 text-[11px] text-[#5a5a5a]">
+        <p className="mt-2 shrink-0 text-[11px] text-zinc-500 dark:text-zinc-400">
           {len} characters -- {tokEst} tokens
         </p>
       </div>
