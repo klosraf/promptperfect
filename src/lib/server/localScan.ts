@@ -323,7 +323,8 @@ export function getLocalScanRoots(): string[] {
       .map((s) => path.normalize(s));
   }
   const home = os.homedir();
-  return [home, '/Users/klosraf', process.cwd()].filter(Boolean).map((s) => path.normalize(s));
+  // No hardcoded personal paths: home + repo cwd, overridable via env.
+  return [home, process.cwd()].filter(Boolean).map((s) => path.normalize(s));
 }
 
 /** True when `abs` (already normalized) sits inside one of `roots`. */
