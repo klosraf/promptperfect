@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { userFacingOptimizeError } from "./optimizeUserError";
+import {
+  sanitizeProviderMessage,
+  userFacingOptimizeError,
+} from "./optimizeUserError";
 
 describe("userFacingOptimizeError", () => {
   it("handles empty and passthrough", () => {
@@ -58,6 +61,26 @@ describe("userFacingOptimizeError", () => {
     );
     expect(userFacingOptimizeError("Invalid API key provided")).toMatch(
       /missing or invalid/i
+    );
+  });
+});
+
+describe("sanitizeProviderMessage", () => {
+  it("redacts key-like material but keeps the message shape", () => {
+    expect(sanitizeProviderMessage("bad key sk-abcDEF1234567890 rejected")).toBe(
+      "bad key [redacted] rejected"
+    );
+    expect(
+      sanitizeProviderMessage("GET https://x.test/v1?key=AIzaSyABCDEF1234567890 failed")
+    ).toBe("GET https://x.test/v1?key=[redacted] failed");
+    expect(sanitizeProviderMessage("Bearer abcdefgh12345678 expired")).toBe(
+      "Bearer [redacted] expired"
+    );
+  });
+
+  it("leaves ordinary messages untouched", () => {
+    expect(sanitizeProviderMessage("weird provider blob")).toBe(
+      "weird provider blob"
     );
   });
 });

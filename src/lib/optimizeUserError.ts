@@ -1,6 +1,23 @@
 /**
  * Maps low-level Gemini / AI SDK errors into clearer UI copy for /app Optimize.
  */
+/**
+ * Strips secret-like material (API keys, tokens, key-bearing URLs) from
+ * provider error text before it reaches clients or logs. Detection in
+ * `userFacingOptimizeError` still runs on the raw message; only the
+ * *output* is sanitized, so mappings are unaffected.
+ */
+export function sanitizeProviderMessage(msg: string): string {
+  const out = msg
+    .replace(/([?&](?:key|api_key|token|access_token)=)[^&\s]+/gi, '$1[redacted]')
+    .replace(/(Bearer\s+)[A-Za-z0-9\-._~+/=]{8,}/g, '$1[redacted]')
+    .replace(
+      /\b(sk-[A-Za-z0-9-_]{8,}|AIza[A-Za-z0-9-_]{10,}|xox[baprs]-[A-Za-z0-9-]{8,})\b/g,
+      '[redacted]',
+    );
+  return out.length > 500 ? out.slice(0, 500) + '…' : out;
+}
+
 export function userFacingOptimizeError(err: unknown): string {
   const raw =
     err instanceof Error ? err.message.trim() : String(err).trim();
@@ -34,7 +51,7 @@ export function userFacingOptimizeError(err: unknown): string {
 
   if (m.includes('missing') && m.includes('api key')) {
     return (
-      `${raw} Set GOOGLE_GENERATIVE_AI_API_KEY, GEMINI_API_KEY, or GOOGLE_API_KEY on the server.`
+      `${sanitizeProviderMessage(raw)} Set GOOGLE_GENERATIVE_AI_API_KEY, GEMINI_API_KEY, or GOOGLE_API_KEY on the server.`
     );
   }
 
@@ -81,5 +98,5 @@ export function userFacingOptimizeError(err: unknown): string {
     );
   }
 
-  return raw;
+  return sanitizeProviderMessage(raw);
 }

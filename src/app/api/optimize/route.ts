@@ -9,6 +9,7 @@ import { parseOptimizeBody } from '@/lib/apiSchemas';
 import { getServiceClient } from '@/lib/server/supabase';
 import { getRequestId, logApi, logWarn } from '@/lib/logger';
 import { enforceRateLimit } from '@/lib/auth/rateLimit';
+import { recordProviderFailure } from '@/lib/server/providerHealth';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -114,6 +115,7 @@ async function handlePost(request: Request) {
 
     return result.toTextStreamResponse();
   } catch (err) {
+    recordProviderFailure();
     logWarn(
       'optimize',
       `request failed: ${err instanceof Error ? err.message : 'Invalid request'}`,

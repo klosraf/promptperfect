@@ -12,6 +12,7 @@ import { isUnlimitedMode } from '@/lib/localMode';
 import { getSystemPrompt } from '@/lib/prompts';
 import { parseOptimizeBody } from '@/lib/apiSchemas';
 import { getRequestId, logApi, logWarn } from '@/lib/logger';
+import { recordProviderFailure } from '@/lib/server/providerHealth';
 import type { OptimizationLogInsert } from '@/types/database';
 
 export const runtime = 'nodejs';
@@ -223,6 +224,7 @@ async function handlePost(req: NextRequest) {
         { headers: corsHeaders },
       );
     } catch (err) {
+      recordProviderFailure();
       return Response.json(
         { error: userFacingOptimizeError(err) },
         { status: 500, headers: corsHeaders },
