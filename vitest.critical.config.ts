@@ -11,11 +11,10 @@ import path from "path";
  * restricts coverage to the four files that carry the product's core logic and
  * applies the thresholds to EACH file rather than to the average.
  *
- * Thresholds are set at today's measured values so the gate locks in the
- * current state and fails on regression. Ratchet them upward as the remaining
- * gaps close — `useOptimizeRunner.ts` is still the weakest at 80.23 statements,
- * 63.88 branches and 66.66 functions, and the shortfall is deep `isGemini`
- * branches inside the streaming path.
+ * Thresholds lock the post-2026-10-18 state and fail on regression. Ratchet
+ * history: 80/60/65 → 95/80/90 after closing the `useOptimizeRunner.ts`
+ * streaming/guest/sync branches (98.81 stmts, 90.97 branches, 98.03 funcs,
+ * 100% lines). Raise again only with new measured minima and safe margins.
  *
  * NOTE: these thresholds MUST be per-file. Passing them as a global average
  * would let one strong file mask a weak one, which is the exact failure this
@@ -46,9 +45,9 @@ export default defineConfig({
       ],
       thresholds: {
         perFile: true,
-        lines: 80,
-        branches: 60,
-        functions: 65,
+        lines: 95,
+        branches: 80,
+        functions: 90,
       },
     },
   },
