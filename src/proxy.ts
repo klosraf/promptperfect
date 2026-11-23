@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { isUnlimitedMode } from '@/lib/localMode';
+import { isUnlimitedMode, normalizeSupabaseUrl } from '@/lib/localMode';
 
 /** Page routes that require a Supabase session (userId from cookie JWT only). */
 const PROTECTED = ['/library', '/profile', '/control-room'];
@@ -49,10 +49,19 @@ export async function proxy(req: NextRequest) {
   }
 
   const res = NextResponse.next();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+
+  // Unconfigured Supabase (missing or placeholder URL/key — a fresh clone,
+  // CI without secrets, a self-hosted box before setup) degrades to
+  // "no session", the same contract as createSupabaseBrowserClient and
+  // getServiceClient returning null. createServerClient throws on empty
+  // credentials, which turned every matched page (/app, /library,
+  // /profile, /control-room) into a 500 in no-env production builds —
+  // first seen on this branch's first remote CI run (2026-11-22).
+  const supabaseUrl = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  let user = null;
+  if (supabaseUrl && supabaseKey) {
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
         getAll: () => req.cookies.getAll(),
         setAll: (c) =>
@@ -60,12 +69,11 @@ export async function proxy(req: NextRequest) {
             res.cookies.set(name, value, options),
           ),
       },
-    },
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    });
+    ({
+      data: { user },
+    } = await supabase.auth.getUser());
+  }
 
   const isProtected = PROTECTED.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   if (isProtected && !user) {
