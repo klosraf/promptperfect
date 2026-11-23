@@ -5,6 +5,7 @@ import {
 } from '@/lib/server/supabase';
 import { logWarn } from '@/lib/logger';
 import { parseSaveHistoryBody } from '@/lib/apiSchemas';
+import { normalizeModeForDb } from '@/lib/optimization-logs';
 import { enforceRateLimit } from '@/lib/auth/rateLimit';
 
 /** Authenticated DB write: throttle before paying for JWT verification. */
@@ -68,7 +69,6 @@ export async function POST(request: Request) {
           password_hash: 'supabase_auth',
           provider: 'gemini',
           model: 'gemini-2.0-flash',
-          api_key: '',
         },
         { onConflict: 'id' },
       );
@@ -79,7 +79,10 @@ export async function POST(request: Request) {
     session_id,
     prompt_original,
     prompt_optimized,
-    mode,
+    // EGM F1-03: the DB CHECK only admits the four canonical modes;
+    // app modes (developer/research/…) must be normalized server-side
+    // or the insert is rejected and surfaces as a generic 500.
+    mode: normalizeModeForDb(mode),
     explanation,
     user_id,
   };

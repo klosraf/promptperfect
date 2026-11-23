@@ -29,11 +29,12 @@ export async function POST(request: Request) {
     if (!parsed.ok) {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
-    const { provider, model, apiKey } = parsed.value;
-    // NOTE (secret boundary): the BYOK key is stored as-sent in pp_users so
-    // the server can call providers on the user's behalf. It is scoped to
-    // the authenticated user (service-role write + RLS), never logged, and
-    // never echoed back in any response. See SECURITY_AUDIT.md.
+    const { provider, model } = parsed.value;
+    // NOTE (secret boundary, ADR-0010): the server NEVER persists BYOK
+    // keys. A key lives only in the user's browser and reaches providers
+    // per request. An `api_key` field sent by an older client is validated
+    // by the parser and discarded there; it is never written, logged, or
+    // echoed back in any response.
 
     const admin = getSupabaseAdminClient();
     if (!admin) {
@@ -46,7 +47,6 @@ export async function POST(request: Request) {
     const updates: Record<string, unknown> = {};
     if (provider !== undefined) updates.provider = provider;
     if (model !== undefined) updates.model = model;
-    if (apiKey !== undefined) updates.api_key = apiKey;
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ ok: true });

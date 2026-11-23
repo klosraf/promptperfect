@@ -1,23 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useMounted } from '@/hooks/useMounted';
 import { useRouter } from 'next/navigation';
 import type { Provider } from '@/lib/types';
+import { DEFAULT_MODEL_IDS, PROVIDER_LABELS } from '@/lib/modelCatalog';
 import { createSupabaseBrowserClient } from '@/lib/client/supabaseBrowser';
 import { readEnginePrefs, writeEnginePrefs } from '@/lib/client/enginePrefsStorage';
 import { resolveAuthUserAndSession } from '@/lib/client/ppUserSync';
 
-const PROVIDER_MODELS: Record<Provider, string> = {
-  gemini: 'gemini-2.0-flash',
-  openai: 'gpt-6-astra',
-  anthropic: 'claude-3-5-haiku-20241022',
-};
-
-const PROVIDER_LABELS: Record<Provider, string> = {
-  gemini: 'Gemini 2.0 Flash',
-  openai: 'OpenAI GPT-4o-mini',
-  anthropic: 'Anthropic Claude Haiku',
-};
+// EGM E3: models/labels come from the single catalog — this page
+// previously persisted the retired `gemini-2.0-flash` and showed an
+// `OpenAI GPT-4o-mini` label for a provider that runs GPT-6 Astra.
+const PROVIDER_MODELS = DEFAULT_MODEL_IDS;
 
 const PROVIDER_DESCRIPTIONS: Record<Provider, string> = {
   gemini: 'Free. No setup needed.',
@@ -27,8 +22,8 @@ const PROVIDER_DESCRIPTIONS: Record<Provider, string> = {
 
 export default function ControlRoomPage() {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-  const [user, setUser] = useState<{ id: string; provider: string; api_key?: string } | null>(null);
+  const mounted = useMounted();
+  const [user, setUser] = useState<{ id: string; provider: string } | null>(null);
   const [provider, setProvider] = useState<Provider>('gemini');
   const [apiKey, setApiKey] = useState('');
   const [verifyStatus, setVerifyStatus] = useState<'idle' | 'checking' | 'ok' | 'fail'>(
@@ -37,10 +32,6 @@ export default function ControlRoomPage() {
   const [verifyMessage, setVerifyMessage] = useState('');
   const [saving, setSaving] = useState(false);
   const [continueError, setContinueError] = useState('');
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (!mounted) return;
@@ -63,7 +54,6 @@ export default function ControlRoomPage() {
         setUser({
           id: user.id,
           provider: providerPref,
-          api_key: undefined,
         });
         if (providerPref && providerPref !== 'gemini') {
           router.replace('/app');
@@ -116,7 +106,6 @@ export default function ControlRoomPage() {
         body: JSON.stringify({
           provider,
           model: PROVIDER_MODELS[provider],
-          api_key: provider !== 'gemini' ? apiKey : '',
         }),
       });
       const payload = await res.json().catch(() => ({}));

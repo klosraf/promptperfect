@@ -1,6 +1,6 @@
 'use strict';
 
-const DEFAULT_API_URL = 'https://promptperfect-beaglecorp.vercel.app';
+const DEFAULT_API_URL = 'https://promptperfect.vercel.app';
 const DEFAULT_MODE = 'better';
 const DEFAULT_PROVIDER = 'gemini';
 const FETCH_TIMEOUT_MS = 30_000;
@@ -34,8 +34,23 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       apiUrl: DEFAULT_API_URL,
       mode: DEFAULT_MODE,
       provider: DEFAULT_PROVIDER,
-      apiKey: '',
     });
+
+    // EGM E7 (F6-09): the BYOK key lives ONLY in chrome.storage.local —
+    // storage.sync replicates values to the browser vendor's cloud and to
+    // every signed-in browser. Read-time migration: a legacy key still in
+    // sync is moved to local and removed from sync on first read.
+    const localSettings = await chrome.storage.local.get({ apiKey: '' });
+    let storedKey =
+      typeof localSettings.apiKey === 'string' ? localSettings.apiKey : '';
+    if (!storedKey) {
+      const legacy = await chrome.storage.sync.get({ apiKey: '' });
+      if (typeof legacy.apiKey === 'string' && legacy.apiKey) {
+        storedKey = legacy.apiKey;
+        await chrome.storage.local.set({ apiKey: storedKey });
+        await chrome.storage.sync.remove('apiKey');
+      }
+    }
 
     const apiUrl =
       typeof settings.apiUrl === 'string' && settings.apiUrl.trim()
@@ -56,8 +71,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           ? settings.provider.trim()
           : DEFAULT_PROVIDER;
 
-    const apiKey =
-      typeof settings.apiKey === 'string' ? settings.apiKey.trim() : '';
+    const apiKey = storedKey.trim();
 
     if (!apiKey) {
       return {

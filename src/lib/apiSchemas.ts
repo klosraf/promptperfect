@@ -170,6 +170,12 @@ export function parseFeedbackBody(
   const sessionId = asTrimmedString(b.sessionId) ?? asTrimmedString(b.session_id);
   if (!mode) return { ok: false, error: 'mode is required' };
   if (!feedback) return { ok: false, error: 'feedback is required' };
+  // EGM F2-03: feedback is a vote, not free text — the DB column has no
+  // CHECK, so the parser is the only enum enforcement. Anything else is
+  // a malformed client, not data.
+  if (feedback !== 'up' && feedback !== 'down') {
+    return { ok: false, error: 'feedback must be "up" or "down"' };
+  }
   if (!sessionId) return { ok: false, error: 'sessionId is required' };
   return {
     ok: true,
@@ -178,7 +184,7 @@ export function parseFeedbackBody(
       provider: asTrimmedString(b.provider) ?? 'gemini',
       inputLength: asNonNegativeInt(b.inputLength),
       outputLength: asNonNegativeInt(b.outputLength),
-      feedback: feedback.slice(0, 2000),
+      feedback,
       sessionId: sessionId.slice(0, MAX_ID_CHARS),
     },
   };
@@ -226,14 +232,14 @@ const UPDATE_USER_MAX_API_KEY_CHARS = 2000;
 export interface UpdateUserBodyValue {
   provider?: string;
   model?: string;
-  apiKey?: string;
 }
 
 /**
  * Shared parser for `/api/auth/update-user`. `provider` is allow-listed and
- * lowercased; `model` and the BYOK `api_key` are length-bounded. Returns the
- * exact user-facing error for a 400 body. The BYOK value is returned as
- * `apiKey` (callers map it to the `api_key` column; never log/echo it).
+ * lowercased; `model` is length-bounded. Returns the exact user-facing error
+ * for a 400 body. A BYOK `api_key` field from an already-deployed client is
+ * still validated (same 400 contract) and then DISCARDED: the server never
+ * persists user API keys (ADR-0010), so it is absent from the returned value.
  */
 export function parseUpdateUserBody(
   body: unknown,
@@ -261,7 +267,8 @@ export function parseUpdateUserBody(
     if (k.length > UPDATE_USER_MAX_API_KEY_CHARS) {
       return { ok: false, error: 'Invalid api_key' };
     }
-    value.apiKey = k;
+    // Validated above; intentionally not copied into the value (ADR-0010).
+    void k;
   }
   return { ok: true, value };
 }
@@ -356,6 +363,16 @@ export function parseSaveHistoryBody(
       error: `Prompt is too long (max ${MAX_PROMPT_CHARS.toLocaleString()} characters)`,
     };
   }
+  // EGM F1-03: mirror the DB CHECK bounds (migration 20261012:
+  // session_id 1-300, explanation <= 20000) so an oversized payload is a
+  // clean 400 here instead of a generic 500 from a rejected insert.
+  if (session_id.length > 300) {
+    return { ok: false, error: 'session_id is too long (max 300 characters)' };
+  }
+  const explanationRaw = typeof b.explanation === 'string' ? b.explanation : '';
+  if (explanationRaw.length > 20000) {
+    return { ok: false, error: 'explanation is too long (max 20000 characters)' };
+  }
   return {
     ok: true,
     value: {
@@ -363,7 +380,7 @@ export function parseSaveHistoryBody(
       prompt_original,
       prompt_optimized,
       mode: typeof b.mode === 'string' ? b.mode : 'better',
-      explanation: typeof b.explanation === 'string' ? b.explanation : '',
+      explanation: explanationRaw,
       provider: typeof b.provider === 'string' ? b.provider : null,
       optimize_session_id:
         typeof b.optimize_session_id === 'string' ? b.optimize_session_id : null,

@@ -32,3 +32,18 @@ describe("enginePrefsStorage", () => {
     expect(loadApiKey("openai")).toBe("");
   });
 });
+
+
+describe('clearStoredApiKeys (EGM E3)', () => {
+  it('removes the BYOK key blob from localStorage', async () => {
+    const { clearStoredApiKeys, API_KEY_STORAGE_KEY } = await import(
+      './enginePrefsStorage'
+    );
+    localStorage.setItem(
+      API_KEY_STORAGE_KEY,
+      JSON.stringify({ openai: 'sk-test', anthropic: 'sk-ant-test' }),
+    );
+    clearStoredApiKeys();
+    expect(localStorage.getItem(API_KEY_STORAGE_KEY)).toBeNull();
+  });
+});

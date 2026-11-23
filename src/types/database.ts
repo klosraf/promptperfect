@@ -66,6 +66,9 @@ export interface PpUserInsert {
   password_hash: string;
   provider?: string | null;
   model?: string | null;
+  /** Legacy column: the server no longer persists BYOK keys (ADR-0010). The
+   * 20261113 migrations nullify the stock and guard the column; this field is
+   * removed once the guard migration has shipped. Never write a key here. */
   api_key?: string | null;
   /** Legacy demo quota columns (20250311000002); defaulted, unused by app code. */
   demo_tokens_used?: number | null;

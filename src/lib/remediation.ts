@@ -28,6 +28,22 @@ const INSTRUCTIONS: Record<string, string> = {
     '- Contract hygiene: keep ---EXPLANATION--- and ---CHANGES--- markers out of the prompt body.',
 };
 
+/** Marker that identifies an already-appended remediation block. */
+export const REMEDIATION_MARKER = '[Refinement pass —';
+
+/**
+ * Append `block` to `input` unless THIS block is already present (EGM E3,
+ * F3-11: repeated "Fix & re-run" clicks used to stack identical blocks).
+ * Dedupe is by block content (Goldfish P2, cierre): a DIFFERENT block —
+ * directives for other failed checks — is appended normally, never
+ * silently dropped. Returns `input` unchanged for a blank/duplicate block.
+ */
+export function appendRemediationBlock(input: string, block: string): string {
+  if (!block.trim()) return input;
+  if (input.includes(block.trim())) return input;
+  return `${input.trimEnd()}${block}`;
+}
+
 /**
  * Build the appended directive block for `failedIds` (unknown ids ignored).
  * Returns `''` when there is nothing to fix.

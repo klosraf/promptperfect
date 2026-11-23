@@ -66,7 +66,7 @@ describe('/api/auth/update-user POST', () => {
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
-  it('persists validated updates scoped to the user', async () => {
+  it('persists provider/model scoped to the user and never persists the BYOK key (ADR-0010)', async () => {
     const { update } = { update: mockUpdate };
     const res = await POST(
       post({ provider: 'OpenAI', model: 'gpt-6-astra', api_key: 'sk-test' }),
@@ -76,8 +76,8 @@ describe('/api/auth/update-user POST', () => {
     expect(update).toHaveBeenCalledWith({
       provider: 'openai',
       model: 'gpt-6-astra',
-      api_key: 'sk-test',
     });
+    expect(JSON.stringify(update.mock.calls)).not.toContain('sk-test');
     const eq = update.mock.results[0]?.value.eq as ReturnType<typeof vi.fn>;
     expect(eq).toHaveBeenCalledWith('id', 'user-123');
   });

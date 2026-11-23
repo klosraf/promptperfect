@@ -20,7 +20,7 @@ export interface OptimizeRequest {
   prompt: string;
   mode: OptimizationMode;
   provider: Provider;
-  /** BYOK key for openai/anthropic. Never persisted server-side. */
+  /** BYOK key for openai/anthropic, sent per request. Stored only in this browser's local storage (ADR-0010): never persisted on the server, never logged. */
   apiKey?: string;
   /** Client-generated session ID for feedback. */
   session_id?: string;

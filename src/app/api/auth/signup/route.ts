@@ -169,7 +169,6 @@ export async function POST(request: Request) {
     password_hash: 'supabase_auth',
     provider: 'gemini',
     model: 'gemini-2.0-flash',
-    api_key: '',
   })
   if (insertErr && insertErr.code !== '23505') {
     logWarn('signup', `insert pp_users failed: ${insertErr.message}`)

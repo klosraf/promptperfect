@@ -41,11 +41,12 @@ describe("parseLoginBody", () => {
 });
 
 describe("parseUpdateUserBody", () => {
-  it("allow-lists + lowercases provider and trims model/api_key", () => {
+  it("allow-lists + lowercases provider, trims model, and discards api_key (ADR-0010)", () => {
     const r = parseUpdateUserBody({ provider: "OpenAI", model: " gpt-6-astra ", api_key: " sk-test " });
     expect(r.ok).toBe(true);
     if (r.ok) {
-      expect(r.value).toEqual({ provider: "openai", model: "gpt-6-astra", apiKey: "sk-test" });
+      expect(r.value).toEqual({ provider: "openai", model: "gpt-6-astra" });
+      expect("apiKey" in r.value).toBe(false);
     }
   });
 
@@ -246,5 +247,30 @@ describe("parseLocalScanBody", () => {
     expect(parseLocalScanBody({ dir: "  " })).toEqual({ ok: false, error: "Missing or invalid dir" });
     expect(parseLocalScanBody({ dir: 123 })).toEqual({ ok: false, error: "Missing or invalid dir" });
     expect(parseLocalScanBody({ dir: "x".repeat(1025) })).toEqual({ ok: false, error: "Missing or invalid dir" });
+  });
+});
+
+describe("EGM bounds (F2-03/F1-03)", () => {
+  it("parseFeedbackBody rejects non-vote feedback", () => {
+    const bad = parseFeedbackBody({ mode: "better", feedback: "great", sessionId: "s1" });
+    expect(bad.ok).toBe(false);
+    const good = parseFeedbackBody({ mode: "better", feedback: "down", sessionId: "s1" });
+    expect(good.ok).toBe(true);
+  });
+
+  it("parseSaveHistoryBody rejects payloads beyond the DB CHECK bounds", () => {
+    const longSession = parseSaveHistoryBody({
+      session_id: "x".repeat(301),
+      prompt_original: "a",
+      prompt_optimized: "b",
+    });
+    expect(longSession.ok).toBe(false);
+    const longExplanation = parseSaveHistoryBody({
+      session_id: "s1",
+      prompt_original: "a",
+      prompt_optimized: "b",
+      explanation: "e".repeat(20001),
+    });
+    expect(longExplanation.ok).toBe(false);
   });
 });

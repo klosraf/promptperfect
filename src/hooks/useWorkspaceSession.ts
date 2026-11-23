@@ -1,12 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useMounted } from '@/hooks/useMounted';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import type { AppUser, Provider } from '@/lib/types';
 import { createSupabaseBrowserClient } from '@/lib/client/supabaseBrowser';
 import {
   buildAppUserFromSupabaseUser,
+  clearStoredApiKeys,
   loadApiKey,
   readEnginePrefs,
 } from '@/lib/client/enginePrefsStorage';
@@ -40,7 +42,7 @@ function toProvider(value: unknown): Provider {
  */
 export function useWorkspaceSession(): WorkspaceSession {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const [user, setUser] = useState<AppUser | null>(null);
   const [provider, setProvider] = useState<Provider>('gemini');
   const [apiKey, setApiKey] = useState('');
@@ -48,13 +50,10 @@ export function useWorkspaceSession(): WorkspaceSession {
   const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
     if (!mounted) return;
     const client = createSupabaseBrowserClient();
     if (!client) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- EGM E4 (signed): terminal branch synchronizing with external systems (absence of a Supabase client is an environment fact, not derived state). It sets terminal defaults once and returns; no render cascade is possible.
       setUser(null);
       setProvider('gemini');
       setApiKey('');
@@ -104,9 +103,17 @@ export function useWorkspaceSession(): WorkspaceSession {
     };
   }, [mounted]);
 
-  useEffect(() => {
+  // EGM E4: apiKey follows provider (it is read from localStorage per
+  // provider). Adjusted during render — the React-docs pattern for
+  // state that tracks a prop — instead of an effect. This must stay
+  // useState, not a pure derivation: setApiKey is public API of this
+  // hook and the key can also be written without a provider change
+  // (settings panel save).
+  const [prevProvider, setPrevProvider] = useState(provider);
+  if (provider !== prevProvider) {
+    setPrevProvider(provider);
     setApiKey(loadApiKey(provider));
-  }, [provider]);
+  }
 
   const handleLogout = useCallback(async () => {
     setSigningOut(true);
@@ -116,6 +123,7 @@ export function useWorkspaceSession(): WorkspaceSession {
         await supabase.auth.signOut();
       }
     } finally {
+      clearStoredApiKeys();
       try {
         localStorage.removeItem('pp_ui_theme');
       } catch {

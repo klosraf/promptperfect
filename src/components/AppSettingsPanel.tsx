@@ -1,29 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X } from 'lucide-react';
 import type { Provider } from '@/lib/types';
-import { writeEnginePrefs } from '@/lib/client/enginePrefsStorage';
+import {
+  writeEnginePrefs,
+  loadApiKey,
+  API_KEY_STORAGE_KEY,
+} from '@/lib/client/enginePrefsStorage';
+import { DEFAULT_MODEL_IDS, PROVIDER_LABELS } from '@/lib/modelCatalog';
 
-const STORAGE_KEY = 'promptperfect:apikey';
-const PROVIDER_LABELS: Record<Provider, string> = {
-  gemini: 'Gemini 2.0 Flash',
-  openai: 'OpenAI GPT-4o-mini',
-  anthropic: 'Anthropic Claude Haiku',
-};
-
-function loadStoredKey(p: Provider): string {
-  if (p === 'gemini') return '';
-  try {
-    const stored: Record<string, string> = JSON.parse(
-      localStorage.getItem(STORAGE_KEY) || '{}',
-    );
-    return stored[p] || '';
-  } catch {
-    // swallow: JSON.parse failed on stored key blob — return empty string
-    return '';
-  }
-}
+// EGM E3: labels, default model ids and the BYOK storage key were
+// duplicated here (with stale values: "Gemini 2.0 Flash",
+// "GPT-4o-mini", a pinned Anthropic snapshot). They now come from the
+// single catalog and the shared engine-prefs storage module.
+const STORAGE_KEY = API_KEY_STORAGE_KEY;
+const loadStoredKey = loadApiKey;
 
 interface AppSettingsPanelProps {
   open: boolean;
@@ -51,12 +43,23 @@ export function AppSettingsPanel({
   const [verifyState, setVerifyState] = useState<'idle' | 'valid' | 'invalid'>('idle');
   const [saveError, setSaveError] = useState('');
 
-  useEffect(() => {
-    setLocalProvider(provider);
-    setLocalKey(apiKey || loadStoredKey(provider));
-    setVerifyState('idle');
-    setSaveError('');
-  }, [open, provider, apiKey]);
+  // EGM E4: the panel mirrors the parent's provider/key whenever the
+  // dialog opens or the parent changes them — state that tracks props,
+  // adjusted during render per the React docs (no effect). The key is
+  // primitive (open | provider | apiKey) so the reset terminates, and
+  // typing in the input never touches it: localKey/localProvider are
+  // the working state while the panel is open.
+  const syncKey = `${open ? '1' : '0'}|${provider}|${apiKey}`;
+  const [prevSyncKey, setPrevSyncKey] = useState(syncKey);
+  if (syncKey !== prevSyncKey) {
+    setPrevSyncKey(syncKey);
+    if (open) {
+      setLocalProvider(provider);
+      setLocalKey(apiKey || loadStoredKey(provider));
+      setVerifyState('idle');
+      setSaveError('');
+    }
+  }
 
   const handleVerifyKey = async () => {
     if (localProvider === 'gemini' || !localKey.trim()) return;
@@ -92,13 +95,7 @@ export function AppSettingsPanel({
         credentials: 'same-origin',
         body: JSON.stringify({
           provider: localProvider,
-          model:
-            localProvider === 'gemini'
-              ? 'gemini-2.0-flash'
-              : localProvider === 'openai'
-                ? 'gpt-6-astra'
-                : 'claude-3-5-haiku-20241022',
-          api_key: localProvider !== 'gemini' ? localKey : '',
+          model: DEFAULT_MODEL_IDS[localProvider],
         }),
       });
       const payload = await res.json().catch(() => ({}));
@@ -192,9 +189,17 @@ export function AppSettingsPanel({
                       : 'border-zinc-600 text-zinc-400 hover:border-zinc-500'
                   }`}
                 >
-                  {p === 'gemini' && '🟢'}
-                  {p === 'openai' && '⬛'}
-                  {p === 'anthropic' && '🟣'} {PROVIDER_LABELS[p].split(' ')[0]}
+                  <span
+                    aria-hidden
+                    className={`mr-1.5 inline-block h-2 w-2 rounded-full ${
+                      p === 'gemini'
+                        ? 'bg-emerald-400'
+                        : p === 'openai'
+                          ? 'bg-zinc-200'
+                          : 'bg-purple-400'
+                    }`}
+                  />
+                  {PROVIDER_LABELS[p].split(' ')[0]}
                 </button>
               ))}
             </div>

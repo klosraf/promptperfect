@@ -1,6 +1,6 @@
 'use strict';
 
-const DEFAULT_API_URL = 'https://promptperfect-beaglecorp.vercel.app';
+const DEFAULT_API_URL = 'https://promptperfect.vercel.app';
 
 const promptInput = document.getElementById('promptInput');
 const modeEl = document.getElementById('mode');
@@ -170,7 +170,11 @@ saveBtn.addEventListener('click', async () => {
   const mode = modeEl.value;
   const provider = providerEl.value;
   const apiKey = (apiKeyEl.value || '').trim();
-  await chrome.storage.sync.set({ apiUrl, mode, provider, apiKey });
+  // EGM E7 (F6-09): non-sensitive prefs may stay in sync; the BYOK key
+  // is written ONLY to chrome.storage.local and removed from sync.
+  await chrome.storage.sync.set({ apiUrl, mode, provider });
+  await chrome.storage.local.set({ apiKey });
+  await chrome.storage.sync.remove('apiKey');
   updateDocLinks(apiUrl);
   updateApiKeyHint(Boolean(apiKey));
   connStatus.textContent = 'Saving…';
@@ -181,15 +185,32 @@ saveBtn.addEventListener('click', async () => {
 apiUrlEl.addEventListener('change', () => updateDocLinks(apiUrlEl.value));
 apiKeyEl.addEventListener('input', () => updateApiKeyHint(Boolean(apiKeyEl.value.trim())));
 
-chrome.storage.sync.get(
-  { apiUrl: DEFAULT_API_URL, mode: 'better', provider: 'gemini', apiKey: '' },
-  (items) => {
-    apiUrlEl.value = items.apiUrl || DEFAULT_API_URL;
-    modeEl.value = items.mode || 'better';
-    providerEl.value = items.provider || 'gemini';
-    apiKeyEl.value = items.apiKey || '';
-    updateDocLinks(apiUrlEl.value);
-    updateApiKeyHint(Boolean(items.apiKey));
-    checkConnection();
-  },
-);
+// EGM E7 (F6-09): prefs come from sync; the key comes from
+// chrome.storage.local. A legacy key still in sync is migrated on read
+// (moved to local, removed from sync) before the field is populated, so
+// saving can never overwrite the migrated key with an empty field.
+(async () => {
+  const items = await chrome.storage.sync.get({
+    apiUrl: DEFAULT_API_URL,
+    mode: 'better',
+    provider: 'gemini',
+  });
+  const localItems = await chrome.storage.local.get({ apiKey: '' });
+  let storedApiKey =
+    typeof localItems.apiKey === 'string' ? localItems.apiKey : '';
+  if (!storedApiKey) {
+    const legacy = await chrome.storage.sync.get({ apiKey: '' });
+    if (typeof legacy.apiKey === 'string' && legacy.apiKey) {
+      storedApiKey = legacy.apiKey;
+      await chrome.storage.local.set({ apiKey: storedApiKey });
+      await chrome.storage.sync.remove('apiKey');
+    }
+  }
+  apiUrlEl.value = items.apiUrl || DEFAULT_API_URL;
+  modeEl.value = items.mode || 'better';
+  providerEl.value = items.provider || 'gemini';
+  apiKeyEl.value = storedApiKey || '';
+  updateDocLinks(apiUrlEl.value);
+  updateApiKeyHint(Boolean(storedApiKey));
+  checkConnection();
+})();

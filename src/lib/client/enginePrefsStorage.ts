@@ -39,6 +39,20 @@ export function writeEnginePrefs(prefs: EnginePrefs): void {
   }
 }
 
+/**
+ * Remove every stored BYOK API key (EGM E3): logout must not leave
+ * provider keys behind in localStorage. Best-effort, like the other
+ * clear helpers in this module.
+ */
+export function clearStoredApiKeys(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(API_KEY_STORAGE_KEY);
+  } catch {
+    // swallow: key clear skipped
+  }
+}
+
 export function clearEnginePrefs(): void {
   if (typeof window === 'undefined') return;
   try {

@@ -38,7 +38,6 @@ export async function jsonLoginSuccess(
         password_hash: 'supabase_auth',
         provider: 'gemini',
         model: 'gemini-2.0-flash',
-        api_key: '',
       })
       const { data: inserted } = await admin
         .from('pp_users')
