@@ -22,10 +22,10 @@ export function DemoLimitModal({ isOpen, onClose }: DemoLimitModalProps) {
         <div className="w-10 h-10 rounded-full bg-accent/15 flex items-center justify-center mb-4">
           <Star className="h-5 w-5 text-accent-text" fill="currentColor" aria-hidden />
         </div>
-        <h2 id={titleId} className="text-[#E7E6D9] font-heading text-xl font-bold mb-2">
+        <h2 id={titleId} className="text-foreground font-heading text-xl font-bold mb-2">
           You&apos;ve used all {limit} free optimizations
         </h2>
-        <p className="text-[#B0B0B0] text-sm leading-relaxed">
+        <p className="text-foreground-dim text-sm leading-relaxed">
           Sign up for a free account to get unlimited prompt optimizations, save your prompt library, and access your history across devices.
         </p>
       </div>
@@ -48,7 +48,7 @@ export function DemoLimitModal({ isOpen, onClose }: DemoLimitModalProps) {
         <button
           type="button"
           onClick={onClose}
-          className="w-full text-[#8a8a8a] text-xs hover:text-[#B0B0B0] transition-colors py-2"
+          className="w-full text-muted-foreground text-xs hover:text-foreground-dim transition-colors py-2"
         >
           Maybe later
         </button>

@@ -131,7 +131,7 @@ export function FeedbackButtons({
           className={`inline-flex items-center justify-center rounded-md border bg-transparent p-1 transition-colors duration-200 ease-out disabled:opacity-50 ${
             upActive
               ? 'border-[#22c55e]/40 text-[#22c55e]'
-              : 'border-transparent text-[#555] hover:text-[#22c55e]'
+              : 'border-transparent text-muted-foreground hover:text-[#22c55e]'
           }`}
         >
           <ThumbsUp className="h-[18px] w-[18px]" strokeWidth={2} />
@@ -145,13 +145,13 @@ export function FeedbackButtons({
           className={`inline-flex items-center justify-center rounded-md border bg-transparent p-1 transition-colors duration-200 ease-out disabled:opacity-50 ${
             downActive
               ? 'border-[#ef4444]/40 text-[#ef4444]'
-              : 'border-transparent text-[#555] hover:text-[#ef4444]'
+              : 'border-transparent text-muted-foreground hover:text-[#ef4444]'
           }`}
         >
           <ThumbsDown className="h-[18px] w-[18px]" strokeWidth={2} />
         </button>
         {loading && (
-          <span className="text-sm text-[#8a8a8a]">…</span>
+          <span className="text-sm text-muted-foreground">…</span>
         )}
         {submitted && !loading && (
           <span role="status" className="text-sm text-green-500/90">
@@ -160,7 +160,7 @@ export function FeedbackButtons({
         )}
       </div>
       {!sessionId?.trim() && !loading && (
-        <p className="text-xs text-[#8a8a8a]">
+        <p className="text-xs text-muted-foreground">
           Run Optimize or choose an item from history to attach feedback.
         </p>
       )}

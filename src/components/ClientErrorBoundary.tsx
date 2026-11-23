@@ -36,7 +36,7 @@ export class ClientErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) return this.props.fallback
       return (
         <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 text-center">
-          <p className="text-sm text-[#8a8a8a]">
+          <p className="text-sm text-muted-foreground">
             Something went wrong in this section.
           </p>
           <button

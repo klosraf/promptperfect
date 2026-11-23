@@ -38,7 +38,7 @@ export function PromptInput({
     return (
       <div className="flex w-full min-w-0 flex-col">
         <div className="mb-2 flex shrink-0 items-start justify-between gap-2">
-          <span className="text-sm font-medium text-[#ECECEC]">
+          <span className="text-sm font-medium text-foreground">
             Your prompt
           </span>
           <button
@@ -46,7 +46,7 @@ export function PromptInput({
             onClick={handleCopy}
             disabled={disabled || !value.trim()}
             aria-label={copied ? "Copied" : "Copy to clipboard"}
-            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-transparent px-2 py-1 text-[12px] text-[#888] transition-all duration-200 ease-out hover:border-[#2a2a2a] hover:bg-[#111] hover:text-[#ECECEC] disabled:opacity-40"
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-transparent px-2 py-1 text-[12px] text-muted-foreground transition-all duration-200 ease-out hover:border-border hover:bg-muted hover:text-foreground disabled:opacity-40"
           >
             {copied ? (
               <>
@@ -70,7 +70,7 @@ export function PromptInput({
           className={optimizerTextarea}
           rows={1}
         />
-        <p className="mt-2 shrink-0 text-[11px] text-zinc-500 dark:text-zinc-400">
+        <p className="mt-2 shrink-0 text-[11px] text-muted-foreground dark:text-foreground-dim">
           {len} characters -- {tokEst} tokens
         </p>
       </div>
@@ -85,7 +85,7 @@ export function PromptInput({
         {showLabel ? (
           <label
             htmlFor="prompt-input"
-            className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            className="block text-sm font-medium text-zinc-700 dark:text-foreground-dim"
           >
             Your prompt
           </label>
@@ -97,7 +97,7 @@ export function PromptInput({
           onClick={handleCopy}
           disabled={disabled || !value.trim()}
           aria-label={copied ? "Copied" : "Copy to clipboard"}
-          className="flex h-9 min-w-[44px] items-center justify-center gap-1.5 rounded-lg border border-zinc-300 px-3 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-400 dark:hover:bg-zinc-800"
+          className="flex h-9 min-w-[44px] items-center justify-center gap-1.5 rounded-lg border border-zinc-300 px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50 dark:border-input dark:text-foreground-dim dark:hover:bg-muted"
         >
           {copied ? (
             <>
@@ -119,9 +119,9 @@ export function PromptInput({
         placeholder={placeholder}
         disabled={disabled}
         rows={6}
-        className="min-h-[140px] w-full max-w-full resize-y rounded-xl border border-zinc-300 bg-white px-4 py-3.5 text-base text-zinc-900 placeholder-zinc-500 whitespace-pre-wrap break-words [word-break:break-word] overflow-wrap-anywhere transition-colors focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-400 dark:focus:border-zinc-400 dark:focus:ring-zinc-400/20 disabled:opacity-50 box-border"
+        className="min-h-[140px] w-full max-w-full resize-y rounded-xl border border-zinc-300 bg-white px-4 py-3.5 text-base text-zinc-900 placeholder-zinc-500 whitespace-pre-wrap break-words [word-break:break-word] overflow-wrap-anywhere transition-colors focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-input dark:bg-card dark:text-zinc-100 dark:placeholder-zinc-400 dark:focus:border-zinc-400 dark:focus:ring-zinc-400/20 disabled:opacity-50 box-border"
       />
-      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+      <p className="mt-1 text-xs text-muted-foreground dark:text-foreground-dim">
         {len} characters · est. {tokEst} tokens
       </p>
     </div>

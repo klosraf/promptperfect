@@ -142,17 +142,17 @@ export default function ControlRoomPage() {
 
   if (!mounted || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#050505]">
-        <div className="text-[#ECECEC]">Loading…</div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-foreground">Loading…</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] p-6 text-[#ECECEC] md:p-10">
+    <div className="min-h-screen bg-background p-6 text-foreground md:p-10">
       <div className="mx-auto max-w-3xl">
-        <h1 className="text-2xl font-bold text-[#ECECEC]">Initialize Your AI Engine</h1>
-        <p className="mt-2 text-zinc-400">
+        <h1 className="text-2xl font-bold text-foreground">Initialize Your AI Engine</h1>
+        <p className="mt-2 text-foreground-dim">
           PromptPerfect works out of the box with Gemini. Connect your own AI for more control.
         </p>
 
@@ -167,10 +167,10 @@ export default function ControlRoomPage() {
                 setVerifyStatus('idle');
                 setVerifyMessage('');
               }}
-              className={`rounded-xl border-2 bg-zinc-900/80 p-4 text-left transition ${
+              className={`rounded-xl border-2 bg-card/80 p-4 text-left transition ${
                 provider === p
                   ? 'border-accent shadow-[0_0_16px_rgba(69,82,255,0.33)]'
-                  : 'border-zinc-700 hover:border-zinc-600'
+                  : 'border-input hover:border-input'
               }`}
             >
               <span className="text-xl">
@@ -178,8 +178,8 @@ export default function ControlRoomPage() {
                 {p === 'openai' && '⬛'}
                 {p === 'anthropic' && '🟣'}
               </span>
-              <h3 className="mt-2 font-semibold text-[#ECECEC]">{PROVIDER_LABELS[p]}</h3>
-              <p className="mt-1 text-sm text-zinc-400">{PROVIDER_DESCRIPTIONS[p]}</p>
+              <h3 className="mt-2 font-semibold text-foreground">{PROVIDER_LABELS[p]}</h3>
+              <p className="mt-1 text-sm text-foreground-dim">{PROVIDER_DESCRIPTIONS[p]}</p>
             </button>
           ))}
         </div>
@@ -191,7 +191,7 @@ export default function ControlRoomPage() {
         )}
 
         {provider === 'gemini' ? (
-          <div className="mt-8 rounded-xl border border-zinc-700 bg-zinc-900/50 p-6">
+          <div className="mt-8 rounded-xl border border-input bg-card p-6">
             <p className="animate-[fade-in_0.3s_ease-out_forwards] font-mono text-[#22c55e]">
               ✓ Gemini 2.0 Flash — Ready (no setup needed)
             </p>
@@ -207,16 +207,16 @@ export default function ControlRoomPage() {
         ) : (
           <>
             <div
-              className="mt-8 rounded-[12px] border border-[#333] bg-[#0d0d0d] p-6 font-mono text-sm"
+              className="mt-8 rounded-[12px] border border-[#333] bg-popover p-6 font-mono text-sm"
               style={{ fontFamily: 'var(--font-geist-mono), monospace' }}
             >
-              <h3 className="font-semibold text-[#ECECEC]">🔐 Connect Your AI Engine</h3>
+              <h3 className="font-semibold text-foreground">🔐 Connect Your AI Engine</h3>
               <div className="mt-4 space-y-3">
-                <p className="text-zinc-400">
+                <p className="text-foreground-dim">
                   Provider: {provider === 'openai' ? 'OpenAI' : 'Anthropic'}
                 </p>
                 <div>
-                  <label className="block text-zinc-400">Enter API Key:</label>
+                  <label className="block text-foreground-dim">Enter API Key:</label>
                   <input
                     type="password"
                     value={apiKey}
@@ -226,14 +226,14 @@ export default function ControlRoomPage() {
                       setVerifyMessage('');
                     }}
                     placeholder="sk-..."
-                    className="mt-1 w-full rounded border border-zinc-600 bg-zinc-900 px-3 py-2 text-[#ECECEC] placeholder-zinc-500 focus:border-accent focus:outline-none"
+                    className="mt-1 w-full rounded border border-input bg-card px-3 py-2 text-foreground placeholder-zinc-500 focus:border-accent focus:outline-none"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={() => void handleVerify()}
                   disabled={verifyStatus === 'checking'}
-                  className="rounded border border-zinc-600 bg-zinc-800 px-4 py-2 text-[#ECECEC] hover:bg-zinc-700 disabled:opacity-50"
+                  className="rounded border border-input bg-muted px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
                 >
                   {verifyStatus === 'checking' ? 'Verifying…' : 'Verify Connection'}
                 </button>
@@ -243,7 +243,7 @@ export default function ControlRoomPage() {
             {verifyStatus !== 'idle' && (
               <div className="mt-4 font-mono text-sm">
                 {verifyStatus === 'checking' && (
-                  <p className="text-zinc-400">Checking provider…</p>
+                  <p className="text-foreground-dim">Checking provider…</p>
                 )}
                 {verifyStatus === 'ok' && (
                   <p className="text-[#22c55e]">✓ {verifyMessage}</p>

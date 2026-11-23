@@ -101,14 +101,14 @@ export default function ForgotPasswordPage() {
         <>
           <Link
             href="/login"
-            className="inline-flex items-center gap-1.5 text-sm text-[#B0B0B0] transition hover:text-[#E7E6D9]"
+            className="inline-flex items-center gap-1.5 text-sm text-foreground-dim transition hover:text-foreground"
           >
             <span aria-hidden>←</span> Back to login
           </Link>
-          <h1 className="mt-6 font-heading text-2xl font-semibold tracking-tight text-[#E7E6D9]">
+          <h1 className="mt-6 font-heading text-2xl font-semibold tracking-tight text-foreground">
             Reset your password
           </h1>
-          <p className="mt-1.5 text-sm text-[#B0B0B0]">
+          <p className="mt-1.5 text-sm text-foreground-dim">
             Enter your email and we&apos;ll send you a reset link if you have an
             account.
           </p>
@@ -154,17 +154,17 @@ export default function ForgotPasswordPage() {
           >
             ✓
           </div>
-          <h1 className="text-center font-heading text-2xl font-semibold tracking-tight text-[#E7E6D9]">
+          <h1 className="text-center font-heading text-2xl font-semibold tracking-tight text-foreground">
             {emailSent ? 'Check your email' : 'Reset link ready'}
           </h1>
           {emailSent ? (
-            <p className="mt-3 text-center text-sm leading-relaxed text-[#B0B0B0]">
+            <p className="mt-3 text-center text-sm leading-relaxed text-foreground-dim">
               We sent a password reset link to{' '}
-              <span className="font-medium text-[#E7E6D9]">{email.trim()}</span>.
+              <span className="font-medium text-foreground">{email.trim()}</span>.
               Open it to choose a new password (check spam too).
             </p>
           ) : (
-            <p className="mt-3 text-center text-sm leading-relaxed text-[#B0B0B0]">
+            <p className="mt-3 text-center text-sm leading-relaxed text-foreground-dim">
               Supabase did not send another email (rate limit or mail delay). On
               localhost you can use the direct link below instead.
             </p>
@@ -176,7 +176,7 @@ export default function ForgotPasswordPage() {
           )}
           {recoveryLink && isLocalhost && (
             <div className="mt-4 rounded-lg border border-accent/30 bg-accent/10 p-4">
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#8a8a8a]">
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Local dev — direct reset link
               </p>
               <a
@@ -185,7 +185,7 @@ export default function ForgotPasswordPage() {
               >
                 Open password reset link
               </a>
-              <p className="mt-2 text-xs text-[#8a8a8a]">
+              <p className="mt-2 text-xs text-muted-foreground">
                 Use this when Supabase email does not arrive. Link expires after
                 a short time.
               </p>

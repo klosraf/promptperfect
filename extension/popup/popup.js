@@ -15,6 +15,15 @@ const providerEl = document.getElementById('provider');
 const apiKeyEl = document.getElementById('apiKey');
 const apiKeyHint = document.getElementById('apiKeyHint');
 const saveBtn = document.getElementById('save');
+
+// Loading gate: fields stay disabled until stored settings are applied, so
+// the popup never shows editable defaults that a save could persist over
+// the user's real configuration.
+const gatedFields = [promptInput, modeEl, apiUrlEl, providerEl, apiKeyEl, saveBtn];
+for (const el of gatedFields) {
+  if (el) el.disabled = true;
+}
+
 const connStatus = document.getElementById('connStatus');
 const settingsPanel = document.getElementById('settingsPanel');
 
@@ -212,5 +221,11 @@ apiKeyEl.addEventListener('input', () => updateApiKeyHint(Boolean(apiKeyEl.value
   apiKeyEl.value = storedApiKey || '';
   updateDocLinks(apiUrlEl.value);
   updateApiKeyHint(Boolean(storedApiKey));
+  for (const el of gatedFields) {
+    if (el) el.disabled = false;
+  }
+  document.body.classList.remove('is-loading');
+  const loadStatus = document.getElementById('loadStatus');
+  if (loadStatus) loadStatus.remove();
   checkConnection();
 })();

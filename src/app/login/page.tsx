@@ -237,13 +237,13 @@ export default function LoginPage() {
       <div className="mb-6 text-center">
         <Link
           href="/"
-          className="inline-block font-heading text-xl font-bold tracking-tight text-[#E7E6D9] transition hover:opacity-80"
+          className="inline-block font-heading text-xl font-bold tracking-tight text-foreground transition hover:opacity-80"
         >
           PromptPerfect
         </Link>
       </div>
 
-      <div className="flex gap-1.5 rounded-xl border border-[#252525] bg-[#050505]/60 p-1">
+      <div className="flex gap-1.5 rounded-xl border border-border bg-background/60 p-1">
         <button
           type="button"
           onClick={() => {
@@ -257,7 +257,7 @@ export default function LoginPage() {
           className={`flex-1 rounded-lg py-2.5 text-sm font-medium transition ${
             mode === 'signin'
               ? 'bg-accent text-white shadow-md shadow-[#4552FF]/25'
-              : 'text-[#B0B0B0] hover:text-[#E7E6D9]'
+              : 'text-foreground-dim hover:text-foreground'
           }`}
         >
           Sign in
@@ -275,7 +275,7 @@ export default function LoginPage() {
           className={`flex-1 rounded-lg py-2.5 text-sm font-medium transition ${
             mode === 'signup'
               ? 'bg-accent text-white shadow-md shadow-[#4552FF]/25'
-              : 'text-[#B0B0B0] hover:text-[#E7E6D9]'
+              : 'text-foreground-dim hover:text-foreground'
           }`}
         >
           Sign up
@@ -290,12 +290,12 @@ export default function LoginPage() {
           >
             ✓
           </div>
-          <h1 className="mt-2 text-center font-heading text-2xl font-semibold tracking-tight text-[#E7E6D9]">
+          <h1 className="mt-2 text-center font-heading text-2xl font-semibold tracking-tight text-foreground">
             Check your email
           </h1>
-          <p className="mt-3 text-center text-sm leading-relaxed text-[#B0B0B0]">
+          <p className="mt-3 text-center text-sm leading-relaxed text-foreground-dim">
             We sent a verification link to{' '}
-            <span className="font-medium text-[#E7E6D9]">{pendingEmail}</span>.
+            <span className="font-medium text-foreground">{pendingEmail}</span>.
             After you confirm, sign in here with your password.
           </p>
           <button
@@ -311,10 +311,10 @@ export default function LoginPage() {
         </>
       ) : (
         <>
-          <h1 className="mt-8 font-heading text-2xl font-semibold tracking-tight text-[#E7E6D9]">
+          <h1 className="mt-8 font-heading text-2xl font-semibold tracking-tight text-foreground">
             {mode === 'signin' ? 'Welcome back' : 'Create your account'}
           </h1>
-          <p className="mt-1.5 text-sm text-[#B0B0B0]">
+          <p className="mt-1.5 text-sm text-foreground-dim">
             {mode === 'signin'
               ? 'Sign in to continue to PromptPerfect.'
               : 'Start optimizing prompts in minutes.'}
@@ -388,7 +388,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#71717A] transition hover:text-[#B0B0B0]"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground-dim"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? (
@@ -402,7 +402,7 @@ export default function LoginPage() {
             <div className="mt-2 flex justify-end">
               <Link
                 href="/forgot-password"
-                className="text-sm text-[#B0B0B0] transition hover:text-[#E7E6D9]"
+                className="text-sm text-foreground-dim transition hover:text-foreground"
               >
                 Forgot password?
               </Link>
@@ -461,7 +461,7 @@ export default function LoginPage() {
       )}
 
       <p
-        className={`mt-8 text-center text-sm text-[#B0B0B0] ${verificationSent && mode === 'signup' ? 'hidden' : ''}`}
+        className={`mt-8 text-center text-sm text-foreground-dim ${verificationSent && mode === 'signup' ? 'hidden' : ''}`}
       >
         {mode === 'signin' ? (
           <>
@@ -472,7 +472,7 @@ export default function LoginPage() {
                 setMode('signup');
                 setVerificationSent(false);
               }}
-              className="font-medium text-accent-text transition hover:text-[#6b75ff]"
+              className="font-medium text-accent-text transition hover:text-accent"
             >
               Sign up
             </button>
@@ -486,7 +486,7 @@ export default function LoginPage() {
                 setMode('signin');
                 setVerificationSent(false);
               }}
-              className="font-medium text-accent-text transition hover:text-[#6b75ff]"
+              className="font-medium text-accent-text transition hover:text-accent"
             >
               Log in
             </button>

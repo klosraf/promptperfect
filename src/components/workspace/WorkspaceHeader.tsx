@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { AppUser } from '@/lib/types';
 import { isUnlimitedMode } from '@/lib/localMode';
 import { UserAccountMenu } from '@/components/UserAccountMenu';
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export interface WorkspaceHeaderProps {
   user: AppUser | null;
@@ -15,7 +16,7 @@ export interface WorkspaceHeaderProps {
 }
 
 const NAV_LINK_CLASS =
-  'rounded-lg border border-transparent px-3 py-1.5 text-sm text-[#888] transition-all duration-200 ease-out hover:border-[#2a2a2a] hover:bg-[#111] hover:text-[#ECECEC]';
+  'rounded-lg border border-transparent px-3 py-1.5 text-sm text-muted-foreground transition-all duration-200 ease-out hover:border-border hover:bg-muted hover:text-foreground';
 
 /**
  * Fixed top bar for the `/app` workspace. Authenticated users get Library /
@@ -30,19 +31,20 @@ export function WorkspaceHeader({
   onLogout,
 }: WorkspaceHeaderProps) {
   return (
-    <header className="fixed left-0 right-0 top-0 z-40 flex h-14 shrink-0 items-center border-b border-[#1a1a1a] bg-[#050505]/95 backdrop-blur-sm">
+    <header className="fixed left-0 right-0 top-0 z-40 flex h-14 shrink-0 items-center border-b border-border bg-background/95 backdrop-blur-sm">
       <div className="flex w-full min-w-0 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
           className="flex shrink-0 items-center gap-2.5 font-heading"
         >
           <Logo size={26} className="shrink-0" />
-          <span className="text-lg font-bold tracking-tight text-[#E7E6D9]">
+          <span className="text-lg font-bold tracking-tight text-foreground">
             PromptPerfect
           </span>
-          <span className="text-sm text-[#8a8a8a]">by Beagle</span>
+          <span className="text-sm text-muted-foreground">by Beagle</span>
         </Link>
         <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-3">
+          <ThemeToggle />
           {user ? (
             <>
               <Link href="/library" className={NAV_LINK_CLASS}>

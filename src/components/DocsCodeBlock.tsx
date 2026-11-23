@@ -14,7 +14,7 @@ export function DocsCodeBlock({ children }: { children: string }) {
         tabIndex={0}
         role="region"
         aria-label="Code sample"
-        className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-3 text-left text-[12px] leading-relaxed text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:p-4 sm:text-[13px]"
+        className="overflow-x-auto rounded-lg border border-border bg-background p-3 text-left text-[12px] leading-relaxed text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:p-4 sm:text-[13px]"
       >
         <code suppressHydrationWarning className="font-mono whitespace-pre">
           {children}

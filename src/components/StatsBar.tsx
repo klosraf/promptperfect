@@ -42,7 +42,7 @@ function sleep(ms: number): Promise<void> {
 
 function StatLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#8a8a8a]">
+    <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
       {children}
     </span>
   );
@@ -50,7 +50,7 @@ function StatLabel({ children }: { children: React.ReactNode }) {
 
 function StatValue({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-base font-semibold tabular-nums tracking-tight text-[#E7E6D9]">
+    <span className="text-base font-semibold tabular-nums tracking-tight text-foreground">
       {children}
     </span>
   );
@@ -198,7 +198,7 @@ export function StatsBar({
   }, [refreshTrigger, cacheUserId]);
 
   const shellClass =
-    'w-full rounded-xl border border-[#252525] bg-gradient-to-b from-white/[0.04] to-[#0A0A0A] px-4 py-3.5 sm:px-5 sm:py-4';
+    'w-full rounded-xl border border-border bg-gradient-to-b from-foreground/[0.04] to-[#0A0A0A] px-4 py-3.5 sm:px-5 sm:py-4';
 
   if (loading) {
     return (
@@ -288,7 +288,7 @@ export function StatsBar({
             <StatValue>{stats.total ?? 0}</StatValue>
           </div>
           <div
-            className="hidden w-px shrink-0 self-stretch bg-[#252525] sm:block"
+            className="hidden w-px shrink-0 self-stretch bg-muted sm:block"
             aria-hidden
           />
           <div className="flex items-center gap-5">
@@ -339,7 +339,7 @@ export function StatsBar({
               )}
             </div>
           ) : (
-            <p className="text-sm text-[#555]">No feedback scores yet</p>
+            <p className="text-sm text-muted-foreground">No feedback scores yet</p>
           )}
         </div>
 
@@ -356,10 +356,10 @@ export function StatsBar({
                 {modeParts.map(([mode, count]) => (
                   <span
                     key={mode}
-                    className="inline-flex items-center gap-2 rounded-lg border border-[#2a2a2a] bg-[#050505]/80 px-3 py-1.5 text-sm"
+                    className="inline-flex items-center gap-2 rounded-lg border border-border bg-background/80 px-3 py-1.5 text-sm"
                   >
-                    <span className="text-[#B0B0B0]">{mode}</span>
-                    <span className="font-semibold tabular-nums text-[#E7E6D9]">
+                    <span className="text-foreground-dim">{mode}</span>
+                    <span className="font-semibold tabular-nums text-foreground">
                       {count}
                     </span>
                   </span>
@@ -367,7 +367,7 @@ export function StatsBar({
               </div>
             </>
           ) : (
-            <p className="text-sm text-[#555]">No mode breakdown yet</p>
+            <p className="text-sm text-muted-foreground">No mode breakdown yet</p>
           )}
         </div>
       </div>

@@ -6,6 +6,7 @@ import { test, expect } from '@playwright/test';
  * real headings/links, and no horizontal overflow.
  */
 test('landing renders fully styled, not raw HTML', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
   await page.goto('/');
 
   await expect(page).toHaveTitle(/PromptPerfect/i);
@@ -32,6 +33,22 @@ test('landing renders fully styled, not raw HTML', async ({ page }) => {
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
   expect(overflow).toBeLessThanOrEqual(1);
+});
+
+
+test('landing renders fully styled in the light scheme', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/');
+
+  // The light background token is computed on <body>.
+  const bodyBg = await page.evaluate(
+    () => getComputedStyle(document.body).backgroundColor,
+  );
+  expect(bodyBg).toBe('rgb(246, 246, 243)');
+
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'PromptPerfect' }),
+  ).toBeVisible();
 });
 
 test('login page renders its form', async ({ page }) => {

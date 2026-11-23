@@ -52,7 +52,7 @@ export function TemplatesTab({
             value={searchQuery ?? ''}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search templates…"
-            className="w-full rounded-lg border border-[#2a2a2a] bg-[#0A0A0A] px-3 py-2 text-sm text-[#ECECEC] placeholder-[#8a8a8a]"
+            className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground placeholder-[#8a8a8a]"
           />
         </div>
       ) : null}
@@ -70,8 +70,8 @@ export function TemplatesTab({
             aria-pressed={tplCategory === c}
             className={`rounded-lg border px-3 py-1.5 text-[12px] font-medium transition-colors ${
               tplCategory === c
-                ? 'border-accent bg-accent/20 text-[#ECECEC]'
-                : 'border-[#2a2a2a] bg-[#0A0A0A] text-[#B0B0B0] hover:border-accent/50'
+                ? 'border-accent bg-accent/20 text-foreground'
+                : 'border-border bg-card text-foreground-dim hover:border-accent/50'
             }`}
           >
             {c === 'All'
@@ -91,7 +91,7 @@ export function TemplatesTab({
       ) : null}
 
       {filteredTemplates.length === 0 ? (
-        <p className="py-12 text-center text-sm text-[#8a8a8a]">
+        <p className="py-12 text-center text-sm text-muted-foreground">
           No templates match your filters.
         </p>
       ) : (
@@ -103,7 +103,7 @@ export function TemplatesTab({
             return (
               <li
                 key={tpl.id}
-                className="rounded-xl border border-[#252525] bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4 transition hover:border-[#3F3F46]"
+                className="rounded-xl border border-border bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4 transition hover:border-[#3F3F46]"
               >
                 <button
                   type="button"
@@ -112,40 +112,40 @@ export function TemplatesTab({
                   aria-expanded={expanded}
                 >
                   <div className="min-w-0 flex-1">
-                    <h2 className="truncate font-[family-name:var(--font-space-grotesk),sans-serif] text-[15px] font-medium text-[#E7E6D9]">
+                    <h2 className="truncate font-[family-name:var(--font-space-grotesk),sans-serif] text-[15px] font-medium text-foreground">
                       {tpl.title}
                     </h2>
-                    <p className="mt-1 truncate text-[13px] text-[#aaa]">
+                    <p className="mt-1 truncate text-[13px] text-foreground-dim">
                       {tpl.description}
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <span className="rounded bg-accent/20 px-2 py-0.5 text-[11px] font-medium text-[#8B9AFF]">
+                    <span className="rounded bg-accent/20 px-2 py-0.5 text-[11px] font-medium text-accent-text">
                       {tpl.category}
                     </span>
                     <span className="rounded bg-green-500/20 px-2 py-0.5 text-[11px] font-medium text-green-400">
                       {modeBadgeLabel(tpl.mode)}
                     </span>
                     {expanded ? (
-                      <ChevronUp className="h-4 w-4 text-[#8a8a8a]" aria-hidden />
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" aria-hidden />
                     ) : (
-                      <ChevronDown className="h-4 w-4 text-[#8a8a8a]" aria-hidden />
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden />
                     )}
                   </div>
                 </button>
 
                 {expanded && (
-                  <div className="mt-4 border-t border-[#252525] pt-4">
-                    <p className="mb-1 text-[11px] text-[#8a8a8a]">
+                  <div className="mt-4 border-t border-border pt-4">
+                    <p className="mb-1 text-[11px] text-muted-foreground">
                       Built from starter
                     </p>
-                    <p className="mb-3 text-[13px] italic text-[#888]">
+                    <p className="mb-3 text-[13px] italic text-muted-foreground">
                       “{tpl.original_prompt}”
                     </p>
-                    <p className="mb-1 text-[11px] text-[#8a8a8a]">
+                    <p className="mb-1 text-[11px] text-muted-foreground">
                       Template — fill the {'{{PLACEHOLDERS}}'} then optimize
                     </p>
-                    <p className="whitespace-pre-wrap text-sm text-[#ECECEC]">
+                    <p className="whitespace-pre-wrap text-sm text-foreground">
                       {tpl.optimized_prompt}
                     </p>
                     <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -167,7 +167,7 @@ export function TemplatesTab({
                           type="button"
                           onClick={() => void onSaveTemplate(tpl)}
                           disabled={saving}
-                          className="inline-flex items-center gap-1.5 text-sm text-[#B0B0B0] transition hover:text-accent-text disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 text-sm text-foreground-dim transition hover:text-accent-text disabled:opacity-50"
                         >
                           <BookmarkPlus size={16} aria-hidden />
                           {saving ? 'Saving…' : 'Save to library'}

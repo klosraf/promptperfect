@@ -22,17 +22,17 @@ export class RootErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 sm:p-6">
-          <div className="w-full max-w-md rounded-2xl border border-[#252525] bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-8 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.9)] text-center">
-            <h1 className="font-heading text-xl font-semibold text-[#E7E6D9]">
+        <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-8 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.9)] text-center">
+            <h1 className="font-heading text-xl font-semibold text-foreground">
               Something went wrong
             </h1>
-            <p className="mt-3 text-sm text-[#E7E6D9]/70">
+            <p className="mt-3 text-sm text-foreground/70">
               The app hit an unexpected error. You can reload the page to try again.
             </p>
             <button
               type="button"
-              className="mt-6 w-full rounded-xl border border-[#353535] bg-white/[0.06] px-4 py-3 text-sm font-medium text-[#E7E6D9] transition hover:bg-white/[0.1]"
+              className="mt-6 w-full rounded-xl border border-[#353535] bg-white/[0.06] px-4 py-3 text-sm font-medium text-foreground transition hover:bg-white/[0.1]"
               onClick={() => window.location.reload()}
             >
               Reload page

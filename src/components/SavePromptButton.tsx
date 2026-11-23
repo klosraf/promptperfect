@@ -159,7 +159,7 @@ export function SavePromptButton({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Name this prompt…"
-            className="w-48 rounded-lg border border-[#252525] bg-[#0A0A0A] px-3 py-1.5 text-sm text-white placeholder-[#8a8a8a] focus:border-accent focus:outline-none"
+            className="w-48 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-white placeholder-[#8a8a8a] focus:border-accent focus:outline-none"
             autoFocus
             disabled={saving}
             onKeyDown={(e) => {
@@ -181,7 +181,7 @@ export function SavePromptButton({
               setTitle('');
               setError(null);
             }}
-            className="text-sm text-[#8a8a8a] hover:underline"
+            className="text-sm text-muted-foreground hover:underline"
           >
             Cancel
           </button>
@@ -200,7 +200,7 @@ export function SavePromptButton({
       <button
         type="button"
         onClick={() => setShowTitleInput(true)}
-        className="flex items-center gap-2 text-sm text-[#B0B0B0] transition hover:text-accent-text"
+        className="flex items-center gap-2 text-sm text-foreground-dim transition hover:text-accent-text"
       >
         <Bookmark size={16} strokeWidth={1} aria-hidden />
         Save to Library

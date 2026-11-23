@@ -47,7 +47,7 @@ export function SegmentedToggle<T extends string>({
               i === options.length - 1 && 'rounded-r-[5px]',
               i > 0 && 'border-l border-border',
               active
-                ? 'bg-[#1a1a1a] text-foreground'
+                ? 'bg-muted text-foreground'
                 : 'bg-transparent text-muted-foreground hover:bg-white/5 hover:text-foreground',
             )}
           >

@@ -110,7 +110,7 @@ export function Modal({
       <div
         ref={panelRef}
         tabIndex={-1}
-        className={`w-full ${maxWidthClass} rounded-xl border border-[#252525] bg-[#0A0A0A] p-8 shadow-2xl outline-none`}
+        className={`w-full ${maxWidthClass} rounded-xl border border-border bg-card p-8 shadow-2xl outline-none`}
       >
         {children}
       </div>

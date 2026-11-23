@@ -12,7 +12,7 @@ import {
 
 const DiffViewLazy = dynamic(
   () => import('@/components/DiffView').then((m) => ({ default: m.DiffView })),
-  { ssr: false, loading: () => <p className="text-[13px] text-[#808088]">Loading diff…</p> },
+  { ssr: false, loading: () => <p className="text-[13px] text-muted-foreground">Loading diff…</p> },
 );
 
 interface ExplanationPanelProps {
@@ -59,20 +59,20 @@ export function ExplanationPanel({
   const allBullets = lines.length > 0 && lines.every(isBulletLine);
 
   return (
-    <div className="rounded-[12px] border border-[#1e1e1e] bg-[#0d0d0d] px-6 py-5 transition-colors duration-200 ease-out">
+    <div className="rounded-[12px] border border-border bg-popover px-6 py-5 transition-colors duration-200 ease-out">
       <div className="flex w-full flex-wrap items-center justify-between gap-2">
         <button
           type="button"
           onClick={() => setExpanded((e) => !e)}
-          className="flex min-w-0 flex-1 items-center justify-between text-left transition hover:bg-[#111]/50"
+          className="flex min-w-0 flex-1 items-center justify-between text-left transition hover:bg-muted/50"
         >
-          <span className="text-[13px] font-medium uppercase tracking-[0.06em] text-[#808088]">
+          <span className="text-[13px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
             What changed and why
           </span>
           {expanded ? (
-            <ChevronUp className="h-4 w-4 shrink-0 text-[#808088]" />
+            <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
           ) : (
-            <ChevronDown className="h-4 w-4 shrink-0 text-[#808088]" />
+            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
           )}
         </button>
         {hasDiffInputs && (
@@ -88,37 +88,37 @@ export function ExplanationPanel({
         )}
       </div>
       {expanded && (
-        <div className="mt-4 border-t border-[#1e1e1e] pt-4">
+        <div className="mt-4 border-t border-border pt-4">
           {viewMode === 'diff' && hasDiffInputs ? (
             <DiffViewLazy original={original} optimized={optimized} />
           ) : trimmed ? (
             allBullets ? (
-              <ul className="list-disc space-y-1.5 pl-5 text-[14px] leading-[1.7] text-[#aaa] marker:text-[#808088]">
+              <ul className="list-disc space-y-1.5 pl-5 text-[14px] leading-[1.7] text-foreground-dim marker:text-muted-foreground">
                 {lines.map((line, i) => (
                   <li key={i}>{stripBullet(line)}</li>
                 ))}
               </ul>
             ) : lines.length === 1 ? (
-              <p className="whitespace-pre-wrap text-[14px] leading-[1.7] text-[#aaa]">
+              <p className="whitespace-pre-wrap text-[14px] leading-[1.7] text-foreground-dim">
                 {lines[0]}
               </p>
             ) : (
-              <div className="whitespace-pre-wrap text-[14px] leading-[1.7] text-[#aaa]">
+              <div className="whitespace-pre-wrap text-[14px] leading-[1.7] text-foreground-dim">
                 {trimmed}
               </div>
             )
           ) : (
-            <p className="text-[14px] text-[#808088]">No explanation for this run.</p>
+            <p className="text-[14px] text-muted-foreground">No explanation for this run.</p>
           )}
           {viewMode === 'explanation' && structuredChanges.length > 0 && (
-            <div className="mt-5 border-t border-[#1e1e1e] pt-4">
-              <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[#808088]">
+            <div className="mt-5 border-t border-border pt-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
                 Changes made
               </p>
               <ul className="mt-2.5 space-y-2">
                 {structuredChanges.map((c, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-[14px] leading-[1.6] text-[#aaa]">
-                    <span className="mt-0.5 shrink-0 rounded-full border border-[#2a2a2a] px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-[#8b93ff]">
+                  <li key={i} className="flex items-start gap-2.5 text-[14px] leading-[1.6] text-foreground-dim">
+                    <span className="mt-0.5 shrink-0 rounded-full border border-border px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-accent-text">
                       {EDIT_METHOD_LABEL[c.method]}
                     </span>
                     <span>{c.text}</span>
@@ -128,7 +128,7 @@ export function ExplanationPanel({
             </div>
           )}
           {viewMode === 'explanation' && tokenDelta && (
-            <p className="mt-4 text-[12px] text-[#666]">
+            <p className="mt-4 text-[12px] text-muted-foreground">
               Length: ≈{tokenDelta.from} → ≈{tokenDelta.to} tokens (
               {tokenDelta.to - tokenDelta.from >= 0 ? '+' : ''}
               {tokenDelta.from > 0

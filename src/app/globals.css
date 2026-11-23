@@ -2,14 +2,50 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ---------------------------------------------------------------------------
-   Global design tokens (dark-only product).
-   Values match the existing palette exactly so nothing shifts; they are just
-   centralized here so components reference semantic tokens instead of raw hex.
+   Global design tokens — one semantic system, two schemes.
+   :root carries the LIGHT scheme; .dark (set on <html> before first paint
+   by the theme script in the root layout) carries the DARK scheme, which
+   preserves the product's original palette exactly. Components reference
+   semantic tokens, never raw hex, so both schemes stay in parity.
+   Light values are derived from the same identity (accent family #4552ff)
+   and AA-checked against their surfaces; see docs/brand/IDENTIDAD-VISUAL.md.
 --------------------------------------------------------------------------- */
 :root {
-  /* surfaces */
+  /* surfaces — light */
+  --background: #f6f6f3;
+  color-scheme: light;
+  --foreground: #121216;
+  --foreground-dim: #45454e;
+  --card: #ffffff;
+  --card-foreground: #121216;
+  --popover: #ffffff;
+  --popover-foreground: #121216;
+
+  /* brand + states */
+  --accent: #4552ff;
+  --accent-foreground: #ffffff;
+  --accent-hover: #3543e0;
+  --ring: #4552ff;
+
+  /* lines + inputs */
+  --border: #e2e2db;
+  --input: #cfcfc6;
+  --muted: #eeeef0;
+  --muted-foreground: #5c5c64;
+
+  /* radiuses */
+  --radius: 0.5rem;
+
+  /* Text-safe accent on light: the darker step of the brand family. */
+  --accent-text: #3543d6;
+}
+
+.dark {
+  /* surfaces — dark (the product's original palette, unchanged) */
   --background: #050505;
+  color-scheme: dark;
   --foreground: #ececec;
+  --foreground-dim: #a8a8ad;
   --card: #0a0a0a;
   --card-foreground: #ececec;
   --popover: #0d0d0d;
@@ -27,9 +63,6 @@
   --muted: #0f0f0f;
   --muted-foreground: #8a8a8a;
 
-  /* radiuses */
-  --radius: 0.5rem;
-
   /* Text-safe accent: the brand #4552ff fails AA as small text on dark
      backgrounds, so links/inline-accent text use this lighter variant while
      buttons keep the true brand accent via bg-accent. */
@@ -43,6 +76,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-foreground-dim: var(--foreground-dim);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
@@ -97,6 +131,37 @@ body {
   color: var(--foreground);
   font-family: var(--font-space-grotesk), var(--font-geist-sans), system-ui, sans-serif;
   overflow-x: hidden;
+}
+
+/* Splash / boot loading motion. The indicator is indeterminate by design:
+   route loading has no measurable progress, so the bar sweeps instead of
+   filling. The global prefers-reduced-motion rule above collapses these
+   animations to a static state. */
+.pp-splash-bar {
+  width: 148px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+.pp-splash-bar > span {
+  display: block;
+  height: 100%;
+  width: 40%;
+  border-radius: 999px;
+  background-image: linear-gradient(90deg, #4552ff, #5c6aff);
+  animation: pp-splash-slide 1.15s ease-in-out infinite;
+}
+@keyframes pp-splash-slide {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(280%); }
+}
+.pp-splash-mark {
+  animation: pp-splash-breathe 2.2s ease-in-out infinite;
+}
+@keyframes pp-splash-breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.96); opacity: 0.85; }
 }
 
 /* Brand gradient CTA background — single source of truth for the signature

@@ -73,7 +73,7 @@ export function StreamingPromptOutput({
     return (
       <div className="flex w-full min-w-0 flex-col">
         <div className="mb-2 flex shrink-0 items-start justify-between gap-2">
-          <span className="text-sm font-medium text-[#ECECEC]">
+          <span className="text-sm font-medium text-foreground">
             Optimized prompt
           </span>
           <button
@@ -81,7 +81,7 @@ export function StreamingPromptOutput({
             onClick={handleCopy}
             disabled={isStreaming || !optimized.trim()}
             aria-label={copied ? "Copied" : "Copy to clipboard"}
-            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-transparent px-2 py-1 text-[12px] text-[#888] transition-all duration-200 ease-out hover:border-[#2a2a2a] hover:bg-[#111] hover:text-[#ECECEC] disabled:opacity-40"
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-transparent px-2 py-1 text-[12px] text-muted-foreground transition-all duration-200 ease-out hover:border-border hover:bg-muted hover:text-foreground disabled:opacity-40"
           >
             {copied ? (
               <>
@@ -109,14 +109,14 @@ export function StreamingPromptOutput({
             <div className="mt-2 w-full shrink-0">{afterTextarea}</div>
           ) : null}
         </div>
-        <p className="mt-2 shrink-0 text-[11px] text-zinc-500 dark:text-zinc-400">
+        <p className="mt-2 shrink-0 text-[11px] text-muted-foreground dark:text-foreground-dim">
           {outLen} characters -- {tokEst} tokens
         </p>
         {isStreaming && (
           <p
             role="status"
             aria-live="polite"
-            className="mt-1 flex shrink-0 items-center gap-1.5 text-[13px] text-[#808088]"
+            className="mt-1 flex shrink-0 items-center gap-1.5 text-[13px] text-muted-foreground"
           >
             <span
               aria-hidden
@@ -141,7 +141,7 @@ export function StreamingPromptOutput({
   return (
     <div className="w-full min-w-0 space-y-2">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+        <span className="text-sm font-medium text-zinc-700 dark:text-foreground-dim">
           Optimized prompt
         </span>
         <button
@@ -149,7 +149,7 @@ export function StreamingPromptOutput({
           onClick={handleCopy}
           disabled={isStreaming || !optimized.trim()}
           aria-label={copied ? "Copied" : "Copy to clipboard"}
-          className="flex h-9 min-w-[44px] items-center justify-center gap-1.5 rounded-lg border border-zinc-300 px-3 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-400 dark:hover:bg-zinc-800"
+          className="flex h-9 min-w-[44px] items-center justify-center gap-1.5 rounded-lg border border-zinc-300 px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50 dark:border-input dark:text-foreground-dim dark:hover:bg-muted"
         >
           {copied ? (
             <>
@@ -170,16 +170,16 @@ export function StreamingPromptOutput({
         placeholder="Your optimized prompt will stream here…"
         rows={12}
         aria-label="Optimized prompt output"
-        className="min-h-[200px] w-full resize-y rounded-xl border border-zinc-300 bg-zinc-50 px-4 py-3.5 font-mono text-sm text-zinc-900 whitespace-pre-wrap break-words [word-break:break-word] overflow-wrap-anywhere dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+        className="min-h-[200px] w-full resize-y rounded-xl border border-zinc-300 bg-zinc-50 px-4 py-3.5 font-mono text-sm text-zinc-900 whitespace-pre-wrap break-words [word-break:break-word] overflow-wrap-anywhere dark:border-input dark:bg-zinc-950 dark:text-zinc-100"
       />
-      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+      <p className="text-xs text-muted-foreground dark:text-foreground-dim">
         {outLen} characters · est. {tokEst} tokens
       </p>
       {isStreaming && (
         <p
           role="status"
           aria-live="polite"
-          className="flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground dark:text-foreground-dim"
         >
           <span
             aria-hidden

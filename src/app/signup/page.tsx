@@ -134,12 +134,12 @@ export default function SignUpPage() {
         >
           ✓
         </div>
-        <h1 className="text-center font-heading text-2xl font-semibold tracking-tight text-[#E7E6D9]">
+        <h1 className="text-center font-heading text-2xl font-semibold tracking-tight text-foreground">
           Check your email
         </h1>
-        <p className="mt-3 text-center text-sm leading-relaxed text-[#B0B0B0]">
+        <p className="mt-3 text-center text-sm leading-relaxed text-foreground-dim">
           We sent a verification link to{' '}
-          <span className="font-medium text-[#E7E6D9]">{email.trim()}</span>.
+          <span className="font-medium text-foreground">{email.trim()}</span>.
           After you confirm, you can{' '}
           <Link href="/login" className="text-accent-text hover:underline">
             sign in
@@ -162,16 +162,16 @@ export default function SignUpPage() {
       <div className="mb-6 text-center">
         <Link
           href="/"
-          className="inline-block font-heading text-xl font-bold tracking-tight text-[#E7E6D9] transition hover:opacity-80"
+          className="inline-block font-heading text-xl font-bold tracking-tight text-foreground transition hover:opacity-80"
         >
           PromptPerfect
         </Link>
       </div>
 
-      <h1 className="font-heading text-2xl font-semibold tracking-tight text-[#E7E6D9]">
+      <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
         Create your account
       </h1>
-      <p className="mt-1.5 text-sm text-[#B0B0B0]">
+      <p className="mt-1.5 text-sm text-foreground-dim">
         Free forever. No credit card required.
       </p>
 
@@ -237,7 +237,7 @@ export default function SignUpPage() {
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#71717A] transition hover:text-[#B0B0B0]"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground-dim"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? (
@@ -276,11 +276,11 @@ export default function SignUpPage() {
         </button>
       </form>
 
-      <p className="mt-8 text-center text-sm text-[#B0B0B0]">
+      <p className="mt-8 text-center text-sm text-foreground-dim">
         Already have an account?{' '}
         <Link
           href="/login"
-          className="font-medium text-accent-text transition hover:text-[#6b75ff]"
+          className="font-medium text-accent-text transition hover:text-accent"
         >
           Log in
         </Link>

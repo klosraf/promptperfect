@@ -65,7 +65,7 @@ export function SavedPromptsTab({
       <label className="relative mb-4 block">
         <span className="sr-only">Search saved prompts</span>
         <Search
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a8a8a]"
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
           aria-hidden
         />
         <input
@@ -74,7 +74,7 @@ export function SavedPromptsTab({
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search prompts…"
           autoComplete="off"
-          className="w-full rounded-[12px] border border-[#252525] bg-[#0A0A0A] py-2.5 pl-10 pr-4 text-[14px] text-white outline-none placeholder:text-[#8a8a8a] focus:border-accent"
+          className="w-full rounded-[12px] border border-border bg-card py-2.5 pl-10 pr-4 text-[14px] text-white outline-none placeholder:text-muted-foreground focus:border-accent"
         />
       </label>
 
@@ -92,8 +92,8 @@ export function SavedPromptsTab({
             aria-pressed={modeFilter === id}
             className={`rounded-lg border px-3 py-1.5 text-[12px] font-medium transition-colors ${
               modeFilter === id
-                ? 'border-accent bg-accent/20 text-[#ECECEC]'
-                : 'border-[#2a2a2a] bg-[#0A0A0A] text-[#B0B0B0] hover:border-accent/50'
+                ? 'border-accent bg-accent/20 text-foreground'
+                : 'border-border bg-card text-foreground-dim hover:border-accent/50'
             }`}
           >
             {label}
@@ -124,7 +124,7 @@ export function SavedPromptsTab({
               return (
                 <li
                   key={row.id}
-                  className="rounded-xl border border-[#252525] bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4 transition hover:border-[#3F3F46]"
+                  className="rounded-xl border border-border bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4 transition hover:border-[#3F3F46]"
                 >
                   <button
                     type="button"
@@ -132,10 +132,10 @@ export function SavedPromptsTab({
                     className="flex w-full items-start justify-between gap-2 text-left"
                   >
                     <div className="min-w-0 flex-1">
-                      <h2 className="truncate font-[family-name:var(--font-space-grotesk),sans-serif] text-[15px] font-medium text-[#E7E6D9]">
+                      <h2 className="truncate font-[family-name:var(--font-space-grotesk),sans-serif] text-[15px] font-medium text-foreground">
                         {row.title}
                       </h2>
-                      <p className="mt-1 truncate text-[13px] text-[#aaa]">
+                      <p className="mt-1 truncate text-[13px] text-foreground-dim">
                         {previewText(row.original_prompt)}
                       </p>
                     </div>
@@ -153,31 +153,31 @@ export function SavedPromptsTab({
                       </span>
                       <time
                         dateTime={row.created_at}
-                        className="text-[11px] text-[#8a8a8a]"
+                        className="text-[11px] text-muted-foreground"
                         title={new Date(row.created_at).toLocaleString()}
                       >
                         {formatTimestamp(row.created_at)}
                       </time>
                       {expanded ? (
-                        <ChevronUp className="h-4 w-4 text-[#8a8a8a]" aria-hidden />
+                        <ChevronUp className="h-4 w-4 text-muted-foreground" aria-hidden />
                       ) : (
-                        <ChevronDown className="h-4 w-4 text-[#8a8a8a]" aria-hidden />
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden />
                       )}
                     </div>
                   </button>
 
                   {expanded && (
-                    <div className="mt-4 border-t border-[#252525] pt-4">
+                    <div className="mt-4 border-t border-border pt-4">
                       <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
-                          <p className="mb-1 text-[11px] text-[#8a8a8a]">Original</p>
-                          <p className="whitespace-pre-wrap text-sm text-[#B0B0B0]">
+                          <p className="mb-1 text-[11px] text-muted-foreground">Original</p>
+                          <p className="whitespace-pre-wrap text-sm text-foreground-dim">
                             {row.original_prompt || '—'}
                           </p>
                         </div>
                         <div>
-                          <p className="mb-1 text-[11px] text-[#8a8a8a]">Optimized</p>
-                          <p className="whitespace-pre-wrap text-sm text-[#ECECEC]">
+                          <p className="mb-1 text-[11px] text-muted-foreground">Optimized</p>
+                          <p className="whitespace-pre-wrap text-sm text-foreground">
                             {row.optimized_prompt || '—'}
                           </p>
                         </div>
@@ -213,10 +213,10 @@ export function SavedPromptsTab({
               <button
                 type="button"
                 onClick={onLoadMore}
-                className="rounded-[10px] border border-[#2a2a2a] bg-[#111] px-6 py-2.5 text-[13px] font-semibold text-[#ECECEC] transition-colors hover:border-[#3a3a3a] hover:bg-[#1a1a1a]"
+                className="rounded-[10px] border border-border bg-muted px-6 py-2.5 text-[13px] font-semibold text-foreground transition-colors hover:border-input hover:bg-muted"
               >
                 Load more
-                <span className="ml-2 text-[#8a8a8a]">
+                <span className="ml-2 text-muted-foreground">
                   ({remainingCount} remaining)
                 </span>
               </button>

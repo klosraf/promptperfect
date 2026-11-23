@@ -104,10 +104,10 @@ export function DiffView({ original, optimized }: DiffViewProps) {
   const afterOps = ops.filter((o) => o.type !== "delete");
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[#1e1e1e] bg-[#080808]">
+    <div className="overflow-hidden rounded-xl border border-border bg-[#080808]">
       {/* ── Stats bar ──────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 border-b border-[#161616] bg-[#0a0a0a] px-5 py-3">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#444]">
+      <div className="flex items-center gap-3 border-b border-border bg-card px-5 py-3">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           Word diff
         </span>
         <div className="mx-1 h-3 w-px bg-[#222]" />
@@ -125,13 +125,13 @@ export function DiffView({ original, optimized }: DiffViewProps) {
       <div className="grid grid-cols-2 divide-x divide-[#161616]">
         {/* Before */}
         <div className="flex flex-col">
-          <div className="flex items-center gap-2 border-b border-[#161616] bg-[#0c0c0c] px-4 py-2.5">
+          <div className="flex items-center gap-2 border-b border-border bg-[#0c0c0c] px-4 py-2.5">
             <span className="h-1.5 w-1.5 rounded-full bg-rose-500/70" />
             <span className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-rose-500/70">
               Original
             </span>
           </div>
-          <div className="max-h-[420px] overflow-y-auto p-5 text-[13.5px] leading-[1.75] text-[#999] [scrollbar-color:#2a2a2a_transparent] [scrollbar-width:thin] whitespace-pre-wrap break-words">
+          <div className="max-h-[420px] overflow-y-auto p-5 text-[13.5px] leading-[1.75] text-muted-foreground [scrollbar-color:#2a2a2a_transparent] [scrollbar-width:thin] whitespace-pre-wrap break-words">
           {beforeOps.map((tok, i) =>
             tok.type === "delete" ? (
               <mark
@@ -149,18 +149,18 @@ export function DiffView({ original, optimized }: DiffViewProps) {
 
         {/* After */}
         <div className="flex flex-col">
-          <div className="flex items-center gap-2 border-b border-[#161616] bg-[#0c0c0c] px-4 py-2.5">
+          <div className="flex items-center gap-2 border-b border-border bg-[#0c0c0c] px-4 py-2.5">
             <span className="h-1.5 w-1.5 rounded-full bg-accent/80" />
             <span className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-accent-text/80">
               Optimized
             </span>
           </div>
-          <div className="max-h-[420px] overflow-y-auto p-5 text-[13.5px] leading-[1.75] text-[#999] [scrollbar-color:#2a2a2a_transparent] [scrollbar-width:thin] whitespace-pre-wrap break-words">
+          <div className="max-h-[420px] overflow-y-auto p-5 text-[13.5px] leading-[1.75] text-muted-foreground [scrollbar-color:#2a2a2a_transparent] [scrollbar-width:thin] whitespace-pre-wrap break-words">
           {afterOps.map((tok, i) =>
             tok.type === "insert" ? (
               <mark
                 key={`i-${i}`}
-                className="rounded-[3px] bg-accent/[0.12] px-[1px] text-[#818cf8]"
+                className="rounded-[3px] bg-accent/[0.12] px-[1px] text-accent-text"
               >
                 {tok.value}
               </mark>
@@ -173,15 +173,15 @@ export function DiffView({ original, optimized }: DiffViewProps) {
       </div>
 
       {/* ── Legend ──────────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-4 border-t border-[#161616] bg-[#0a0a0a] px-5 py-2.5">
-        <span className="flex items-center gap-1.5 text-[11px] text-[#444]">
+      <div className="flex items-center gap-4 border-t border-border bg-card px-5 py-2.5">
+        <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <mark className="rounded-[3px] bg-rose-950/70 px-1 text-rose-400 line-through decoration-rose-700/60 [text-decoration-thickness:1px] no-underline">
             word
           </mark>
           removed
         </span>
-        <span className="flex items-center gap-1.5 text-[11px] text-[#444]">
-          <mark className="rounded-[3px] bg-accent/[0.12] px-1 text-[#818cf8]">
+        <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <mark className="rounded-[3px] bg-accent/[0.12] px-1 text-accent-text">
             word
           </mark>
           added

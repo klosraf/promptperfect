@@ -19,20 +19,20 @@ export function DemoTokenBar({ isAuthenticated }: DemoTokenBarProps) {
 
   return (
     <div className="mx-auto mb-4 w-full max-w-2xl">
-      <p className="mb-1 text-center text-sm text-[#B0B0B0]">
+      <p className="mb-1 text-center text-sm text-foreground-dim">
         {count} of {limit} free optimizations used
       </p>
       <div className="mb-1 flex items-center justify-between">
-        <span className="text-sm text-[#B0B0B0]">
+        <span className="text-sm text-foreground-dim">
           {remaining > 0
             ? `${remaining} free optimization${remaining !== 1 ? 's' : ''} remaining`
             : 'Free limit reached — sign up for unlimited'}
         </span>
-        <span className="text-xs text-[#8a8a8a]">
+        <span className="text-xs text-muted-foreground">
           {count}/{limit}
         </span>
       </div>
-      <div className="h-1.5 w-full rounded-full bg-[#252525]">
+      <div className="h-1.5 w-full rounded-full bg-muted">
         <div
           className="h-1.5 rounded-full transition-all duration-500"
           style={{

@@ -34,11 +34,11 @@ export function SignInRequiredModal({
           <div>
             <h2
               id={titleId}
-              className="font-heading text-lg font-semibold text-[#E7E6D9]"
+              className="font-heading text-lg font-semibold text-foreground"
             >
               {title ?? `Sign in to use ${feature}`}
             </h2>
-            <p className="mt-1.5 text-sm leading-relaxed text-[#888]">
+            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
               Create a free account to save your prompt library, view history
               across devices, and unlock unlimited optimizations.
             </p>
@@ -58,7 +58,7 @@ export function SignInRequiredModal({
           <button
             type="button"
             onClick={onClose}
-            className="mt-1 text-xs text-[#555] transition hover:text-[#888]"
+            className="mt-1 text-xs text-muted-foreground transition hover:text-muted-foreground"
           >
             Maybe later
           </button>

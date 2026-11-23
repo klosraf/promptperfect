@@ -47,8 +47,8 @@ export default function AppPage() {
 
   if (!mounted || !hydrated) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#050505]">
-        <div className="text-[#ECECEC]">Loading…</div>
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="text-foreground">Loading…</div>
       </div>
     );
   }
@@ -90,7 +90,7 @@ export default function AppPage() {
 
   return (
     <div
-      className={`relative flex min-h-screen w-full flex-col bg-[#050505] font-sans${user ? ' md:pr-72' : ''}`}
+      className={`relative flex min-h-screen w-full flex-col bg-background font-sans${user ? ' md:pr-72' : ''}`}
     >
       <WorkspaceHeader
         user={user}
@@ -198,7 +198,7 @@ export default function AppPage() {
               type="button"
               onClick={() => void handleOptimize()}
               disabled={isLoading || inputText.trim().length === 0}
-              className="mt-1 rounded-lg border border-[#2a2a2a] px-3 py-1 text-[12px] text-[#ECECEC] transition hover:border-accent/50 disabled:opacity-40"
+              className="mt-1 rounded-lg border border-border px-3 py-1 text-[12px] text-foreground transition hover:border-accent/50 disabled:opacity-40"
             >
               Retry
             </button>

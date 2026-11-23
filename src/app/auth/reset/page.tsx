@@ -101,7 +101,7 @@ export default function AuthResetPage() {
   if (!sessionReady) {
     return (
       <AuthShell>
-        <p className="text-center text-sm text-[#B0B0B0]">Loading reset link…</p>
+        <p className="text-center text-sm text-foreground-dim">Loading reset link…</p>
       </AuthShell>
     );
   }
@@ -110,10 +110,10 @@ export default function AuthResetPage() {
     <AuthShell>
       {!success ? (
         <>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight text-[#E7E6D9]">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
             Set new password
           </h1>
-          <p className="mt-1.5 text-sm text-[#B0B0B0]">
+          <p className="mt-1.5 text-sm text-foreground-dim">
             Min 8 characters, 1 uppercase, 1 number.
           </p>
           <form onSubmit={onSubmit} className="mt-8 space-y-4">
@@ -180,10 +180,10 @@ export default function AuthResetPage() {
           >
             ✓
           </div>
-          <h1 className="text-center font-heading text-2xl font-semibold tracking-tight text-[#E7E6D9]">
+          <h1 className="text-center font-heading text-2xl font-semibold tracking-tight text-foreground">
             Password updated
           </h1>
-          <p className="mt-3 text-center text-sm text-[#B0B0B0]">
+          <p className="mt-3 text-center text-sm text-foreground-dim">
             Redirecting to login…
           </p>
         </>

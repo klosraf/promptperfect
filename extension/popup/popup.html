@@ -224,13 +224,46 @@
       font-size: 11px;
       color: #52525b;
     }
+    .brand { display: flex; align-items: center; gap: 8px; }
+    .brand img { border-radius: 5px; display: block; }
+    #loadStatus {
+      margin: 0 0 10px;
+      font-size: 12px;
+      color: #8b93ff;
+      animation: pp-popup-pulse 1.2s ease-in-out infinite;
+    }
+    body.is-loading textarea,
+    body.is-loading select,
+    body.is-loading input { opacity: 0.55; }
+    @keyframes pp-popup-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+    @media (prefers-reduced-motion: reduce) {
+      #loadStatus { animation: none; }
+    }
     footer a { color: #4552FF; text-decoration: none; }
     footer a:hover { text-decoration: underline; }
+
+    /* ── Light scheme ──────────────────────────────────────────────────
+       Same token values as the web app's light mode (single visual
+       system; see docs/brand/IDENTIDAD-VISUAL.md). Follows the
+       browser's color scheme automatically. */
+    @media (prefers-color-scheme: light) {
+      body { background: #f6f6f3; color: #121216; }
+      h1 { color: #121216; }
+      .links a { color: #3543d6; }
+      .version { color: #5c5c64; background: #eeeef0; border-color: #e2e2db; }
+      label { color: #45454e; }
+      textarea, input, select { border-color: #cfcfc6; background: #ffffff; color: #121216; }
+      #resultOutput { color: #45454e; }
+      #copyBtn { border-color: #cfcfc6; background: #eeeef0; color: #45454e; }
+      #copyBtn:hover { color: #121216; border-color: #4552FF; }
+      details { border-color: #e2e2db; }
+      summary { color: #5c5c64; }
+    }
   </style>
 </head>
-<body>
+<body class="is-loading">
   <div class="header-row">
-    <h1>PromptPerfect</h1>
+    <h1 class="brand"><img src="../icons/icon48.png" width="22" height="22" alt="" />PromptPerfect</h1>
     <div class="header-right">
       <div class="links">
         <a id="link-app" href="https://promptperfect.vercel.app" target="_blank" rel="noopener noreferrer">App</a>
@@ -239,6 +272,8 @@
       <span id="ext-version" class="version">…</span>
     </div>
   </div>
+
+  <p id="loadStatus" role="status">Loading your settings…</p>
 
   <!-- Primary: Optimize in popup -->
   <div class="optimize-section">

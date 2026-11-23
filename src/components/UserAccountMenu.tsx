@@ -30,7 +30,7 @@ function MenuAvatar({ src }: { src: string }) {
   const [broken, setBroken] = useState(false);
   if (broken) {
     return (
-      <User className="h-[18px] w-[18px] text-[#8a8a8a]" aria-hidden strokeWidth={1.75} />
+      <User className="h-[18px] w-[18px] text-muted-foreground" aria-hidden strokeWidth={1.75} />
     );
   }
   return (
@@ -179,11 +179,11 @@ export function UserAccountMenu({
   }, [onLogout]);
 
   const itemClass =
-    'flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-[#B0B0B0] transition hover:bg-[#141414] hover:text-[#ECECEC]';
+    'flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-foreground-dim transition hover:bg-card hover:text-foreground';
 
   /** Destructive-style hover (logout), aligned with typical delete actions. */
   const logoutItemClass =
-    'flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-[#B0B0B0] transition hover:bg-red-950/35 hover:text-red-400 focus-visible:outline-none focus-visible:bg-red-950/35 focus-visible:text-red-400 disabled:pointer-events-none disabled:opacity-50';
+    'flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-foreground-dim transition hover:bg-red-950/35 hover:text-red-400 focus-visible:outline-none focus-visible:bg-red-950/35 focus-visible:text-red-400 disabled:pointer-events-none disabled:opacity-50';
 
   return (
     <div ref={wrapRef} className="relative">
@@ -196,17 +196,17 @@ export function UserAccountMenu({
         aria-label={`Account menu, ${displayName}`}
         title={`Account menu, ${displayName}`}
         onClick={() => setOpen((o) => !o)}
-        className="flex h-10 max-w-[min(100vw-8rem,14rem)] items-center gap-2 rounded-full border border-[#2a2a2a] bg-[#0f0f0f] py-1 pl-1 pr-2 transition hover:border-[#3f3f3f] hover:bg-[#141414]"
+        className="flex h-10 max-w-[min(100vw-8rem,14rem)] items-center gap-2 rounded-full border border-border bg-muted py-1 pl-1 pr-2 transition hover:border-[#3f3f3f] hover:bg-card"
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1a1a]">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
           {rawAvatarUrl ? (
             <MenuAvatar key={rawAvatarUrl} src={rawAvatarUrl} />
           ) : (
-            <User className="h-[18px] w-[18px] text-[#8a8a8a]" aria-hidden strokeWidth={1.75} />
+            <User className="h-[18px] w-[18px] text-muted-foreground" aria-hidden strokeWidth={1.75} />
           )}
         </span>
         <ChevronDown
-          className={`h-4 w-4 shrink-0 text-[#8a8a8a] transition ${open ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 shrink-0 text-muted-foreground transition ${open ? 'rotate-180' : ''}`}
           aria-hidden
         />
       </button>
@@ -216,11 +216,11 @@ export function UserAccountMenu({
           id={`${menuId}-panel`}
           role="menu"
           aria-labelledby={`${menuId}-trigger`}
-          className="absolute right-0 z-50 mt-2 min-w-[220px] rounded-xl border border-[#252525] bg-[#0A0A0A] py-1 shadow-xl ring-1 ring-black/40"
+          className="absolute right-0 z-50 mt-2 min-w-[220px] rounded-xl border border-border bg-card py-1 shadow-xl ring-1 ring-black/40"
         >
-          <div className="border-b border-[#252525] px-4 py-3">
+          <div className="border-b border-border px-4 py-3">
             <p className="text-sm">
-              <span className="font-semibold text-[#E7E6D9]">
+              <span className="font-semibold text-foreground">
                 Hi, {displayName}
               </span>{' '}
               <span role="img" aria-label="Waving hand">

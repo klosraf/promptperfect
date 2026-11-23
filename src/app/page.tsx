@@ -34,10 +34,10 @@ export default function Page() {
       <div className="mx-auto w-full min-w-0 max-w-5xl flex-1 px-4 py-16 sm:px-6 md:px-8 lg:px-10">
         <section className="mb-20 min-w-0 text-center md:mb-24">
           <Logo size={72} className="animate-fade-in mx-auto mb-6" />
-          <h2 className="animate-fade-in bg-gradient-to-r from-[#ECECEC] via-zinc-300 to-[#ECECEC] bg-clip-text text-3xl font-semibold leading-tight tracking-tight text-transparent sm:text-4xl md:text-5xl">
+          <h2 className="animate-fade-in bg-gradient-to-r from-foreground via-foreground-dim to-foreground bg-clip-text text-3xl font-semibold leading-tight tracking-tight text-transparent sm:text-4xl md:text-5xl">
             PromptPerfect
           </h2>
-          <p className="animate-fade-in animate-fade-in-delay-1 mx-auto mt-4 max-w-2xl break-words px-1 text-base leading-relaxed text-zinc-400 sm:mt-5 sm:text-lg">
+          <p className="animate-fade-in animate-fade-in-delay-1 mx-auto mt-4 max-w-2xl break-words px-1 text-base leading-relaxed text-foreground-dim sm:mt-5 sm:text-lg">
             The open-source prompt optimizer that teaches you why
           </p>
 
@@ -45,20 +45,20 @@ export default function Page() {
             {steps.map(({ icon: Icon, label }, i) => (
               <div
                 key={label}
-                className={`animate-fade-in flex min-w-0 flex-col items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-6 sm:px-6 sm:py-7 ${i === 0 ? 'animate-fade-in-delay-2' : i === 1 ? 'animate-fade-in-delay-3' : 'animate-fade-in-delay-4'}`}
+                className={`animate-fade-in flex min-w-0 flex-col items-center gap-3 rounded-xl border border-border bg-card px-4 py-6 sm:px-6 sm:py-7 ${i === 0 ? 'animate-fade-in-delay-2' : i === 1 ? 'animate-fade-in-delay-3' : 'animate-fade-in-delay-4'}`}
               >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-accent-text">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted text-accent-text">
                   <Icon className="h-6 w-6" aria-hidden />
                 </div>
-                <span className="break-words text-center text-sm font-medium leading-snug text-[#ECECEC] sm:text-base">
+                <span className="break-words text-center text-sm font-medium leading-snug text-foreground sm:text-base">
                   {label}
                 </span>
               </div>
             ))}
           </div>
 
-          <div className="animate-fade-in animate-fade-in-delay-4 mx-auto mt-10 w-full max-w-lg rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-5 sm:mt-12 sm:px-6">
-            <p className="break-words text-center text-base leading-relaxed text-zinc-400">
+          <div className="animate-fade-in animate-fade-in-delay-4 mx-auto mt-10 w-full max-w-lg rounded-xl border border-border bg-card px-4 py-5 sm:mt-12 sm:px-6">
+            <p className="break-words text-center text-base leading-relaxed text-foreground-dim">
               Free. Open-source. Your API key never leaves your browser.
             </p>
           </div>
@@ -79,23 +79,23 @@ export default function Page() {
         >
           <h2
             id="works-everywhere-heading"
-            className="text-2xl font-semibold tracking-tight text-[#ECECEC] sm:text-3xl"
+            className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
           >
             Works Everywhere
           </h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-zinc-400 sm:text-base">
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-foreground-dim sm:text-base">
             Use PromptPerfect in the browser, on any site with our extension, or from your own
             stack via the API.
           </p>
 
           <div className="mx-auto mt-10 grid w-full max-w-5xl grid-cols-1 items-stretch gap-6 sm:grid-cols-3 sm:gap-6">
             {/* Web App */}
-            <article className="flex min-w-0 flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 text-left">
-              <div className="mb-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-accent-text">
+            <article className="flex min-w-0 flex-col rounded-2xl border border-border bg-card p-6 text-left">
+              <div className="mb-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted text-accent-text">
                 <Globe className="h-5 w-5" aria-hidden />
               </div>
-              <h3 className="text-base font-semibold text-[#ECECEC]">Web App</h3>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-400">
+              <h3 className="text-base font-semibold text-foreground">Web App</h3>
+              <p className="mt-2 flex-1 text-sm leading-relaxed text-foreground-dim">
                 Full optimizer workspace: paste a prompt, pick a mode, and learn why the rewrite
                 works.
               </p>
@@ -107,18 +107,18 @@ export default function Page() {
             </article>
 
             {/* Chrome Extension */}
-            <article className="flex min-w-0 flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 text-left">
-              <div className="mb-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-accent-text">
+            <article className="flex min-w-0 flex-col rounded-2xl border border-border bg-card p-6 text-left">
+              <div className="mb-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted text-accent-text">
                 <Puzzle className="h-5 w-5" aria-hidden />
               </div>
-              <h3 className="text-base font-semibold text-[#ECECEC]">Chrome Extension</h3>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-400">
+              <h3 className="text-base font-semibold text-foreground">Chrome Extension</h3>
+              <p className="mt-2 flex-1 text-sm leading-relaxed text-foreground-dim">
                 Optimize prompts where you already work—ChatGPT, Gmail, and more.
               </p>
               <Link href="/docs#chrome-extension" className="mt-6 inline-block">
                 <Button size="md">Add to Chrome</Button>
               </Link>
-              <p className="mt-3 text-xs text-zinc-500">
+              <p className="mt-3 text-xs text-muted-foreground">
                 Load unpacked or install from the Web Store—see{' '}
                 <Link href="/docs#chrome-extension" className="text-accent-text underline">
                   docs
@@ -128,12 +128,12 @@ export default function Page() {
             </article>
 
             {/* API */}
-            <article className="flex min-w-0 flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 text-left">
-              <div className="mb-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-accent-text">
+            <article className="flex min-w-0 flex-col rounded-2xl border border-border bg-card p-6 text-left">
+              <div className="mb-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted text-accent-text">
                 <Code2 className="h-5 w-5" aria-hidden />
               </div>
-              <h3 className="text-base font-semibold text-[#ECECEC]">API</h3>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-400">
+              <h3 className="text-base font-semibold text-foreground">API</h3>
+              <p className="mt-2 flex-1 text-sm leading-relaxed text-foreground-dim">
                 POST your draft prompt and stream back an optimized version from your backend or
                 scripts.
               </p>
@@ -147,10 +147,10 @@ export default function Page() {
         </section>
       </div>
 
-      <footer className="border-t border-zinc-800 bg-background px-6 py-10">
-        <div className="mx-auto max-w-7xl text-center text-sm text-zinc-400">
+      <footer className="border-t border-border bg-background px-6 py-10">
+        <div className="mx-auto max-w-7xl text-center text-sm text-foreground-dim">
           <p>© 2026 PromptPerfect. Open Source under MIT License.</p>
-          <p className="mt-2 text-zinc-500">Built by Beagle Builder Program</p>
+          <p className="mt-2 text-muted-foreground">Built by Beagle Builder Program</p>
         </div>
       </footer>
     </main>

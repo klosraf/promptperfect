@@ -178,8 +178,8 @@ export default function ProfilePage() {
 
   if (!supabase && !loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#050505] px-4">
-        <p className="text-center text-[#B0B0B0]">
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <p className="text-center text-foreground-dim">
           Supabase is not configured. Add{' '}
           <code className="text-accent-text">NEXT_PUBLIC_SUPABASE_URL</code> and{' '}
           <code className="text-accent-text">NEXT_PUBLIC_SUPABASE_ANON_KEY</code>.
@@ -190,21 +190,21 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#050505]">
-        <p className="text-[#B0B0B0]">Loading…</p>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <p className="text-foreground-dim">Loading…</p>
       </div>
     );
   }
 
   if (needsSignIn) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#050505] px-4">
-        <p className="max-w-md text-center text-[#B0B0B0]">
-          We couldn’t load your profile because <strong className="text-[#E7E6D9]">this browser tab</strong> has no active sign-in. Profile only opens after you authenticate here (same device and browser where you use the app).
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4">
+        <p className="max-w-md text-center text-foreground-dim">
+          We couldn’t load your profile because <strong className="text-foreground">this browser tab</strong> has no active sign-in. Profile only opens after you authenticate here (same device and browser where you use the app).
         </p>
-        <p className="max-w-md text-center text-sm text-[#8a8a8a]">
-          Use <strong className="text-[#B0B0B0]">Log in</strong> or{' '}
-          <strong className="text-[#B0B0B0]">Sign up</strong> below, then open Profile again—or go to the app, sign in from the header, then use the Profile link.
+        <p className="max-w-md text-center text-sm text-muted-foreground">
+          Use <strong className="text-foreground-dim">Log in</strong> or{' '}
+          <strong className="text-foreground-dim">Sign up</strong> below, then open Profile again—or go to the app, sign in from the header, then use the Profile link.
         </p>
         <Link
           href="/login"
@@ -212,7 +212,7 @@ export default function ProfilePage() {
         >
           Go to sign in
         </Link>
-        <Link href="/app" className="text-sm text-[#8a8a8a] hover:text-[#B0B0B0]">
+        <Link href="/app" className="text-sm text-muted-foreground hover:text-foreground-dim">
           Back to app
         </Link>
       </div>
@@ -221,16 +221,16 @@ export default function ProfilePage() {
 
   if (loadError) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#050505] px-4">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4">
         <p className="max-w-lg text-center text-red-400">{loadError}</p>
         {loadHint && (
-          <p className="max-w-lg text-center text-sm text-[#8a8a8a]">{loadHint}</p>
+          <p className="max-w-lg text-center text-sm text-muted-foreground">{loadHint}</p>
         )}
         <div className="flex flex-wrap justify-center gap-3">
           <button
             type="button"
             onClick={handleRetryLoad}
-            className="rounded-lg border border-[#252525] px-4 py-2 text-sm text-[#E7E6D9] hover:bg-[#141414]"
+            className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-card"
           >
             Retry
           </button>
@@ -253,8 +253,8 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#050505] px-4">
-        <p className="text-[#B0B0B0]">Could not load your profile.</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4">
+        <p className="text-foreground-dim">Could not load your profile.</p>
         <Link href="/app" className="text-accent-text hover:underline">
           Back to app
         </Link>
@@ -263,18 +263,18 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505]">
-      <header className="border-b border-[#1a1a1a] px-4 py-4 sm:px-6">
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border px-4 py-4 sm:px-6">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
           <Link
             href="/app"
-            className="text-sm text-[#8a8a8a] transition hover:text-[#B0B0B0]"
+            className="text-sm text-muted-foreground transition hover:text-foreground-dim"
           >
             ← Back to app
           </Link>
           {showSignOutConfirm ? (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-[#B0B0B0]">Sign out?</span>
+              <span className="text-sm text-foreground-dim">Sign out?</span>
               <button
                 type="button"
                 onClick={() => void handleSignOut()}
@@ -285,7 +285,7 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setShowSignOutConfirm(false)}
-                className="rounded-lg border border-[#252525] px-3 py-1.5 text-sm text-[#B0B0B0] hover:bg-[#141414]"
+                className="rounded-lg border border-border px-3 py-1.5 text-sm text-foreground-dim hover:bg-card"
               >
                 Cancel
               </button>
@@ -294,7 +294,7 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => setShowSignOutConfirm(true)}
-              className="text-sm text-[#8a8a8a] transition hover:text-[#B0B0B0]"
+              className="text-sm text-muted-foreground transition hover:text-foreground-dim"
             >
               Sign out
             </button>
@@ -303,21 +303,21 @@ export default function ProfilePage() {
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-        <p className="mb-1 text-lg text-[#B0B0B0]">
+        <p className="mb-1 text-lg text-foreground-dim">
           Hi,{' '}
-          <span className="text-[#E7E6D9]">
+          <span className="text-foreground">
             {profile.display_name?.trim() ||
               profile.email.split('@')[0] ||
               'there'}
           </span>
         </p>
-        <h1 className="mb-2 font-heading text-3xl font-bold text-[#E7E6D9]">
+        <h1 className="mb-2 font-heading text-3xl font-bold text-foreground">
           Your profile
         </h1>
-        <p className="mb-8 text-sm text-[#8a8a8a]">
-          To edit: click <strong className="text-[#B0B0B0]">Edit</strong> next to
+        <p className="mb-8 text-sm text-muted-foreground">
+          To edit: click <strong className="text-foreground-dim">Edit</strong> next to
           your name, change display name and/or avatar image URL, then{' '}
-          <strong className="text-[#B0B0B0]">Save</strong>.
+          <strong className="text-foreground-dim">Save</strong>.
         </p>
 
         {saveError && (
@@ -326,7 +326,7 @@ export default function ProfilePage() {
           </p>
         )}
 
-        <div className="mb-8 rounded-xl border border-[#252525] bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+        <div className="mb-8 rounded-xl border border-border bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
             {profile.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element -- user-supplied arbitrary URL
@@ -344,24 +344,24 @@ export default function ProfilePage() {
               {editing ? (
                 <div className="space-y-3">
                   <div>
-                    <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-[#8a8a8a]">
+                    <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       Display name
                     </label>
                     <input
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full rounded-lg border border-[#252525] bg-[#0A0A0A] px-3 py-2 text-[#E7E6D9] focus:border-accent focus:outline-none"
+                      className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground focus:border-accent focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-[#8a8a8a]">
+                    <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       Avatar URL
                     </label>
                     <input
                       value={avatarUrl}
                       onChange={(e) => setAvatarUrl(e.target.value)}
                       placeholder="https://…"
-                      className="w-full rounded-lg border border-[#252525] bg-[#0A0A0A] px-3 py-2 text-[#E7E6D9] placeholder:text-[#52525b] focus:border-accent focus:outline-none"
+                      className="w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground placeholder:text-[#52525b] focus:border-accent focus:outline-none"
                     />
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -381,7 +381,7 @@ export default function ProfilePage() {
                         setDisplayName(profile.display_name || '');
                         setAvatarUrl(profile.avatar_url || '');
                       }}
-                      className="rounded-lg border border-[#252525] px-4 py-2 text-sm text-[#B0B0B0] hover:bg-[#141414]"
+                      className="rounded-lg border border-border px-4 py-2 text-sm text-foreground-dim hover:bg-card"
                     >
                       Cancel
                     </button>
@@ -390,7 +390,7 @@ export default function ProfilePage() {
               ) : (
                 <>
                   <div className="flex flex-wrap items-baseline gap-2">
-                    <h2 className="font-heading text-xl font-semibold text-[#E7E6D9]">
+                    <h2 className="font-heading text-xl font-semibold text-foreground">
                       {profile.display_name || '—'}
                     </h2>
                     <button
@@ -399,14 +399,14 @@ export default function ProfilePage() {
                         setEditing(true);
                         setSaveError(null);
                       }}
-                      className="text-sm text-[#8a8a8a] hover:text-[#B0B0B0]"
+                      className="text-sm text-muted-foreground hover:text-foreground-dim"
                     >
                       Edit
                     </button>
                   </div>
-                  <p className="mt-1 text-sm text-[#B0B0B0]">{profile.email || '—'}</p>
+                  <p className="mt-1 text-sm text-foreground-dim">{profile.email || '—'}</p>
                   {profile.created_at && (
-                    <p className="mt-2 text-xs text-[#8a8a8a]">
+                    <p className="mt-2 text-xs text-muted-foreground">
                       Member since{' '}
                       {new Date(profile.created_at).toLocaleDateString('en-US', {
                         month: 'long',
@@ -414,8 +414,8 @@ export default function ProfilePage() {
                       })}
                     </p>
                   )}
-                  <p className="mt-3 text-sm text-[#B0B0B0]">
-                    <span className="font-medium text-[#E7E6D9]">
+                  <p className="mt-3 text-sm text-foreground-dim">
+                    <span className="font-medium text-foreground">
                       {profile.optimization_count}
                     </span>{' '}
                     optimizations saved to your account
@@ -426,16 +426,16 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <h2 className="mb-4 font-heading text-lg font-semibold text-[#E7E6D9]">
+        <h2 className="mb-4 font-heading text-lg font-semibold text-foreground">
           Account overview
         </h2>
         {stats.total === 0 ? (
-          <div className="rounded-xl border border-[#252525] bg-gradient-to-b from-white/[0.04] to-white/[0.01] py-12 text-center">
+          <div className="rounded-xl border border-border bg-gradient-to-b from-white/[0.04] to-white/[0.01] py-12 text-center">
             <BarChart3
               className="mx-auto mb-4 h-10 w-10 text-[#333333]"
               strokeWidth={1}
             />
-            <p className="text-sm text-[#8a8a8a]">
+            <p className="text-sm text-muted-foreground">
               Start optimizing prompts to see your stats here!
             </p>
             <Link
@@ -447,29 +447,29 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-xl border border-[#252525] bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6 text-center">
+            <div className="rounded-xl border border-border bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6 text-center">
               <BarChart3
                 className="mx-auto mb-2 h-8 w-8 text-accent-text"
                 strokeWidth={1}
               />
-              <p className="font-heading text-2xl font-bold text-[#E7E6D9]">
+              <p className="font-heading text-2xl font-bold text-foreground">
                 {stats.total}
               </p>
-              <p className="text-sm text-[#B0B0B0]">Total optimizations</p>
+              <p className="text-sm text-foreground-dim">Total optimizations</p>
             </div>
-            <div className="rounded-xl border border-[#252525] bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6 text-center">
+            <div className="rounded-xl border border-border bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6 text-center">
               <Zap className="mx-auto mb-2 h-8 w-8 text-accent-text" strokeWidth={1} />
-              <p className="font-heading text-2xl font-bold text-[#E7E6D9]">
+              <p className="font-heading text-2xl font-bold text-foreground">
                 {formatModeLabel(stats.favoriteMode)}
               </p>
-              <p className="text-sm text-[#B0B0B0]">Favorite mode</p>
+              <p className="text-sm text-foreground-dim">Favorite mode</p>
             </div>
-            <div className="rounded-xl border border-[#252525] bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6 text-center">
+            <div className="rounded-xl border border-border bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6 text-center">
               <Clock className="mx-auto mb-2 h-8 w-8 text-accent-text" strokeWidth={1} />
-              <p className="font-heading text-2xl font-bold text-[#E7E6D9]">
+              <p className="font-heading text-2xl font-bold text-foreground">
                 {formatProviderLabel(stats.favoriteProvider)}
               </p>
-              <p className="text-sm text-[#B0B0B0]">Most-used provider</p>
+              <p className="text-sm text-foreground-dim">Most-used provider</p>
             </div>
           </div>
         )}

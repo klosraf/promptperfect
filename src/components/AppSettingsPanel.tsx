@@ -154,26 +154,26 @@ export function AppSettingsPanel({
         aria-hidden
       />
       <div
-        className="fixed right-0 top-0 z-50 h-full w-[360px] border-l border-zinc-800 bg-[#0d0d0d] shadow-xl transition-transform duration-300 ease-out"
+        className="fixed right-0 top-0 z-50 h-full w-[360px] border-l border-border bg-popover shadow-xl transition-transform duration-300 ease-out"
         style={{ transform: open ? 'translateX(0)' : 'translateX(100%)' }}
       >
-        <div className="flex items-center justify-between border-b border-zinc-800 p-4">
-          <h2 className="text-lg font-semibold text-[#ECECEC]">AI Engine Settings</h2>
+        <div className="flex items-center justify-between border-b border-border p-4">
+          <h2 className="text-lg font-semibold text-foreground">AI Engine Settings</h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-2 text-zinc-400 hover:bg-zinc-800 hover:text-[#ECECEC]"
+            className="rounded p-2 text-foreground-dim hover:bg-muted hover:text-foreground"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
         <div className="p-4 space-y-4">
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-foreground-dim">
             Current: {PROVIDER_LABELS[provider]}
           </p>
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-zinc-300">Provider</span>
+            <span className="text-sm font-medium text-foreground-dim">Provider</span>
             <div className="grid grid-cols-3 gap-2">
               {(['gemini', 'openai', 'anthropic'] as const).map((p) => (
                 <button
@@ -185,8 +185,8 @@ export function AppSettingsPanel({
                   }}
                   className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
                     localProvider === p
-                      ? 'border-accent bg-accent/10 text-[#ECECEC]'
-                      : 'border-zinc-600 text-zinc-400 hover:border-zinc-500'
+                      ? 'border-accent bg-accent/10 text-foreground'
+                      : 'border-input text-foreground-dim hover:border-zinc-500'
                   }`}
                 >
                   <span
@@ -206,7 +206,7 @@ export function AppSettingsPanel({
           </div>
           {localProvider !== 'gemini' && (
             <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">
+              <label className="block text-sm font-medium text-foreground-dim mb-1">
                 API Key
               </label>
               <input
@@ -217,13 +217,13 @@ export function AppSettingsPanel({
                   setVerifyState('idle');
                 }}
                 placeholder="Paste your API key"
-                className="w-full rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-[#ECECEC] placeholder-zinc-500 focus:border-accent focus:outline-none"
+                className="w-full rounded-lg border border-input bg-muted px-3 py-2 text-sm text-foreground placeholder-zinc-500 focus:border-accent focus:outline-none"
               />
               <button
                 type="button"
                 onClick={handleVerifyKey}
                 disabled={!localKey.trim() || verifying}
-                className="mt-2 rounded-lg border border-zinc-600 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800 disabled:opacity-50"
+                className="mt-2 rounded-lg border border-input px-3 py-1.5 text-xs text-foreground-dim hover:bg-muted disabled:opacity-50"
               >
                 {verifying ? 'Verifying…' : 'Verify'}
               </button>

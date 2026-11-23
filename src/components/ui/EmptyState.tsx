@@ -37,7 +37,7 @@ export function EmptyState({
       <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-muted">
         <Icon className="h-5 w-5 text-[#3a3a3a]" strokeWidth={1.5} aria-hidden />
       </div>
-      <p className="text-[13px] font-medium text-[#B0B0B0]">{title}</p>
+      <p className="text-[13px] font-medium text-foreground-dim">{title}</p>
       {description ? (
         <p className="max-w-[260px] text-[12px] leading-relaxed text-muted-foreground">
           {description}

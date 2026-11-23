@@ -46,10 +46,10 @@ export function AppModeSelector({
               disabled={disabled}
               aria-pressed={isSelected}
               title={hint}
-              className={`rounded-[20px] px-5 py-2 text-[13px] font-medium transition-colors duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] disabled:opacity-50 ${
+              className={`rounded-[20px] px-5 py-2 text-[13px] font-medium transition-colors duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-50 ${
                 isSelected
                   ? "border-0 bg-accent text-white"
-                  : "border border-solid border-[#252525] bg-[#151515] text-[#808088] hover:border-accent hover:text-[#ccc]"
+                  : "border border-solid border-border bg-muted text-muted-foreground hover:border-accent hover:text-foreground"
               }`}
             >
               {label}
@@ -82,7 +82,7 @@ export function AppModeSelector({
               title={hint}
               className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-50 dark:focus:ring-offset-zinc-900 ${
                 isSelected
-                  ? "border-accent bg-accent/10 text-accent-text dark:text-[#8B9AFF]"
+                  ? "border-accent bg-accent/10 text-accent-text dark:text-accent-text"
                   : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
               }`}
             >

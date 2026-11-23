@@ -9,14 +9,14 @@ const buttonVariants = cvaLite(
     variants: {
       variant: {
         primary:
-          'bg-accent text-accent-foreground shadow-sm shadow-accent/10 hover:bg-[#5b6cff]',
+          'bg-accent text-accent-foreground shadow-sm shadow-accent/10 hover:bg-accent-hover',
         secondary:
           'border border-border bg-transparent text-foreground hover:border-accent/50 hover:bg-accent/5',
-        ghost: 'text-foreground hover:bg-white/5',
+        ghost: 'text-foreground hover:bg-foreground/5',
         outline:
-          'border border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-white',
+          'border border-input text-foreground-dim hover:border-muted-foreground hover:text-foreground',
         danger:
-          'bg-red-500/10 text-red-300 border border-red-500/20 hover:bg-red-500/20',
+          'bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/30 hover:bg-red-500/20',
       },
       size: {
         sm: 'h-8 px-3 text-xs',

@@ -1,6 +1,7 @@
 import { Logo } from "@/components/brand/Logo";
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 export function LandingHeader() {
   return (
@@ -23,6 +24,7 @@ export function LandingHeader() {
         </p>
       </div>
       <div className="flex items-center gap-3">
+        <ThemeToggle />
         <Link href="/app" className="cursor-pointer">
           <Button size="sm">Try for free</Button>
         </Link>

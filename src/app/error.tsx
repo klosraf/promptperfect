@@ -20,8 +20,8 @@ export default function Error({
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-      <h2 className="text-xl font-semibold text-[#ECECEC]">Something went wrong.</h2>
-      <p className="text-sm text-[#8a8a8a]">
+      <h2 className="text-xl font-semibold text-foreground">Something went wrong.</h2>
+      <p className="text-sm text-muted-foreground">
         Try again, or head back to the home page. If it keeps happening, ping us in Discord.
       </p>
       <div className="flex gap-2">
@@ -33,7 +33,7 @@ export default function Error({
         </button>
         <Link
           href="/"
-          className="rounded-[10px] border border-[#2a2a2a] bg-[#111] px-4 py-2 text-sm font-semibold text-[#ECECEC] transition-colors hover:border-[#3a3a3a] hover:bg-[#1a1a1a]"
+          className="rounded-[10px] border border-border bg-muted px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-input hover:bg-muted"
         >
           Go home
         </Link>

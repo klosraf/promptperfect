@@ -52,9 +52,9 @@ export function HistoryPanel({
   });
 
   return (
-    <div className="flex h-full flex-col border-l border-[#1a1a1a] bg-[#0a0a0a]">
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[#1a1a1a] px-3 py-2">
-        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[#808088]">
+    <div className="flex h-full flex-col border-l border-border bg-card">
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-2">
+        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
           History
         </span>
         {onNewPrompt ? (
@@ -63,7 +63,7 @@ export function HistoryPanel({
             onClick={() => onNewPrompt()}
             title="New prompt"
             aria-label="New prompt"
-            className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-[#2a2a2a] bg-[#141414] px-2.5 text-[12px] font-medium text-[#ccc] transition hover:border-[#3f3f46] hover:bg-[#1a1a1a] hover:text-[#E7E6D9]"
+            className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-border bg-card px-2.5 text-[12px] font-medium text-foreground-dim transition hover:border-[#3f3f46] hover:bg-muted hover:text-foreground"
           >
             <Plus className="h-4 w-4" strokeWidth={2} aria-hidden />
             <span className="hidden sm:inline">New</span>
@@ -84,7 +84,7 @@ export function HistoryPanel({
       )}
       <div className="min-h-0 flex-1 overflow-y-auto pp-history-scroll">
         {loading ? (
-          <p className="px-3 py-2 text-[13px] text-[#808088]" aria-busy="true">Loading…</p>
+          <p className="px-3 py-2 text-[13px] text-muted-foreground" aria-busy="true">Loading…</p>
         ) : rows.length === 0 ? (
           <EmptyState
             icon={History}
@@ -98,14 +98,14 @@ export function HistoryPanel({
                 <button
                   type="button"
                   onClick={() => onSelect(item)}
-                  className={`min-w-0 flex-1 px-3 py-2.5 text-left transition hover:bg-[#141414] ${
-                    selectedId && item.id === selectedId ? 'bg-[#141414]' : ''
+                  className={`min-w-0 flex-1 px-3 py-2.5 text-left transition hover:bg-card ${
+                    selectedId && item.id === selectedId ? 'bg-card' : ''
                   }`}
                 >
-                  <p className="line-clamp-2 text-[13px] leading-snug text-[#ccc]">
+                  <p className="line-clamp-2 text-[13px] leading-snug text-foreground-dim">
                     {previewPrompt(item.prompt_original)}
                   </p>
-                  <p className="mt-1 text-[11px] text-[#808088]">
+                  <p className="mt-1 text-[11px] text-muted-foreground">
                     {item.mode} · {formatHistoryTime(item.created_at)}
                   </p>
                 </button>
@@ -120,7 +120,7 @@ export function HistoryPanel({
                       e.stopPropagation();
                       void removeItem(item.id);
                     }}
-                    className="shrink-0 px-2.5 py-2 text-[#555] transition hover:bg-[#1a1a1a] hover:text-[#e85d5d] disabled:opacity-40"
+                    className="shrink-0 px-2.5 py-2 text-muted-foreground transition hover:bg-muted hover:text-[#e85d5d] disabled:opacity-40"
                   >
                     {deletingId === item.id ? (
                       <span className="text-[11px]">…</span>

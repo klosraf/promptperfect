@@ -214,7 +214,7 @@ export function ProjectLinker({ onDigest, disabled = false }: ProjectLinkerProps
         type="button"
         onClick={() => void handlePick()}
         disabled={disabled || analyzing}
-        className="inline-flex items-center gap-2 rounded-[12px] border border-dashed border-[#3a3a3a] bg-transparent px-4 py-2 text-[13px] font-medium text-[#B0B0B0] transition-colors hover:border-accent hover:text-[#ECECEC] disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded-[12px] border border-dashed border-input bg-transparent px-4 py-2 text-[13px] font-medium text-foreground-dim transition-colors hover:border-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
       >
         {analyzing ? (
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
@@ -227,7 +227,7 @@ export function ProjectLinker({ onDigest, disabled = false }: ProjectLinkerProps
             ? `Re-link project (last: ${lastProject})`
             : 'Link project directory'}
       </button>
-      <p className="max-w-xs text-center text-[11px] leading-relaxed text-[#8a8a8a]">
+      <p className="max-w-xs text-center text-[11px] leading-relaxed text-muted-foreground">
         Reads any directory locally in your browser — code, docs, data, media, or mixed
         content in any language — and builds a structural digest. Files stay on your
         device until you run Optimize.
@@ -241,14 +241,14 @@ export function ProjectLinker({ onDigest, disabled = false }: ProjectLinkerProps
         type="button"
         onClick={() => setShowLocal((v) => !v)}
         disabled={disabled || analyzing}
-        className="inline-flex items-center gap-1.5 text-[12px] text-[#8a8a8a] transition-colors hover:text-[#ECECEC] disabled:opacity-50"
+        className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
       >
         <HardDrive className="h-3.5 w-3.5" aria-hidden />
         {showLocal ? 'Hide local-disk scan' : 'Scan a local-disk path'}
       </button>
       {showLocal ? (
         <div className="flex w-full max-w-xs flex-col gap-1.5">
-          <label htmlFor="local-scan-dir" className="text-[11px] text-[#8a8a8a]">
+          <label htmlFor="local-scan-dir" className="text-[11px] text-muted-foreground">
             Local dev only — scanned by the Next.js server, never uploaded
           </label>
           <div className="flex gap-1.5">
@@ -259,13 +259,13 @@ export function ProjectLinker({ onDigest, disabled = false }: ProjectLinkerProps
               onChange={(e) => setLocalDir(e.target.value)}
               placeholder="/Users/klosraf"
               disabled={disabled || analyzing}
-              className="min-w-0 flex-1 rounded-[10px] border border-[#3a3a3a] bg-[#0A0A0A] px-3 py-1.5 text-[12px] text-[#ECECEC] outline-none placeholder:text-[#555] focus:border-accent disabled:opacity-50"
+              className="min-w-0 flex-1 rounded-[10px] border border-input bg-card px-3 py-1.5 text-[12px] text-foreground outline-none placeholder:text-muted-foreground focus:border-accent disabled:opacity-50"
             />
             <button
               type="button"
               onClick={() => void handleLocalScan(false)}
               disabled={disabled || analyzing || !localDir.trim()}
-              className="shrink-0 rounded-[10px] border border-[#3a3a3a] px-3 py-1.5 text-[12px] font-semibold text-[#B0B0B0] transition hover:border-accent hover:text-[#ECECEC] disabled:opacity-50"
+              className="shrink-0 rounded-[10px] border border-input px-3 py-1.5 text-[12px] font-semibold text-foreground-dim transition hover:border-accent hover:text-foreground disabled:opacity-50"
             >
               {analyzing ? 'Scanning…' : 'Scan'}
             </button>

@@ -51,9 +51,9 @@ export default function LibraryPage() {
   // ── Auth / mount gate ──────────────────────────────────────────────────────
   if (!mounted || !authReady) {
     return (
-      <div className="min-h-screen bg-[#050505] px-6 py-8 font-sans">
+      <div className="min-h-screen bg-background px-6 py-8 font-sans">
         <div className="mx-auto max-w-4xl">
-          <div className="mb-8 h-8 w-32 animate-pulse rounded bg-[#1a1a1a]" />
+          <div className="mb-8 h-8 w-32 animate-pulse rounded bg-muted" />
           <LibrarySkeleton />
         </div>
       </div>
@@ -63,22 +63,22 @@ export default function LibraryPage() {
   // ── Unauthenticated ────────────────────────────────────────────────────────
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#050505] px-6 py-12 font-sans text-[#ECECEC]">
+      <div className="min-h-screen bg-background px-6 py-12 font-sans text-foreground">
         <div className="mx-auto max-w-md text-center">
           <div className="mb-6">
             <Link
               href="/app"
-              className="inline-flex items-center gap-1.5 text-sm text-[#888] transition-colors hover:text-[#ECECEC]"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden />
               Back to optimizer
             </Link>
           </div>
           <Bookmark className="mx-auto mb-4 h-16 w-16 text-accent" strokeWidth={1} aria-hidden />
-          <h2 className="mb-2 font-[family-name:var(--font-space-grotesk),sans-serif] text-2xl font-bold text-[#E7E6D9]">
+          <h2 className="mb-2 font-[family-name:var(--font-space-grotesk),sans-serif] text-2xl font-bold text-foreground">
             Your Prompt Library
           </h2>
-          <p className="mb-8 text-sm text-[#888]">
+          <p className="mb-8 text-sm text-muted-foreground">
             Save and revisit your best optimized prompts. Create a free account to get started.
           </p>
           <LibraryEmptyState
@@ -93,7 +93,7 @@ export default function LibraryPage() {
             </Link>
             <Link
               href="/login"
-              className="text-sm text-[#888] transition-colors hover:text-[#ECECEC]"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               Already have an account? Log in
             </Link>
@@ -114,23 +114,23 @@ export default function LibraryPage() {
         />
       )}
 
-      <div className="min-h-screen bg-[#050505] px-6 py-8 font-sans text-[#ECECEC]">
-        <header className="mx-auto mb-8 flex max-w-4xl flex-wrap items-center justify-between gap-4 border-b border-[#1a1a1a] pb-4">
+      <div className="min-h-screen bg-background px-6 py-8 font-sans text-foreground">
+        <header className="mx-auto mb-8 flex max-w-4xl flex-wrap items-center justify-between gap-4 border-b border-border pb-4">
           <div className="flex flex-col gap-1">
             <Link
               href="/app"
-              className="inline-flex items-center gap-1.5 text-sm text-[#888] transition-colors hover:text-[#ECECEC]"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden />
               Back to optimizer
             </Link>
-            <h1 className="font-[family-name:var(--font-space-grotesk),sans-serif] text-2xl font-bold text-[#E7E6D9]">
+            <h1 className="font-[family-name:var(--font-space-grotesk),sans-serif] text-2xl font-bold text-foreground">
               Prompt Library
             </h1>
           </div>
           <div className="flex flex-col items-end gap-1 text-right">
-            <span className="text-[13px] text-[#888]">{user.name || user.email}</span>
-            <span className="text-[12px] text-[#8a8a8a]">{rows.length} saved</span>
+            <span className="text-[13px] text-muted-foreground">{user.name || user.email}</span>
+            <span className="text-[12px] text-muted-foreground">{rows.length} saved</span>
           </div>
         </header>
 
@@ -155,8 +155,8 @@ export default function LibraryPage() {
                 onClick={() => setTab(id)}
                 className={`rounded-lg border px-4 py-2 text-[13px] font-medium transition-colors ${
                   tab === id
-                    ? 'border-accent bg-accent/20 text-[#ECECEC]'
-                    : 'border-[#2a2a2a] bg-[#0A0A0A] text-[#B0B0B0] hover:border-accent/50'
+                    ? 'border-accent bg-accent/20 text-foreground'
+                    : 'border-border bg-card text-foreground-dim hover:border-accent/50'
                 }`}
               >
                 {label}
