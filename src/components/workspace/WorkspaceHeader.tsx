@@ -1,5 +1,6 @@
 'use client';
 
+import { Logo } from "@/components/brand/Logo";
 import Link from 'next/link';
 import type { AppUser } from '@/lib/types';
 import { isUnlimitedMode } from '@/lib/localMode';
@@ -33,8 +34,9 @@ export function WorkspaceHeader({
       <div className="flex w-full min-w-0 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
-          className="flex shrink-0 items-baseline gap-2 font-heading"
+          className="flex shrink-0 items-center gap-2.5 font-heading"
         >
+          <Logo size={26} className="shrink-0" />
           <span className="text-lg font-bold tracking-tight text-[#E7E6D9]">
             PromptPerfect
           </span>

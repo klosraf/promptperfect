@@ -1,10 +1,12 @@
+import { Logo } from "@/components/brand/Logo";
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 
 export function LandingHeader() {
   return (
     <header className="flex items-center justify-between border-b border-border bg-background px-4 py-3">
-      <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+      <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
+        <Logo size={26} className="shrink-0" />
         <h1 className="text-xl font-bold tracking-tight text-foreground">
           PromptPerfect
         </h1>

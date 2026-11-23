@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="PromptPerfect">
+  <defs>
+    <linearGradient id="pp-g" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5b6cff"/>
+      <stop offset="0.55" stop-color="#4552ff"/>
+      <stop offset="1" stop-color="#3a45e6"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#pp-g)"/>
+  <path d="M45 13.5c.9 4.3 2.2 5.6 6.5 6.5-4.3.9-5.6 2.2-6.5 6.5-.9-4.3-2.2-5.6-6.5-6.5 4.3-.9 5.6-2.2 6.5-6.5Z" fill="#dfe3ff"/>
+  <path d="M23.5 21.5 36 32l-12.5 10.5" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M41.5 42.5h7" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round"/>
+</svg>

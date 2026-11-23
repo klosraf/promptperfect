@@ -19,9 +19,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://promptperfect.vercel.app"),
   title: "PromptPerfect by Beagle — AI Prompt Optimizer",
   description:
     "Optimize your AI prompts for better results. Free API, Chrome extension, and web app.",
+  openGraph: {
+    title: "PromptPerfect — AI Prompt Optimizer",
+    description:
+      "Optimize your prompts. Understand every change. Open-source prompt optimization with explanations.",
+    siteName: "PromptPerfect",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PromptPerfect — AI Prompt Optimizer",
+    description:
+      "Optimize your prompts. Understand every change. Open-source prompt optimization with explanations.",
+  },
 };
 
 export default function RootLayout({

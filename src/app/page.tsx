@@ -1,3 +1,4 @@
+import { Logo } from "@/components/brand/Logo";
 import {
   Clipboard,
   Code2,
@@ -32,6 +33,7 @@ export default function Page() {
 
       <div className="mx-auto w-full min-w-0 max-w-5xl flex-1 px-4 py-16 sm:px-6 md:px-8 lg:px-10">
         <section className="mb-20 min-w-0 text-center md:mb-24">
+          <Logo size={72} className="animate-fade-in mx-auto mb-6" />
           <h2 className="animate-fade-in bg-gradient-to-r from-[#ECECEC] via-zinc-300 to-[#ECECEC] bg-clip-text text-3xl font-semibold leading-tight tracking-tight text-transparent sm:text-4xl md:text-5xl">
             PromptPerfect
           </h2>

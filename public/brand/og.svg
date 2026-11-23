@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="PromptPerfect — optimize your prompts, understand every change">
+  <defs>
+    <linearGradient id="pp-g" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5b6cff"/>
+      <stop offset="0.55" stop-color="#4552ff"/>
+      <stop offset="1" stop-color="#3a45e6"/>
+    </linearGradient>
+    <radialGradient id="pp-glow" cx="0.24" cy="0.5" r="0.55">
+      <stop offset="0" stop-color="#4552ff" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#4552ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#050505"/>
+  <rect width="1200" height="630" fill="url(#pp-glow)"/>
+  <g transform="translate(110 207) scale(3.375)">
+    <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#pp-g)"/>
+    <path d="M45 13.5c.9 4.3 2.2 5.6 6.5 6.5-4.3.9-5.6 2.2-6.5 6.5-.9-4.3-2.2-5.6-6.5-6.5 4.3-.9 5.6-2.2 6.5-6.5Z" fill="#dfe3ff"/>
+    <path d="M23.5 21.5 36 32l-12.5 10.5" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M41.5 42.5h7" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round"/>
+  </g>
+  <text x="392" y="308" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="66" font-weight="800" letter-spacing="-1.5" fill="#ffffff">PromptPerfect</text>
+  <text x="395" y="366" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="29" font-weight="500" fill="#8b93ff">Optimize your prompts. Understand every change.</text>
+  <text x="395" y="416" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="21" font-weight="500" fill="#9ca3af">Open-source prompt optimization with explanations</text>
+</svg>

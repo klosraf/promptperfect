@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/brand/lockup.svg" alt="PromptPerfect" width="316" />
+</p>
+
 # PromptPerfect
 
 > PromptPerfect is an open-source prompt optimization tool that automatically improves your LLM prompts and explains the changes.
