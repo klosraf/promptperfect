@@ -60,3 +60,27 @@ corregido aquí sin reescribir la decisión original:
   si el RPC no existe en la base (F5-09). La cuota sigue siendo
   fricción comercial, no identidad: rotar el guest id la reinicia
   (consecuencia ya aceptada arriba).
+
+## Addendum 2026-11-23 — convergencia de esquema decidida y preparada
+
+La convergencia que el addendum EGM dejó «pendiente de decisión» queda
+decidida aquí, con su instrumento preparado (no aplicado):
+
+- **Forma canónica: la de 20250404** (`guest_id text PRIMARY KEY`, sin
+  columna `id`). Es la forma que producción ejecuta de verdad, la que el
+  RPC `increment_guest_usage` y la ruta `/api/guest-usage` ya asumen, y
+  converger hacia ella no reescribe ninguna base viva: las que corren la
+  forma canónica no cambian; solo una base creada únicamente desde
+  20260401 (forma uuid-PK) necesitaría la reconstrucción.
+- **Instrumento**: `supabase/prepared/20261123000000_guest_usage_convergence.sql`
+  — detecta la forma, no-op verificado sobre la canónica, reconstrucción
+  con preservación de filas sobre la uuid-PK, y aborta sin tocar nada
+  ante cualquier forma desconocida (fail-closed). Vive en `prepared/`,
+  fuera de la cadena automática, como la guard BYOK.
+- **Secuencia**: se aplica solo dentro de la ventana de producción, tras
+  las tres migraciones pendientes de 2026-11-12/13 y su verificación;
+  el propio SQL exige que el RPC exista antes de converger.
+- **Verificación**: ensayada en Postgres efímero aislado sobre ambas
+  formas (no-op sobre la canónica; reconstrucción con filas preservadas
+  y RPC operativo sobre la uuid-PK) el 2026-11-23.
+
