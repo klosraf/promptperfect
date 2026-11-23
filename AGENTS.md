@@ -5,6 +5,11 @@ natively in `.claude/egm/` — read `.claude/egm/METHOD.md` first. Skills live
 in `.claude/skills/egm-*/`, agent personas in `.claude/egm/agents/` with
 invocable wrappers in `.claude/agents/`.
 
+The **operating master prompt** for agents/leads working in this repo lives at
+`docs/MASTER_PROMPT.md` — it defines the canonical output shape, all engineering
+gates, the security/RLS mandates and the deployment contract. Read it before
+starting any task; its "definition of done" (§8) outranks a single green test.
+
 Project rules that outrank defaults:
 
 - Canonical toolchain is **npm** (`npm ci` against `package-lock.json`).
