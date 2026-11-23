@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { useCopy } from "@/lib/clipboard";
 
@@ -44,6 +44,11 @@ export function StreamingPromptOutput({
   afterTextarea,
 }: StreamingPromptOutputProps) {
   const lastExplRef = useRef("");
+  // Tracks "a stream ran in this mount" for the completion
+  // announcement below — state adjusted during render (React docs
+  // pattern), since refs may not be read during render.
+  const [wasStreaming, setWasStreaming] = useState(false);
+  if (isStreaming && !wasStreaming) setWasStreaming(true);
   const { copied, copy } = useCopy();
 
   const optimized = useMemo(() => optimizedFromFullText(text), [text]);
@@ -120,6 +125,15 @@ export function StreamingPromptOutput({
             Streaming…
           </p>
         )}
+        {/* Screen-reader completion announcement (EGM E4): derived in
+            render — the region mounts with the completion text in the
+            same commit the stream ends, so it is announced exactly
+            once, and it never announces on a fresh mount. */}
+        <p role="status" aria-live="polite" className="sr-only">
+          {!isStreaming && wasStreaming && optimized.trim()
+            ? `Optimization complete. ${outLen} characters.`
+            : ''}
+        </p>
       </div>
     );
   }

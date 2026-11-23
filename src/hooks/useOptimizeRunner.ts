@@ -21,6 +21,7 @@ import { useOptimisticThumbs } from '@/hooks/useOptimisticThumbs';
 import { useLibraryStatus } from '@/hooks/useLibraryStatus';
 import { useGuestUsageSync } from '@/hooks/useGuestUsageSync';
 import { isUnlimitedMode } from '@/lib/localMode';
+import { appendRemediationBlock } from '@/lib/remediation';
 import type { AppUser, OptimizationMode, Provider } from '@/lib/types';
 import { readStatsBarCache } from '@/lib/client/statsBarCache';
 import {
@@ -507,7 +508,9 @@ export function useOptimizeRunner({
   // input and auto-run. handleOptimize resets run state for the new run.
   const handleRemediate = useCallback((directiveBlock: string) => {
     if (!directiveBlock.trim()) return;
-    setInputText((prev) => `${prev.trimEnd()}${directiveBlock}`);
+    // EGM E3 (F3-11): never stack the same remediation block twice; the
+    // re-run still happens, only the duplicate append is skipped.
+    setInputText((prev) => appendRemediationBlock(prev, directiveBlock));
     pendingAutoRunRef.current = true;
   }, []);
 

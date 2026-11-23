@@ -13,6 +13,7 @@
  */
 
 import { normalizeSupabaseUrl } from '@/lib/env';
+import { DEFAULT_MODEL_IDS } from '@/lib/modelCatalog';
 
 export interface SupabaseConfig {
   url: string;
@@ -92,8 +93,8 @@ export function getConfig(): AppConfig {
         nonempty(process.env.PROMPTPERFECT_ANTHROPIC_API_KEY) ??
         nonempty(process.env.ANTHROPIC_API_KEY),
     },
-    geminiModel: nonempty(process.env.GEMINI_MODEL) ?? 'gemini-3.5-flash',
-    openaiModel: nonempty(process.env.OPENAI_MODEL) ?? 'gpt-6-astra',
+    geminiModel: nonempty(process.env.GEMINI_MODEL) ?? DEFAULT_MODEL_IDS.gemini,
+    openaiModel: nonempty(process.env.OPENAI_MODEL) ?? DEFAULT_MODEL_IDS.openai,
     openaiReasoningEffort:
       nonempty(process.env.OPENAI_REASONING_EFFORT) ?? 'high',
     flags: {

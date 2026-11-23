@@ -96,12 +96,14 @@ describe('/api/auth/forgot-password POST', () => {
     expect(res.status).toBe(503);
   });
 
-  it('returns 503 with a setup hint when the service key is missing', async () => {
+  it('returns 503 without internal hints when the service key is missing', async () => {
     mockGetAdminClient.mockReturnValueOnce(null);
     const res = await POST(makeRequest({ email: 'user@example.com' }));
     expect(res.status).toBe(503);
-    const body = (await res.json()) as { code?: string };
+    const body = (await res.json()) as { code?: string; hint?: string };
     expect(body.code).toBe('SERVICE_KEY_REQUIRED');
+    // EGM E2 (F2-06): setup instructions are operator information.
+    expect(body.hint).toBeUndefined();
   });
 
   it('responds success for unknown emails (anti-enumeration)', async () => {
@@ -132,7 +134,7 @@ describe('/api/auth/forgot-password POST', () => {
     expect(body.recoveryLink).toBeUndefined();
   });
 
-  it('adds a Google hint and local recovery link when applicable', async () => {
+  it('never reveals Google-only accounts nor the recovery link by default', async () => {
     mockGenerateLink.mockResolvedValueOnce({
       data: linkData({
         user: { id: 'user-1', identities: [{ provider: 'google' }] },
@@ -144,8 +146,30 @@ describe('/api/auth/forgot-password POST', () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, unknown>;
     expect(body).toMatchObject({ ok: true, emailSent: true });
-    expect(typeof body.googleOnlyHint).toBe('string');
-    expect(body.recoveryLink).toBe('http://localhost/auth/recovery');
+    // EGM E2 (F2-05/F2-06): anti-enumeration + the link is a credential;
+    // outside gated local mode neither field may appear.
+    expect(body.googleOnlyHint).toBeUndefined();
+    expect(body.recoveryLink).toBeUndefined();
+  });
+
+  it('returns the recovery link only in gated local mode', async () => {
+    const prev = process.env.NEXT_PUBLIC_UNLIMITED_MODE;
+    process.env.NEXT_PUBLIC_UNLIMITED_MODE = 'true';
+    try {
+      mockGenerateLink.mockResolvedValueOnce({
+        data: linkData({
+          properties: { action_link: 'http://localhost/auth/recovery' },
+        }),
+        error: null,
+      });
+      const res = await POST(makeRequest({ email: 'user@example.com' }));
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as Record<string, unknown>;
+      expect(body.recoveryLink).toBe('http://localhost/auth/recovery');
+    } finally {
+      if (prev === undefined) delete process.env.NEXT_PUBLIC_UNLIMITED_MODE;
+      else process.env.NEXT_PUBLIC_UNLIMITED_MODE = prev;
+    }
   });
 
   it('maps a real generateLink failure to 400', async () => {
@@ -159,7 +183,35 @@ describe('/api/auth/forgot-password POST', () => {
     expect(body.code).toBe('EMAIL_NOT_CONFIGURED');
   });
 
-  it('returns the direct link on localhost when email send fails', async () => {
+  it('returns the direct link on localhost when email send fails (gated local mode)', async () => {
+    const prev = process.env.NEXT_PUBLIC_UNLIMITED_MODE;
+    process.env.NEXT_PUBLIC_UNLIMITED_MODE = 'true';
+    try {
+      mockGenerateLink.mockResolvedValueOnce({
+        data: linkData({
+          properties: { action_link: 'http://localhost/auth/recovery' },
+        }),
+        error: null,
+      });
+      mockResetEmail.mockResolvedValueOnce({
+        error: { message: 'over_email_send_rate_limit' },
+      });
+      const res = await POST(makeRequest({ email: 'user@example.com' }));
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as Record<string, unknown>;
+      expect(body).toMatchObject({
+        ok: true,
+        emailSent: false,
+        recoveryLink: 'http://localhost/auth/recovery',
+        code: 'EMAIL_RATE_LIMIT',
+      });
+    } finally {
+      if (prev === undefined) delete process.env.NEXT_PUBLIC_UNLIMITED_MODE;
+      else process.env.NEXT_PUBLIC_UNLIMITED_MODE = prev;
+    }
+  });
+
+  it('does not leak the link when email send fails outside local mode', async () => {
     mockGenerateLink.mockResolvedValueOnce({
       data: linkData({
         properties: { action_link: 'http://localhost/auth/recovery' },
@@ -170,13 +222,9 @@ describe('/api/auth/forgot-password POST', () => {
       error: { message: 'over_email_send_rate_limit' },
     });
     const res = await POST(makeRequest({ email: 'user@example.com' }));
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(400);
     const body = (await res.json()) as Record<string, unknown>;
-    expect(body).toMatchObject({
-      ok: true,
-      emailSent: false,
-      recoveryLink: 'http://localhost/auth/recovery',
-      code: 'EMAIL_RATE_LIMIT',
-    });
+    expect(body.recoveryLink).toBeUndefined();
+    expect(body.code).toBe('EMAIL_RATE_LIMIT');
   });
 });

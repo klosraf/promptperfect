@@ -1,3 +1,4 @@
+import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 
 import { parseLocalScanBody } from '@/lib/apiSchemas';
@@ -50,8 +51,26 @@ async function handlePost(request: Request): Promise<Response> {
     if (!parsed.ok) {
       return Response.json({ error: parsed.error }, { status: 400 });
     }
-    const abs = path.resolve(parsed.value.dir);
-    const roots = getLocalScanRoots();
+    // EGM E2: resolve symlinks on BOTH the requested dir and the
+    // allowlisted roots before comparing — `path.resolve` alone lets a
+    // symlinked root inside an allowed tree point anywhere on disk
+    // (the walker never follows child symlinks, but the root itself
+    // was implicitly followed). A dir that does not exist is a 403,
+    // indistinguishable from a disallowed one.
+    let abs: string;
+    try {
+      abs = await fs.realpath(path.resolve(parsed.value.dir));
+    } catch {
+      return Response.json({ error: 'Directory not allowed' }, { status: 403 });
+    }
+    const roots: string[] = [];
+    for (const r of getLocalScanRoots()) {
+      try {
+        roots.push(await fs.realpath(r));
+      } catch {
+        roots.push(path.normalize(r));
+      }
+    }
     if (!path.isAbsolute(abs) || !isPathAllowed(abs, roots)) {
       return Response.json({ error: 'Directory not allowed' }, { status: 403 });
     }

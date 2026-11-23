@@ -5,11 +5,24 @@ vi.mock("@/lib/server/supabase", () => ({
   getServiceClient: () => null,
 }));
 
-vi.mock("@/lib/providers", () => ({
-  createProvider: () => ({
+const createProvider = vi.fn((...args: unknown[]) => {
+  void args;
+  return {
     model: {},
     modelId: "test-model",
-  }),
+  };
+});
+vi.mock("@/lib/providers", () => ({
+  createProvider: (...args: unknown[]) => createProvider(...args),
+  getProviderCallOptions: () => ({}),
+}));
+
+const resolveIdentity = vi.fn(async (...args: unknown[]) => {
+  void args;
+  return undefined;
+});
+vi.mock("@/lib/server/supabaseRequestIdentity", () => ({
+  resolveIdentity: (...args: unknown[]) => resolveIdentity(...args),
 }));
 
 const streamText = vi.fn();
@@ -20,9 +33,13 @@ vi.mock("ai", () => ({
 describe("/api/optimize POST", () => {
   beforeEach(() => {
     streamText.mockReset();
+    createProvider.mockClear();
+    resolveIdentity.mockClear();
+    resolveIdentity.mockResolvedValue(undefined);
     // NOTE: ai v6 `streamText` returns the result object synchronously.
     streamText.mockReturnValue({
-      toTextStreamResponse: () => new Response("streamed-output"),
+      toTextStreamResponse: (init?: ResponseInit) =>
+        new Response("streamed-output", init),
     });
   });
 
@@ -89,5 +106,41 @@ describe("/api/optimize POST", () => {
     const blocked = await POST(req());
     expect(blocked.status).toBe(429);
     expect(streamText).toHaveBeenCalledTimes(20);
+  });
+
+  it("honors a non-Gemini provider when a BYOK key is present (EGM F1-01)", async () => {
+    const res = await POST(
+      new Request("http://localhost/api/optimize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: "Hello world",
+          mode: "better",
+          provider: "openai",
+          apiKey: "sk-test-byok",
+        }),
+      })
+    );
+    expect(res.status).toBe(200);
+    expect(createProvider).toHaveBeenCalledWith("openai", "sk-test-byok");
+    expect(res.headers.get("x-promptperfect-provider")).toBe("openai");
+    expect(res.headers.get("x-promptperfect-model")).toBe("test-model");
+  });
+
+  it("degrades an anonymous non-Gemini request to Gemini and says so (EGM F2-01 guard)", async () => {
+    const res = await POST(
+      new Request("http://localhost/api/optimize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: "Hello world",
+          mode: "better",
+          provider: "anthropic",
+        }),
+      })
+    );
+    expect(res.status).toBe(200);
+    expect(createProvider).toHaveBeenCalledWith("gemini", undefined);
+    expect(res.headers.get("x-promptperfect-provider")).toBe("gemini");
   });
 });

@@ -60,3 +60,35 @@ describe("Modal", () => {
     expect(document.body.style.overflow).toBe("");
   });
 });
+
+
+describe("Modal focus trap", () => {
+  it("wraps Tab from the last focusable to the first", () => {
+    render(
+      <Modal isOpen onClose={() => {}}>
+        <button type="button">First</button>
+        <button type="button">Last</button>
+      </Modal>
+    );
+    const first = screen.getByRole("button", { name: "First" });
+    const last = screen.getByRole("button", { name: "Last" });
+    last.focus();
+    expect(document.activeElement).toBe(last);
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(document.activeElement).toBe(first);
+  });
+
+  it("wraps Shift+Tab from the first focusable to the last", () => {
+    render(
+      <Modal isOpen onClose={() => {}}>
+        <button type="button">First</button>
+        <button type="button">Last</button>
+      </Modal>
+    );
+    const first = screen.getByRole("button", { name: "First" });
+    const last = screen.getByRole("button", { name: "Last" });
+    first.focus();
+    fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(last);
+  });
+});

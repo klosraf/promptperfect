@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
   const supabase = getServiceClient();
   if (!supabase) {
-    return Response.json({ error: 'Supabase not configured' }, { status: 500 });
+    return Response.json({ error: 'Supabase not configured' }, { status: 503 });
   }
 
   const identity = await resolveIdentity(req);
@@ -104,22 +104,17 @@ export async function POST(req: Request) {
       if (!narrow.error && narrow.data && narrow.data.length > 0) {
         return Response.json({ success: true, updated: true });
       }
-      const legacyInsert = authUserId
-        ? {
-            session_id: sid,
-            mode: normalizedMode,
-            provider: prov,
-            model: prov,
-            feedback: fb,
-            user_id: authUserId,
-          }
-        : {
-            session_id: sid,
-            mode: normalizedMode,
-            provider: prov,
-            model: prov,
-            feedback: fb,
-          };
+      // Spread-conditional (same pattern as insertRow below): a ternary
+      // union with `user_id?: undefined` is rejected by the generated
+      // Supabase types (TS2345) and previously broke typecheck + build.
+      const legacyInsert = {
+        session_id: sid,
+        mode: normalizedMode,
+        provider: prov,
+        model: prov,
+        feedback: fb,
+        ...(authUserId ? { user_id: authUserId } : {}),
+      };
       let legacy = await supabase.from('optimization_logs').insert(legacyInsert);
       if (
         legacy.error &&

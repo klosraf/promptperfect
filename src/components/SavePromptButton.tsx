@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { Bookmark, BookmarkCheck } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/client/supabaseBrowser';
 import { getPromptPerfectAuthHeaders } from '@/lib/client/promptPerfectAuthHeaders';
@@ -46,16 +46,23 @@ export function SavePromptButton({
   // Local mode (no backend): guests can save snapshots into the local library.
   const localMode = !supabase && isUnlimitedMode();
 
-  useEffect(() => {
+  // EGM E4: a new history entry invalidates the per-run save state —
+  // state tracking a prop, adjusted during render (React docs
+  // pattern) instead of an effect.
+  const [prevHistoryId, setPrevHistoryId] = useState(historyId);
+  if (historyId !== prevHistoryId) {
+    setPrevHistoryId(historyId);
     setJustSaved(false);
     setShowTitleInput(false);
     setTitle('');
     setError(null);
-  }, [historyId]);
+  }
 
-  useEffect(() => {
+  const [prevAlreadySaved, setPrevAlreadySaved] = useState(alreadySaved);
+  if (alreadySaved !== prevAlreadySaved) {
+    setPrevAlreadySaved(alreadySaved);
     if (alreadySaved) setJustSaved(false);
-  }, [alreadySaved]);
+  }
 
   if (!userId && !localMode) return null;
 

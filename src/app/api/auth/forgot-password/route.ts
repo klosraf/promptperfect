@@ -12,6 +12,7 @@ import {
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { logWarn } from '@/lib/logger';
+import { isUnlimitedMode } from '@/lib/localMode';
 
 function isLocalRedirect(redirectTo: string): boolean {
   try {
@@ -24,8 +25,13 @@ function isLocalRedirect(redirectTo: string): boolean {
 
 /**
  * Password recovery: admin generateLink (verifies user + builds link), then
- * resetPasswordForEmail (sends mail). On localhost, also returns recoveryLink
- * when Supabase email is rate-limited or undelivered.
+ * resetPasswordForEmail (sends mail).
+ *
+ * EGM E2 (F2-05): the raw recovery link is a credential. It is returned
+ * ONLY in local development — NODE_ENV !== 'production' AND unlimited
+ * (local) mode AND a loopback redirect. The redirect is derived from
+ * request headers, so "looks local" alone would let a caller send
+ * `Host: localhost` to a deployed instance and harvest reset links.
  */
 export async function POST(request: Request) {
   if (!checkRateLimit(rateLimitKey('auth/forgot-password', request), 8)) {
@@ -56,20 +62,22 @@ export async function POST(request: Request) {
 
   const admin = getSupabaseAdminClient();
   if (!admin) {
+    // EGM E2 (F2-06): no internal setup hints to unauthenticated callers.
     return NextResponse.json(
       {
         error:
           'Password reset is temporarily unavailable (server configuration).',
         code: 'SERVICE_KEY_REQUIRED',
-        hint:
-          'Set SUPABASE_SERVICE_ROLE_KEY in .env.local (Supabase → Settings → API → service_role secret).',
       },
       { status: 503 },
     );
   }
 
   const redirectTo = resolvePasswordResetRedirect(request, clientRedirectTo);
-  const localDev = isLocalRedirect(redirectTo);
+  const exposeRecoveryLink =
+    process.env.NODE_ENV !== 'production' &&
+    isUnlimitedMode() &&
+    isLocalRedirect(redirectTo);
 
   const { data: linkData, error: genError } =
     await admin.auth.admin.generateLink({
@@ -109,11 +117,6 @@ export async function POST(request: Request) {
       ? linkData.properties.action_link
       : undefined;
 
-  const identities = linkData.user.identities ?? [];
-  const signedUpWithGoogleOnly =
-    identities.length > 0 &&
-    identities.every((i: { provider?: string }) => i.provider === 'google');
-
   const anon = createClient(url, anonKey, {
     auth: {
       persistSession: false,
@@ -127,13 +130,12 @@ export async function POST(request: Request) {
   });
 
   if (!emailError) {
+    // EGM E2 (F2-06): no googleOnlyHint — revealing that an account is
+    // Google-only breaks the anti-enumeration contract of this route.
     return NextResponse.json({
       ok: true,
       emailSent: true,
-      ...(localDev && recoveryLink ? { recoveryLink } : {}),
-      googleOnlyHint: signedUpWithGoogleOnly
-        ? 'This account uses Google sign-in. You can still set a password from the reset link, or use Continue with Google on the login page.'
-        : undefined,
+      ...(exposeRecoveryLink && recoveryLink ? { recoveryLink } : {}),
     });
   }
 
@@ -141,32 +143,20 @@ export async function POST(request: Request) {
   logWarn('forgot-password', `resetPasswordForEmail failed: ${msg}`);
   const mapped = mapPasswordResetEmailError(msg, redirectTo);
 
-  // Local dev: Supabase rate-limits emails (~1/min) but generateLink still works.
-  // Return the direct recovery link so you can reset without waiting on mail.
-  if (localDev && recoveryLink) {
+  // Local dev only (triple-gated above): Supabase rate-limits emails
+  // (~1/min) but generateLink still works, so return the direct link.
+  if (exposeRecoveryLink && recoveryLink) {
     return NextResponse.json({
       ok: true,
       emailSent: false,
       recoveryLink,
       code: mapped.code,
       message: mapped.error,
-      googleOnlyHint: signedUpWithGoogleOnly
-        ? 'This account uses Google sign-in. Open the link below to set a password, or use Continue with Google.'
-        : undefined,
     });
   }
 
   return NextResponse.json(
-    {
-      error: mapped.error,
-      code: mapped.code,
-      hint:
-        mapped.code === 'REDIRECT_NOT_ALLOWLISTED'
-          ? `Add "${redirectTo}" in Supabase → Authentication → URL Configuration → Redirect URLs.`
-          : mapped.code === 'EMAIL_RATE_LIMIT'
-            ? 'Wait one minute, then try again. Check spam for an earlier email.'
-            : 'Ask your project admin to enable Auth emails or custom SMTP in Supabase.',
-    },
+    { error: mapped.error, code: mapped.code },
     { status: 400 },
   );
 }

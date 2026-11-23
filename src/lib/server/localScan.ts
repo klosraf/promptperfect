@@ -327,6 +327,29 @@ export function getLocalScanRoots(): string[] {
   return [home, process.cwd()].filter(Boolean).map((s) => path.normalize(s));
 }
 
+/**
+ * Secret-bearing file/dir names that must never be listed or read by a
+ * scan (EGM E2): private keys and credential stores. Applied by name
+ * before any read. Collateral, declared: Apple Keynote bundles use the
+ * `.key` extension and are excluded too — acceptable for a code digest.
+ */
+export function isDeniedSecretFile(name: string): boolean {
+  const b = name.toLowerCase();
+  return (
+    b.endsWith('.pem') ||
+    b.endsWith('.key') ||
+    b.endsWith('.p12') ||
+    b.endsWith('.pfx') ||
+    b.endsWith('.keystore') ||
+    b.startsWith('id_rsa') ||
+    b.startsWith('id_ed25519') ||
+    b.startsWith('id_ecdsa') ||
+    b.startsWith('id_dsa') ||
+    b === '.git-credentials' ||
+    b.startsWith('credentials')
+  );
+}
+
 /** True when `abs` (already normalized) sits inside one of `roots`. */
 export function isPathAllowed(abs: string, roots: string[]): boolean {
   const norm = path.normalize(abs);
@@ -471,6 +494,7 @@ async function walk(
     try {
       if (d.isSymbolicLink()) continue; // never follow symlinks (cycles/escapes)
       if (isAuditDeniedPath(childRel)) continue; // cache/state — never config
+      if (isDeniedSecretFile(d.name)) continue; // keys/credentials — never listed or read
       if (d.isDirectory()) {
         if (HOME_HEAVY_DIRS.has(d.name)) continue;
         if (isSkippedPath(childRel)) continue;
@@ -678,6 +702,7 @@ async function scanSystemAudit(homeRoot: string): Promise<LocalScanResult> {
    */
   const pushFile = async (abs: string, rel: string): Promise<void> => {
     if (isSkippedPath(rel) || isAuditDeniedPath(rel)) return;
+    if (isDeniedSecretFile(path.basename(rel))) return;
     state.entries += 1;
     let size = 0;
     try {

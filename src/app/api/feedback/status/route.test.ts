@@ -45,10 +45,15 @@ describe('/api/feedback/status GET', () => {
     expect(from).not.toHaveBeenCalled();
   });
 
-  it('returns submitted:false when Supabase is not configured', async () => {
+  it('returns an explicit 503 when Supabase is not configured', async () => {
     mockGetServiceClient.mockReturnValue(null);
     const res = await GET(get('http://localhost/api/feedback/status?session_id=abc'));
-    expect(await res.json()).toEqual({ submitted: false, feedback: null });
+    expect(res.status).toBe(503);
+    expect(await res.json()).toEqual({
+      error: 'Feedback status is not configured on this server.',
+      submitted: false,
+      feedback: null,
+    });
   });
 
   it.each([

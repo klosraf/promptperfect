@@ -90,16 +90,16 @@ describe('/api/auth/claim-guest-history POST', () => {
     expect(res.status).toBe(400);
   });
 
-  it('skips gracefully when the database is not configured', async () => {
+  it('returns an honest 503 when the database is not configured (EGM E5)', async () => {
     mockGetAdminClient.mockReturnValueOnce(null);
     const res = await POST(
       makeRequest({ guestId: GUEST_ID, targetSessionId: TARGET_SESSION }),
     );
-    expect(res.status).toBe(200);
+    // F5-10: the old { ok: true, skipped: true } 200 was a fake success —
+    // the client deleted the guest id and the claim was lost forever.
+    expect(res.status).toBe(503);
     expect(await res.json()).toMatchObject({
-      ok: true,
-      skipped: true,
-      migrated: 0,
+      code: 'SERVICE_KEY_REQUIRED',
     });
   });
 

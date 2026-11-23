@@ -136,7 +136,7 @@ async function handlePost(req: NextRequest) {
       providerConfig = createProvider(provider, apiKey);
     } catch (e) {
       return Response.json(
-        { error: userFacingOptimizeError(e) },
+        { error: userFacingOptimizeError(e, provider) },
         { status: 400, headers: corsHeaders },
       );
     }
@@ -151,6 +151,9 @@ async function handlePost(req: NextRequest) {
         system,
         prompt: promptRaw,
         maxRetries: 1,
+        // EGM F3-04: bound provider latency per request instead of
+        // relying only on the platform maxDuration cutoff.
+        abortSignal: AbortSignal.timeout(45_000),
         ...getProviderCallOptions(provider),
       });
 
@@ -225,8 +228,13 @@ async function handlePost(req: NextRequest) {
       );
     } catch (err) {
       recordProviderFailure();
+      // EGM F3-06: this catch previously returned 500 with no log at all.
+      logWarn(
+        'optimize-sync',
+        `provider call failed (${provider}): ${err instanceof Error ? err.message : 'Unknown error'}`,
+      );
       return Response.json(
-        { error: userFacingOptimizeError(err) },
+        { error: userFacingOptimizeError(err, provider) },
         { status: 500, headers: corsHeaders },
       );
     }

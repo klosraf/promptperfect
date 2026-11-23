@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMounted } from '@/hooks/useMounted';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/client/supabaseBrowser';
 import { getPromptPerfectAuthHeaders } from '@/lib/client/promptPerfectAuthHeaders';
@@ -86,7 +87,7 @@ function stashReoptimizeDraft(payload: { text: string; mode: string; autoOptimiz
  */
 export function useSavedLibrary(): SavedLibrary {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState<AppUser | null>(null);
   const [rows, setRows] = useState<SavedPromptRow[]>([]);
@@ -317,14 +318,13 @@ export function useSavedLibrary(): SavedLibrary {
     [user, tplSavingId, isTplSaved],
   );
 
-  useEffect(() => { setMounted(true); }, []);
-
   useEffect(() => {
     if (!mounted) return;
     const client = createSupabaseBrowserClient();
     if (!client) {
       // Local mode without backend: library works off localStorage, no sign-in.
       if (isUnlimitedMode()) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- EGM E4 (signed): terminal branch synchronizing with external systems (no Supabase client + local-mode flag are environment facts). It sets the terminal local user once and returns; no render cascade is possible.
         setUser({ id: 'local', name: 'Local device', email: '', provider: '', model: '' });
         void loadSaved('local');
         setAuthReady(true);

@@ -7,6 +7,10 @@ import { modeBadgeLabel } from '@/lib/library';
 
 export interface TemplatesTabProps {
   filteredTemplates: PromptTemplate[];
+  /** Template search (EGM E4/F4-08): the hook already filters by this
+   * query; the tab previously had no input to set it. */
+  searchQuery?: string;
+  onSearchChange?: (q: string) => void;
   tplCategory: TemplateCategory | 'All';
   onCategoryChange: (c: TemplateCategory | 'All') => void;
   templateCountByCategory: Map<string, number>;
@@ -32,9 +36,26 @@ export function TemplatesTab({
   tplSavingId,
   onUseTemplate,
   onSaveTemplate,
+  searchQuery,
+  onSearchChange,
 }: TemplatesTabProps) {
   return (
     <>
+      {onSearchChange ? (
+        <div className="mb-3">
+          <label className="sr-only" htmlFor="template-search">
+            Search templates
+          </label>
+          <input
+            id="template-search"
+            type="search"
+            value={searchQuery ?? ''}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search templates…"
+            className="w-full rounded-lg border border-[#2a2a2a] bg-[#0A0A0A] px-3 py-2 text-sm text-[#ECECEC] placeholder-[#8a8a8a]"
+          />
+        </div>
+      ) : null}
       {/* Templates: curated production-ready prompts, works offline */}
       <div
         className="mb-4 flex flex-wrap gap-2"

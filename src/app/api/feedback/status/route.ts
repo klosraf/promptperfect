@@ -27,7 +27,18 @@ export async function GET(request: Request) {
 
   const supabase = getServiceClient();
   if (!supabase) {
-    return Response.json({ submitted: false, feedback: null as string | null });
+    // E1 v2 consequence table (Goldfish P3, cierre): an unconfigured
+    // server is an explicit 503, not a 200 indistinguishable from
+    // "no feedback yet". The body keeps {submitted:false} so existing
+    // clients degrade exactly as before.
+    return Response.json(
+      {
+        error: 'Feedback status is not configured on this server.',
+        submitted: false,
+        feedback: null as string | null,
+      },
+      { status: 503 },
+    );
   }
 
   const { data, error } = await supabase

@@ -19,7 +19,6 @@ export default function ForgotPasswordPage() {
   const [cooldownSec, setCooldownSec] = useState(0);
   const [recoveryLink, setRecoveryLink] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(true);
-  const [googleHint, setGoogleHint] = useState<string | null>(null);
 
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const configured = useMemo(() => Boolean(supabase), [supabase]);
@@ -40,7 +39,6 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError('');
     setRecoveryLink(null);
-    setGoogleHint(null);
 
     if (cooldownSec > 0) {
       setError(
@@ -72,13 +70,11 @@ export default function ForgotPasswordPage() {
       });
       const data = (await res.json()) as {
         error?: string;
-        hint?: string;
         code?: string;
         ok?: boolean;
         emailSent?: boolean;
         recoveryLink?: string;
         message?: string;
-        googleOnlyHint?: string;
       };
 
       if (!res.ok) {
@@ -86,13 +82,10 @@ export default function ForgotPasswordPage() {
           const secMatch = data.error?.match(/Wait (\d+) seconds/i);
           setCooldownSec(secMatch ? Number(secMatch[1]) : 60);
         }
-        const parts = [data.error || 'Something went wrong'];
-        if (data.hint) parts.push(data.hint);
-        setError(parts.join(' '));
+        setError(data.error || 'Something went wrong');
         return;
       }
 
-      if (data.googleOnlyHint) setGoogleHint(data.googleOnlyHint);
       setEmailSent(data.emailSent !== false);
       if (data.recoveryLink) setRecoveryLink(data.recoveryLink);
       if (data.message && !data.emailSent) setError(data.message);
@@ -180,9 +173,6 @@ export default function ForgotPasswordPage() {
             <p className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-center text-sm text-amber-200">
               {error}
             </p>
-          )}
-          {googleHint && (
-            <p className="mt-3 text-center text-sm text-[#B0B0B0]">{googleHint}</p>
           )}
           {recoveryLink && isLocalhost && (
             <div className="mt-4 rounded-lg border border-accent/30 bg-accent/10 p-4">

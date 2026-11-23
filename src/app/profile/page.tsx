@@ -13,6 +13,7 @@ import {
 import {
   fetchProfileFromApi,
   updateUserProfile,
+  type ProfileLoadResult,
   type UserProfile,
   type UserStats,
 } from '@/lib/client/userProfile';
@@ -50,7 +51,9 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [loading, setLoading] = useState(true);
+  // Without a Supabase client there is nothing to load: start settled
+  // so the "not configured" state renders immediately (EGM E4).
+  const [loading, setLoading] = useState(() => supabase !== null);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loadHint, setLoadHint] = useState<string | null>(null);
@@ -59,19 +62,10 @@ export default function ProfilePage() {
   const [needsSignIn, setNeedsSignIn] = useState(false);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoadError(null);
-    setLoadHint(null);
-    setLoadErrorCode(null);
-    setNeedsSignIn(false);
-
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
-
-    const result = await fetchProfileFromApi(supabase);
-
+  // Applies a settled profile fetch. Every caller reaches this from
+  // an async callback (the mount effect's .then, or load() after its
+  // await), never synchronously from an effect body (EGM E4).
+  const applyResult = useCallback((result: ProfileLoadResult) => {
     if (!result.ok) {
       const d = result.detail;
       // Only prompt for sign-in when we truly sent no credentials — not when the API rejected a 401 (e.g. misconfigured service key or stale id).
@@ -98,11 +92,34 @@ export default function ProfilePage() {
       displayName: result.profile.display_name ?? null,
     });
     setLoading(false);
-  }, [supabase]);
+  }, []);
+
+  const load = useCallback(async () => {
+    if (!supabase) {
+      return;
+    }
+    applyResult(await fetchProfileFromApi(supabase));
+  }, [supabase, applyResult]);
 
   useEffect(() => {
+    if (!supabase) return;
+    let cancelled = false;
+    void fetchProfileFromApi(supabase).then((result) => {
+      if (!cancelled) applyResult(result);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, applyResult]);
+
+  const handleRetryLoad = () => {
+    setLoadError(null);
+    setLoadHint(null);
+    setLoadErrorCode(null);
+    setNeedsSignIn(false);
+    setLoading(true);
     void load();
-  }, [load]);
+  };
 
   const handleResetAuth = async () => {
     await clearPromptPerfectLocalAuth(supabase);
@@ -212,7 +229,7 @@ export default function ProfilePage() {
         <div className="flex flex-wrap justify-center gap-3">
           <button
             type="button"
-            onClick={() => void load()}
+            onClick={handleRetryLoad}
             className="rounded-lg border border-[#252525] px-4 py-2 text-sm text-[#E7E6D9] hover:bg-[#141414]"
           >
             Retry

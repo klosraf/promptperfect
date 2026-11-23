@@ -30,6 +30,24 @@ interface UseOptimizationHistoryOptions {
   onDeleted?: (id: string) => void;
 }
 
+/**
+ * localStorage is an external system; reading it through an async
+ * boundary keeps every state update in `load()` after a real await
+ * instead of synchronous inside the effect (EGM E4).
+ */
+async function readLocalHistory(
+  sessionId: string,
+): Promise<ReturnType<typeof getLocalHistoryForSession>> {
+  return getLocalHistoryForSession(sessionId);
+}
+
+async function authHeadersOrNull(
+  client: Parameters<typeof getPromptPerfectAuthHeaders>[0] | null,
+): Promise<Awaited<ReturnType<typeof getPromptPerfectAuthHeaders>>> {
+  if (!client) return null;
+  return getPromptPerfectAuthHeaders(client);
+}
+
 async function fetchJson<T>(url: string, headers: Record<string, string>): Promise<T | null> {
   try {
     const res = await fetch(url, { headers });
@@ -85,9 +103,9 @@ export function useOptimizationHistory({
     const client = createSupabaseBrowserClient();
 
     if (uid) {
-      setLoading(true);
       try {
-        const headers = client ? await getPromptPerfectAuthHeaders(client) : null;
+        const headers = await authHeadersOrNull(client);
+        setLoading(true);
         const headerMap = headers ?? {};
 
         // 1. History rows properly linked to this account (user_id set).
@@ -129,20 +147,25 @@ export function useOptimizationHistory({
       return;
     }
 
-    // Guest: session-scoped local + Supabase query.
+    // Guest: session-scoped local + Supabase query. The local read is
+    // awaited first so no setState below runs synchronously.
+    const localRows = await readLocalHistory(browserSid);
     if (!browserSid) {
       setRows([]);
       setLoading(false);
       return;
     }
 
+    // Local-only path: rows are already in hand from the awaited read
+    // above; settle loading directly (it starts true).
+    if (!client) {
+      setRows(sortByNewest(localRows, 20));
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
-      const localRows = getLocalHistoryForSession(browserSid);
-      if (!client) {
-        setRows(sortByNewest(localRows, 20));
-        return;
-      }
       const { data, error } = await client
         .from('pp_optimization_history')
         .select(HISTORY_SELECT)
@@ -160,6 +183,7 @@ export function useOptimizationHistory({
   }, [historySessionId, userId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- EGM E4 (signed, third site; the design estimated two): load() synchronizes state with fetch + localStorage and every setState inside it happens after a real await at runtime (auth headers, local read, network). The compiler cannot prove that through the local async helpers (authHeadersOrNull / readLocalHistory), whose no-client paths complete synchronously, and restructuring further would change fetch semantics. Verified by the hook's tests.
     void load();
   }, [load, refreshTrigger]);
 

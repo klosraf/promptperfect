@@ -7,6 +7,7 @@ import {
   readEnginePrefs,
   writeEnginePrefs,
   clearEnginePrefs,
+  clearStoredApiKeys,
 } from '@/lib/client/enginePrefsStorage';
 import { wipeBrowserSupabaseSession } from '@/lib/client/supabaseBrowserSessionWipe';
 
@@ -140,6 +141,7 @@ export async function clearPromptPerfectLocalAuth(
   if (typeof window !== 'undefined') {
     try {
       clearEnginePrefs();
+      clearStoredApiKeys();
     } catch {
       // swallow: engine prefs clear failed (storage)
     }

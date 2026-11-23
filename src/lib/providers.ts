@@ -4,16 +4,18 @@ import { createOpenAI } from "@ai-sdk/openai";
 import type { LanguageModelV3 } from "@ai-sdk/provider";
 import type { ProviderOptions } from "@ai-sdk/provider-utils";
 import type { Provider } from "@/lib/types";
+import { DEFAULT_MODEL_IDS } from "@/lib/modelCatalog";
 
 /**
  * Default to current GA Flash. Override with `GEMINI_MODEL` if needed.
  * `gemini-2.5-flash` was retired by Google (404 for new keys) — prefer 3.5.
  */
 const GEMINI_MODEL =
-  process.env.GEMINI_MODEL?.trim() || "gemini-3.5-flash";
+  process.env.GEMINI_MODEL?.trim() || DEFAULT_MODEL_IDS.gemini;
 
-const OPENAI_MODEL = process.env.OPENAI_MODEL?.trim() || "gpt-6-astra";
-const ANTHROPIC_MODEL = "claude-3-5-haiku-latest";
+const OPENAI_MODEL =
+  process.env.OPENAI_MODEL?.trim() || DEFAULT_MODEL_IDS.openai;
+const ANTHROPIC_MODEL = DEFAULT_MODEL_IDS.anthropic;
 
 /**
  * Explicit API base URLs. Pinned to the providers' own endpoints so an ambient

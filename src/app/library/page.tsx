@@ -200,6 +200,8 @@ export default function LibraryPage() {
           ) : (
             <TemplatesTab
               filteredTemplates={filteredTemplates}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
               tplCategory={tplCategory}
               onCategoryChange={setTplCategory}
               templateCountByCategory={templateCountByCategory}

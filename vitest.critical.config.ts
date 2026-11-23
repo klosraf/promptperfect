@@ -8,13 +8,18 @@ import path from "path";
  * The global gate in `test:coverage:core` lives in `src/lib` and reports an
  * aggregate, which is how `useOptimizeRunner.ts` sat at 74.3% statements for a
  * long time while the repo-wide number looked healthy at 96%+. This config
- * restricts coverage to the four files that carry the product's core logic and
+ * restricts coverage to the five files that carry the product's core logic and
  * applies the thresholds to EACH file rather than to the average.
  *
  * Thresholds lock the post-2026-10-18 state and fail on regression. Ratchet
  * history: 80/60/65 → 95/80/90 after closing the `useOptimizeRunner.ts`
  * streaming/guest/sync branches (98.81 stmts, 90.97 branches, 98.03 funcs,
  * 100% lines). Raise again only with new measured minima and safe margins.
+ *
+ * EGM E6 (F6-01, 2026-11-12): `src/lib/guest.ts` added with its test —
+ * measured at addition: 100% lines / 88.23% branches / 100% functions, so
+ * it holds 95/80/90 with a narrow branch margin; new guest branches need
+ * tests in guest.test.ts.
  *
  * NOTE: these thresholds MUST be per-file. Passing them as a global average
  * would let one strong file mask a weak one, which is the exact failure this
@@ -31,6 +36,7 @@ export default defineConfig({
       "src/lib/historyMerge.test.ts",
       "src/lib/promptScore.test.ts",
       "src/lib/auth/rateLimit.test.ts",
+      "src/lib/guest.test.ts",
     ],
     fileParallelism: false,
     coverage: {
@@ -42,6 +48,7 @@ export default defineConfig({
         "src/lib/historyMerge.ts",
         "src/lib/promptScore.ts",
         "src/lib/auth/rateLimit.ts",
+        "src/lib/guest.ts",
       ],
       thresholds: {
         perFile: true,

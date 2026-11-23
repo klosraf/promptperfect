@@ -46,6 +46,33 @@ export function Modal({
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && closeOnEscape) onCloseRef.current();
+      if (e.key === 'Tab') {
+        // Focus trap (EGM E4 / WCAG 2.4.3): keep Tab cycling inside
+        // the panel instead of leaking to the page behind the dialog.
+        const panel = panelRef.current;
+        if (!panel) return;
+        const focusables = panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabIndex]:not([tabIndex="-1"])',
+        );
+        if (focusables.length === 0) {
+          e.preventDefault();
+          return;
+        }
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (!first || !last) {
+          e.preventDefault();
+          return;
+        }
+        const active = document.activeElement as HTMLElement | null;
+        if (e.shiftKey && (active === first || active === panel)) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     document.addEventListener('keydown', onKeyDown);
 

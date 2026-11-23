@@ -84,3 +84,31 @@ describe("sanitizeProviderMessage", () => {
     );
   });
 });
+
+describe("userFacingOptimizeError — provider-aware (EGM F3-05/F3-04)", () => {
+  it("does not give Gemini instructions to Anthropic users", () => {
+    const msg = userFacingOptimizeError(new Error("429 rate limit exceeded"), "anthropic");
+    expect(msg).toMatch(/Anthropic Claude is limiting requests/);
+    expect(msg).not.toMatch(/GEMINI_MODEL|Google AI Studio/);
+  });
+
+  it("does not give Gemini instructions to OpenAI users", () => {
+    const msg = userFacingOptimizeError(new Error("Invalid API key provided"), "openai");
+    expect(msg).toMatch(/OpenAI API key is missing or invalid/);
+    expect(msg).not.toMatch(/GOOGLE_API_KEY/);
+  });
+
+  it("maps real TimeoutError shapes to timeout copy", () => {
+    const err = new Error("The operation timed out");
+    err.name = "TimeoutError";
+    expect(userFacingOptimizeError(err, "openai")).toMatch(/timed out/i);
+    const abort = new Error("signal aborted");
+    abort.name = "AbortError";
+    expect(userFacingOptimizeError(abort)).toMatch(/timed out/i);
+  });
+
+  it("sanitizes x-api-key headers and JSON api_key fields", () => {
+    expect(sanitizeProviderMessage("x-api-key: sk-live-123456 failed")).not.toContain("sk-live-123456");
+    expect(sanitizeProviderMessage('{"api_key":"secret-value-1"}')).not.toContain("secret-value-1");
+  });
+});

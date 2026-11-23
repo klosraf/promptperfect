@@ -46,9 +46,13 @@ export function getServiceClient(): SupabaseClient | null {
     normalizeEnvValue(process.env.SUPABASE_SERVICE_ROLE_KEY);
   if (serviceKey) return createClient(url, serviceKey);
 
-  const anonKey = normalizeEnvValue(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-  if (!anonKey) return null;
-  return createClient(url, anonKey);
+  // EGM E1 (F1-04): never degrade silently to an anon client under a
+  // service-role name. Callers assume RLS bypass; an anon client would
+  // fail invisibly (0 rows updated, inserts dropped). Returning null
+  // makes every caller surface an explicit error instead:
+  // feedback/guest-usage -> 503, share page -> Service Unavailable,
+  // optimize log insert -> skipped (already null-guarded).
+  return null;
 }
 
 /** Server-only: uses service role key, bypasses RLS. Use for trusted server operations. */

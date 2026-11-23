@@ -1,4 +1,5 @@
 import { getConfig } from '@/lib/config';
+import { DEFAULT_MODEL_IDS } from '@/lib/modelCatalog';
 
 /**
  * Public capability map for clients (web UI, browser extension).
@@ -16,7 +17,7 @@ export async function GET() {
     models: {
       gemini: config.geminiModel,
       openai: config.openaiModel,
-      anthropic: 'claude-3-5-haiku-latest',
+      anthropic: DEFAULT_MODEL_IDS.anthropic,
     },
     unlimited: config.flags.unlimitedMode,
   });

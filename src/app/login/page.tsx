@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
@@ -19,6 +19,17 @@ import {
 import { mapOAuthCallbackError } from '@/lib/auth/mapOAuthCallbackError';
 import { claimGuestHistoryAfterAuth } from '@/lib/client/claimGuestHistory';
 import { writeEnginePrefs } from '@/lib/client/enginePrefsStorage';
+
+const subscribeToNothing = () => () => {};
+
+function readOAuthErrorFromUrl(): string {
+  if (typeof window === 'undefined') return '';
+  const p = new URLSearchParams(window.location.search);
+  const fromOAuth = p.get('error')?.trim();
+  return fromOAuth
+    ? mapOAuthCallbackError(decodeURIComponent(fromOAuth))
+    : '';
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,19 +56,25 @@ export default function LoginPage() {
   const [pendingEmailConfirmation, setPendingEmailConfirmation] =
     useState(false);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const p = new URLSearchParams(window.location.search);
-    const fromOAuth = p.get('error')?.trim();
-    if (fromOAuth) {
-      setError(mapOAuthCallbackError(decodeURIComponent(fromOAuth)));
-    }
-  }, []);
+  // EGM E4: the OAuth error comes from the URL — an external system —
+  // so it is derived with useSyncExternalStore (server snapshot: '')
+  // instead of copied into state from an effect. It is dismissable:
+  // the first form interaction supersedes it (see handlers), which is
+  // the one deliberate semantic change vs. the old effect version.
+  const oauthError = useSyncExternalStore(
+    subscribeToNothing,
+    readOAuthErrorFromUrl,
+    () => '',
+  );
+  const [oauthDismissed, setOauthDismissed] = useState(false);
+  const displayError =
+    error !== '' ? error : oauthDismissed ? '' : oauthError;
 
   const passwordValidation = validatePassword(password);
   const showPasswordHints = mode === 'signup' && password.length > 0;
 
   async function handleGoogle() {
+    setOauthDismissed(true);
     if (!supabase) {
       setError('Google sign-in is not available');
       return;
@@ -96,6 +113,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setOauthDismissed(true);
     setError('');
     setLoading(true);
     try {
@@ -405,9 +423,9 @@ export default function LoginPage() {
             </div>
           )}
         </div>
-        {error && (
+        {displayError && (
           <p className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-300">
-            {error}
+            {displayError}
           </p>
         )}
         {pendingEmailConfirmation && mode === 'signin' && (

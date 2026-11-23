@@ -6,6 +6,7 @@ import {
   resolveIdentity,
 } from '@/lib/server/supabaseRequestIdentity';
 import { logWarn } from '@/lib/logger';
+import { normalizeModeForDb } from '@/lib/optimization-logs';
 import { enforceRateLimit } from '@/lib/auth/rateLimit';
 
 /**
@@ -136,6 +137,21 @@ export async function POST(request: Request) {
     );
   }
 
+  // EGM F1-03: mirror the DB CHECK bounds (migration 20261012:
+  // session_id 1-300, prompts <= 60000, explanation <= 20000) so an
+  // oversized payload is a clean 400 instead of a rejected insert (500).
+  if (
+    session_id.length > 300 ||
+    prompt_original.length > 60000 ||
+    prompt_optimized.length > 60000 ||
+    explanation.length > 20000
+  ) {
+    return NextResponse.json(
+      { error: 'History payload exceeds the maximum allowed size' },
+      { status: 400 },
+    );
+  }
+
   const db = getDbForIdentity(identity);
   if (!db) {
     return NextResponse.json(
@@ -149,7 +165,8 @@ export async function POST(request: Request) {
     session_id,
     prompt_original,
     prompt_optimized,
-    mode,
+    // EGM F1-03: normalize app modes to the four DB modes (CHECK).
+    mode: normalizeModeForDb(mode),
     explanation,
   };
 

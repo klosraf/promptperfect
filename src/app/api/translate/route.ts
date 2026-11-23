@@ -70,7 +70,7 @@ async function handlePost(request: Request) {
     model = resolved.model;
     modelId = resolved.modelId;
   } catch (e) {
-    return NextResponse.json({ error: userFacingOptimizeError(e) }, { status: 400 });
+    return NextResponse.json({ error: userFacingOptimizeError(e, provider) }, { status: 400 });
   }
 
   try {
@@ -79,6 +79,7 @@ async function handlePost(request: Request) {
       system: buildTranslatorPrompt(target),
       prompt: text,
       maxRetries: 1,
+      abortSignal: AbortSignal.timeout(45_000),
     });
     const translatedText = (result.text ?? '').trim();
     if (!translatedText) {
@@ -86,6 +87,6 @@ async function handlePost(request: Request) {
     }
     return NextResponse.json({ translatedText, targetLang: target, model: modelId });
   } catch (err) {
-    return NextResponse.json({ error: userFacingOptimizeError(err) }, { status: 500 });
+    return NextResponse.json({ error: userFacingOptimizeError(err, provider) }, { status: 500 });
   }
 }

@@ -45,12 +45,12 @@ describe('/api/feedback POST', () => {
     mockGetServiceClient.mockReturnValue({ from: mockFrom });
   });
 
-  it('returns 500 when Supabase is not configured', async () => {
+  it('returns 503 when Supabase is not configured', async () => {
     mockGetServiceClient.mockReturnValue(null);
     const res = await POST(
       post({ mode: 'better', feedback: 'up', sessionId: 's1' }),
     );
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(503);
   });
 
   it('returns 400 for invalid bodies (shared schema)', async () => {

@@ -177,15 +177,25 @@ export default function AppPage() {
         />
 
         {usageGateError && (
-          <p className="shrink-0 px-6 pb-2 text-center text-sm text-red-400">
+          <p role="alert" className="shrink-0 px-6 pb-2 text-center text-sm text-red-400">
             {usageGateError}
           </p>
         )}
 
         {error && (
-          <p className="shrink-0 px-6 pb-2 text-center text-sm text-red-400">
-            {userFacingOptimizeError(error)}
-          </p>
+          <div role="alert" className="shrink-0 px-6 pb-2 text-center">
+            <p className="text-sm text-red-400">
+              {userFacingOptimizeError(error)}
+            </p>
+            <button
+              type="button"
+              onClick={() => void handleOptimize()}
+              disabled={isLoading || inputText.trim().length === 0}
+              className="mt-1 rounded-lg border border-[#2a2a2a] px-3 py-1 text-[12px] text-[#ECECEC] transition hover:border-accent/50 disabled:opacity-40"
+            >
+              Retry
+            </button>
+          </div>
         )}
 
         <div className="mt-2 w-full shrink-0 px-6 pb-8">

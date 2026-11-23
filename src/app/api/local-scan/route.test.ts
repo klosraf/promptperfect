@@ -171,3 +171,53 @@ describe('POST /api/local-scan', () => {
     await fs.rm(tmp, { recursive: true, force: true });
   });
 });
+
+
+describe('POST /api/local-scan — EGM E2 hardening', () => {
+  beforeEach(() => {
+    process.env.NEXT_PUBLIC_UNLIMITED_MODE = 'true';
+    process.env.LOCAL_SCAN_NO_EXEC = '1';
+    delete process.env.LOCAL_SCAN_DIRS;
+  });
+
+  it('rejects a symlinked root that escapes the allowlist', async () => {
+    const allowed = await fs.mkdtemp(path.join(os.tmpdir(), 'pp-allow-'));
+    const outside = await fs.mkdtemp(path.join(os.tmpdir(), 'pp-outside-'));
+    await fs.writeFile(path.join(outside, 'secret.txt'), 'outside-data');
+    const link = path.join(allowed, 'escape-link');
+    await fs.symlink(outside, link);
+    process.env.LOCAL_SCAN_DIRS = allowed;
+    const res = await POST(new Request('http://localhost/api/local-scan', {
+      method: 'POST',
+      body: JSON.stringify({ dir: link }),
+    }));
+    expect(res.status).toBe(403);
+  });
+
+  it('never lists or reads key/credential files', async () => {
+    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'pp-deny-'));
+    await fs.writeFile(path.join(tmp, 'app.ts'), 'export const a = 1;');
+    await fs.writeFile(path.join(tmp, 'server.pem'), 'PEM-SECRET-CONTENT');
+    await fs.writeFile(path.join(tmp, 'credentials.json'), 'CRED-SECRET-CONTENT');
+    await fs.writeFile(path.join(tmp, 'id_rsa'), 'RSA-SECRET-CONTENT');
+    await fs.writeFile(path.join(tmp, 'id_ed25519'), 'ED25519-SECRET-CONTENT');
+    await fs.writeFile(path.join(tmp, 'id_ecdsa'), 'ECDSA-SECRET-CONTENT');
+    await fs.writeFile(path.join(tmp, 'cert.p12'), 'P12-SECRET-CONTENT');
+    process.env.LOCAL_SCAN_DIRS = tmp;
+    const res = await POST(new Request('http://localhost/api/local-scan', {
+      method: 'POST',
+      body: JSON.stringify({ dir: tmp }),
+    }));
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { digest: string; fileCount: number };
+    expect(json.digest).not.toContain('PEM-SECRET-CONTENT');
+    expect(json.digest).not.toContain('CRED-SECRET-CONTENT');
+    expect(json.digest).not.toContain('RSA-SECRET-CONTENT');
+    expect(json.digest).not.toContain('ED25519-SECRET-CONTENT');
+    expect(json.digest).not.toContain('ECDSA-SECRET-CONTENT');
+    expect(json.digest).not.toContain('P12-SECRET-CONTENT');
+    expect(json.digest).not.toContain('id_ed25519');
+    expect(json.digest).not.toContain('server.pem');
+    expect(json.fileCount).toBe(1);
+  });
+});

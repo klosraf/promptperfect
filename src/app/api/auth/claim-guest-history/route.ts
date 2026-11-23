@@ -40,7 +40,13 @@ export async function POST(request: Request) {
 
     const admin = getSupabaseAdminClient();
     if (!admin) {
-      return NextResponse.json({ ok: true, skipped: true, migrated: 0 });
+      // EGM E5 (F5-10): never fake success. Without the admin client
+      // nothing was migrated; the client keeps the guest id and the
+      // claim is retried on a later sign-in.
+      return NextResponse.json(
+        { error: 'Server not configured', code: 'SERVICE_KEY_REQUIRED' },
+        { status: 503 },
+      );
     }
 
     const updates: { session_id: string; user_id: string } = {
