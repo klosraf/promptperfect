@@ -21,6 +21,19 @@ export interface SavedPromptRow {
   created_at: string;
 }
 
+export interface SavedPromptVersionRow {
+  id: string;
+  saved_prompt_id: string;
+  version: number;
+  title: string;
+  original_prompt: string;
+  optimized_prompt: string;
+  explanation: string;
+  mode: string;
+  provider: string;
+  created_at: string;
+}
+
 export type LibraryModeFilter = 'all' | 'better' | 'specific' | 'cot';
 
 /** Narrow an unknown row list to renderable saved-prompt rows. */

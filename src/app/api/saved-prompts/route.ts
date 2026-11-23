@@ -6,6 +6,7 @@ import {
 } from '@/lib/server/supabaseRequestIdentity';
 import { nextOffset, parseLimit, parseOffset } from '@/lib/pagination';
 import { logWarn } from '@/lib/logger';
+import { snapshotSavedPrompt } from '@/lib/server/savedVersions';
 import { enforceRateLimit } from '@/lib/auth/rateLimit';
 
 const MAX_TITLE = 200;
@@ -287,4 +288,100 @@ export async function DELETE(request: Request) {
   }
 
   return NextResponse.json({ ok: true });
+}
+
+export async function PUT(request: Request) {
+  const limited = enforceRateLimit('saved-prompts-write', request, 30);
+  if (limited) return limited;
+
+  const identity = await resolveIdentity(request);
+  if (!identity) {
+    return NextResponse.json(await jsonUnauthorizedDetails(request), {
+      status: 401,
+    });
+  }
+
+  const db = getDbForIdentity(identity);
+  if (!db) {
+    return NextResponse.json(
+      { error: 'Server misconfigured' },
+      { status: 503 },
+    );
+  }
+
+  const body = (await request.json().catch(() => null)) as Record<
+    string,
+    unknown
+  > | null;
+  const id = typeof body?.id === 'string' ? body.id.trim() : '';
+  if (!id) {
+    return NextResponse.json({ error: 'id is required' }, { status: 400 });
+  }
+  const hasTitle = typeof body?.title === 'string';
+  const hasOptimized = typeof body?.optimized_prompt === 'string';
+  if (!hasTitle && !hasOptimized) {
+    return NextResponse.json(
+      { error: 'Nothing to update' },
+      { status: 400 },
+    );
+  }
+  const title = hasTitle
+    ? (body!.title as string).trim().slice(0, MAX_TITLE)
+    : undefined;
+  if (hasTitle && !title) {
+    return NextResponse.json(
+      { error: 'Title cannot be empty' },
+      { status: 400 },
+    );
+  }
+  const optimized = hasOptimized
+    ? (body!.optimized_prompt as string).slice(0, MAX_TEXT)
+    : undefined;
+
+  const { data: live, error: loadError } = await db
+    .from('pp_saved_prompts')
+    .select(
+      'id,user_id,title,original_prompt,optimized_prompt,explanation,mode,provider',
+    )
+    .eq('id', id)
+    .eq('user_id', identity.userId)
+    .maybeSingle();
+  if (loadError || !live) {
+    if (loadError)
+      logWarn('saved-prompts', `PUT load failed: ${loadError.message}`);
+    return NextResponse.json(
+      { error: 'Saved prompt not found' },
+      { status: loadError ? 500 : 404 },
+    );
+  }
+
+  // Snapshot before editing: the pre-edit state becomes the next
+  // immutable version. Best-effort until the versions table exists.
+  const versioned = await snapshotSavedPrompt(db, live);
+
+  const patch: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+  if (title !== undefined) patch.title = title;
+  if (optimized !== undefined) patch.optimized_prompt = optimized.trim();
+
+  const { data: updated, error: updateError } = await db
+    .from('pp_saved_prompts')
+    .update(patch)
+    .eq('id', id)
+    .eq('user_id', identity.userId)
+    .select(
+      'id,title,original_prompt,optimized_prompt,explanation,mode,provider,created_at',
+    )
+    .maybeSingle();
+  if (updateError || !updated) {
+    if (updateError)
+      logWarn('saved-prompts', `PUT failed: ${updateError.message}`);
+    return NextResponse.json(
+      { error: 'Could not update the prompt' },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({ prompt: updated, versioned });
 }

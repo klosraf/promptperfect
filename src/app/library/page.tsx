@@ -7,12 +7,79 @@ import { PROMPT_TEMPLATES } from '@/lib/promptTemplates';
 import { useSavedLibrary } from '@/hooks/useSavedLibrary';
 import { LibraryEmptyState, LibrarySkeleton, DeleteConfirmModal } from '@/components/library/LibraryStates';
 import { SavedPromptsTab } from '@/components/library/SavedPromptsTab';
+import type { SavedPromptRow, SavedPromptVersionRow } from '@/lib/library';
 import { TemplatesTab } from '@/components/library/TemplatesTab';
 
 export default function LibraryPage() {
   const lib = useSavedLibrary();
   /** ID pending confirmation before delete; null = no modal open */
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  // ── Version history (fail-soft: hidden until the table exists) ──────
+  const [versionsById, setVersionsById] = useState<
+    Record<string, SavedPromptVersionRow[] | 'unavailable'>
+  >({});
+
+  const loadVersions = async (row: SavedPromptRow) => {
+    try {
+      const res = await fetch(
+        `/api/saved-prompts/versions?savedId=${encodeURIComponent(row.id)}`,
+      );
+      if (!res.ok) throw new Error('load failed');
+      const json = (await res.json()) as {
+        available: boolean;
+        versions: SavedPromptVersionRow[];
+      };
+      setVersionsById((prev) => ({
+        ...prev,
+        [row.id]: json.available ? json.versions : 'unavailable',
+      }));
+    } catch {
+      setVersionsById((prev) => ({ ...prev, [row.id]: 'unavailable' }));
+    }
+  };
+
+  const handleToggleExpand = (id: string | null) => {
+    setExpandedId(id);
+    if (id) {
+      const row = rows.find((r) => r.id === id);
+      if (row && versionsById[id] === undefined) void loadVersions(row);
+    }
+  };
+
+  const handleSaveEdit = async (
+    row: SavedPromptRow,
+    patch: { title: string; optimized_prompt: string },
+  ) => {
+    const res = await fetch('/api/saved-prompts', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: row.id,
+        title: patch.title,
+        optimized_prompt: patch.optimized_prompt,
+      }),
+    });
+    if (!res.ok) return;
+    const json = (await res.json()) as { prompt: SavedPromptRow };
+    updateRow({ ...row, ...json.prompt });
+    void loadVersions(row);
+  };
+
+  const handleRestoreVersion = async (
+    row: SavedPromptRow,
+    version: SavedPromptVersionRow,
+  ) => {
+    const res = await fetch('/api/saved-prompts/versions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ savedId: row.id, versionId: version.id }),
+    });
+    if (!res.ok) return;
+    const json = (await res.json()) as { prompt: SavedPromptRow };
+    updateRow({ ...row, ...json.prompt });
+    void loadVersions(row);
+  };
 
   const {
     mounted,
@@ -32,6 +99,7 @@ export default function LibraryPage() {
     hasMore,
     loadMore,
     confirmDelete,
+    updateRow,
     reoptimize,
     tab,
     setTab,
@@ -179,8 +247,11 @@ export default function LibraryPage() {
               remainingCount={filteredCount - visibleRows.length}
               onLoadMore={loadMore}
               expandedId={expandedId}
-              onToggleExpand={setExpandedId}
+              onToggleExpand={handleToggleExpand}
               onReoptimize={reoptimize}
+              versionsById={versionsById}
+              onSaveEdit={handleSaveEdit}
+              onRestoreVersion={handleRestoreVersion}
               onRequestDelete={setDeleteConfirmId}
               skeleton={<LibrarySkeleton />}
               emptyState={

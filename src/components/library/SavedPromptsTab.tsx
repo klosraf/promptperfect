@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { ArrowRight, ChevronDown, ChevronUp, Search, SearchX, Trash2 } from 'lucide-react';
 import {
   formatTimestamp,
@@ -7,6 +8,7 @@ import {
   previewText,
   type LibraryModeFilter,
   type SavedPromptRow,
+  type SavedPromptVersionRow,
 } from '@/lib/library';
 import { EmptyState } from '@/components/ui/EmptyState';
 
@@ -34,6 +36,13 @@ export interface SavedPromptsTabProps {
   onToggleExpand: (id: string | null) => void;
   onReoptimize: (row: SavedPromptRow) => void;
   onRequestDelete: (id: string) => void;
+  /** Version history (optional; absent = feature hidden). */
+  versionsById?: Record<string, SavedPromptVersionRow[] | 'unavailable'>;
+  onSaveEdit?: (
+    row: SavedPromptRow,
+    patch: { title: string; optimized_prompt: string },
+  ) => void;
+  onRestoreVersion?: (row: SavedPromptRow, version: SavedPromptVersionRow) => void;
   skeleton: React.ReactNode;
   emptyState: React.ReactNode;
 }
@@ -56,9 +65,17 @@ export function SavedPromptsTab({
   onToggleExpand,
   onReoptimize,
   onRequestDelete,
+  versionsById,
+  onSaveEdit,
+  onRestoreVersion,
   skeleton,
   emptyState,
 }: SavedPromptsTabProps) {
+  const [editState, setEditState] = useState<{
+    id: string;
+    title: string;
+    optimized: string;
+  } | null>(null);
   return (
     <>
       {/* Search */}
@@ -121,6 +138,7 @@ export function SavedPromptsTab({
           <ul className="flex flex-col gap-3">
             {visibleRows.map((row) => {
               const expanded = expandedId === row.id;
+                  const versions = versionsById?.[row.id];
               return (
                 <li
                   key={row.id}
@@ -199,7 +217,106 @@ export function SavedPromptsTab({
                           <Trash2 size={14} aria-hidden />
                           Delete
                         </button>
+                        {onSaveEdit && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setEditState({
+                                id: row.id,
+                                title: row.title,
+                                optimized: row.optimized_prompt,
+                              })
+                            }
+                            className="inline-flex items-center gap-1.5 text-sm text-accent-text hover:underline"
+                          >
+                            Edit
+                          </button>
+                        )}
                       </div>
+                      {editState?.id === row.id && onSaveEdit && (
+                        <div className="mt-4 rounded-xl border border-border bg-card p-3">
+                          <label className="block text-[11px] text-muted-foreground">
+                            Title
+                            <input
+                              value={editState.title}
+                              onChange={(e) =>
+                                setEditState({ ...editState, title: e.target.value })
+                              }
+                              className="mt-1 w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm text-foreground"
+                            />
+                          </label>
+                          <label className="mt-3 block text-[11px] text-muted-foreground">
+                            Optimized prompt
+                            <textarea
+                              value={editState.optimized}
+                              onChange={(e) =>
+                                setEditState({ ...editState, optimized: e.target.value })
+                              }
+                              rows={5}
+                              className="mt-1 w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm text-foreground"
+                            />
+                          </label>
+                          <div className="mt-3 flex gap-3">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onSaveEdit(row, {
+                                  title: editState.title,
+                                  optimized_prompt: editState.optimized,
+                                });
+                                setEditState(null);
+                              }}
+                              className="rounded-full border border-border px-3 py-1 text-[12.5px] font-medium text-foreground transition hover:border-accent/60"
+                            >
+                              Save (snapshots a version)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditState(null)}
+                              className="text-[12.5px] text-muted-foreground hover:underline"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {versionsById && versions !== 'unavailable' && (
+                        <div className="mt-4 border-t border-border pt-3">
+                          <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+                            Versions
+                          </p>
+                          {!versions ? (
+                            <p className="mt-1.5 text-[12.5px] text-muted-foreground">Loading…</p>
+                          ) : versions.length === 0 ? (
+                            <p className="mt-1.5 text-[12.5px] text-muted-foreground">
+                              No earlier versions yet — the first edit will snapshot one.
+                            </p>
+                          ) : (
+                            <ul className="mt-2 space-y-1.5">
+                              {versions.map((v) => (
+                                <li
+                                  key={v.id}
+                                  className="flex items-center justify-between gap-3 text-[13px] text-foreground-dim"
+                                >
+                                  <span>
+                                    v{v.version} ·{' '}
+                                    {new Date(v.created_at).toLocaleString()}
+                                  </span>
+                                  {onRestoreVersion && (
+                                    <button
+                                      type="button"
+                                      onClick={() => onRestoreVersion(row, v)}
+                                      className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[11.5px] font-medium text-muted-foreground transition hover:border-accent/60 hover:text-foreground"
+                                    >
+                                      Restore
+                                    </button>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </li>

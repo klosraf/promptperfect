@@ -55,6 +55,7 @@ export interface SavedLibrary {
   hasMore: boolean;
   loadMore: () => void;
   confirmDelete: (id: string) => Promise<void>;
+  updateRow: (row: SavedPromptRow) => void;
   reoptimize: (row: SavedPromptRow) => void;
   tab: LibraryTab;
   setTab: (t: LibraryTab) => void;
@@ -359,6 +360,10 @@ export function useSavedLibrary(): SavedLibrary {
     setVisibleCount((n) => n + LIBRARY_PAGE_SIZE);
   }, []);
 
+  const updateRow = useCallback((next: SavedPromptRow) => {
+    setRows((prev) => prev.map((r) => (r.id === next.id ? next : r)));
+  }, []);
+
   return {
     mounted,
     authReady,
@@ -376,6 +381,7 @@ export function useSavedLibrary(): SavedLibrary {
     filteredCount: filteredRows.length,
     hasMore,
     loadMore,
+    updateRow,
     confirmDelete,
     reoptimize,
     tab,
