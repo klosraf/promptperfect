@@ -3,9 +3,13 @@ import { useId } from "react";
 /**
  * PromptPerfect brand mark — the single in-app source of the logo.
  * Master vector: public/brand/logo.svg (raster assets are generated from it
- * by scripts/brand/build-assets.mjs). The glyph is the terminal prompt
- * (chevron + underscore) with the optimization sparkle, on the brand
- * gradient tile built from the app accent (#4552ff family).
+ * by scripts/brand/build-assets.mjs). The glyph is the product's essence drawn literally: a dim, smaller
+ * chevron (the prompt as given) resolved into a larger, full-strength
+ * chevron with its cursor (the same prompt, returned better), carrying
+ * two short annotation strokes — the explanation that always comes with
+ * the improvement. On the brand gradient tile built from the app accent
+ * (#4552ff family). No generic sparkle: nothing here could belong to
+ * another app.
  */
 export function Logo({
   size = 28,
@@ -40,22 +44,43 @@ export function Logo({
       </defs>
       <rect x="2" y="2" width="60" height="60" rx="15" fill={`url(#${gradientId})`} />
       <path
-        d="M45 13.5c.9 4.3 2.2 5.6 6.5 6.5-4.3.9-5.6 2.2-6.5 6.5-.9-4.3-2.2-5.6-6.5-6.5 4.3-.9 5.6-2.2 6.5-6.5Z"
-        fill="#dfe3ff"
-      />
-      <path
-        d="M23.5 21.5 36 32l-12.5 10.5"
+        d="M13.5 23.5 23 32l-9.5 8.5"
         fill="none"
         stroke="#ffffff"
-        strokeWidth="6.5"
+        strokeOpacity={0.65}
+        strokeWidth="6"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
-        d="M41.5 42.5h7"
+        d="M26.5 20.5 39 32l-12.5 11.5"
         fill="none"
         stroke="#ffffff"
-        strokeWidth="6.5"
+        strokeWidth="7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M44.5 24.5h6.5"
+        fill="none"
+        stroke="#ffffff"
+        strokeOpacity={0.8}
+        strokeWidth="4.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M44.5 30.5h6.5"
+        fill="none"
+        stroke="#ffffff"
+        strokeOpacity={0.8}
+        strokeWidth="4.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M42.5 43.5h8"
+        fill="none"
+        stroke="#ffffff"
+        strokeWidth="7"
         strokeLinecap="round"
       />
     </svg>

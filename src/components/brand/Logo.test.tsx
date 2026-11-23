@@ -10,8 +10,8 @@ describe("Logo", () => {
     expect(svg?.getAttribute("width")).toBe("32");
     expect(svg?.getAttribute("height")).toBe("32");
     expect(svg?.getAttribute("aria-hidden")).toBe("true");
-    // Tile + sparkle + chevron + underscore
-    expect(container.querySelectorAll("path")).toHaveLength(3);
+    // Tile + prompt-as-given chevron + returned chevron + 2 annotation strokes + cursor
+    expect(container.querySelectorAll("path")).toHaveLength(5);
     expect(container.querySelector("rect")).not.toBeNull();
   });
 
