@@ -183,7 +183,7 @@ export function useOptimizationHistory({
   }, [historySessionId, userId]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- EGM E4 (signed, third site; the design estimated two): load() synchronizes state with fetch + localStorage and every setState inside it happens after a real await at runtime (auth headers, local read, network). The compiler cannot prove that through the local async helpers (authHeadersOrNull / readLocalHistory), whose no-client paths complete synchronously, and restructuring further would change fetch semantics. Verified by the hook's tests.
+    // EGM E4 (signed, third site; the design estimated two): load() synchronizes state with fetch + localStorage and every setState inside it happens after a real await at runtime (auth headers, local read, network). The compiler cannot prove that through the local async helpers (authHeadersOrNull / readLocalHistory), whose no-client paths complete synchronously, and restructuring further would change fetch semantics. Verified by the hook's tests.
     void load();
   }, [load, refreshTrigger]);
 

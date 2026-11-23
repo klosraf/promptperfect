@@ -53,7 +53,7 @@ export function useWorkspaceSession(): WorkspaceSession {
     if (!mounted) return;
     const client = createSupabaseBrowserClient();
     if (!client) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- EGM E4 (signed): terminal branch synchronizing with external systems (absence of a Supabase client is an environment fact, not derived state). It sets terminal defaults once and returns; no render cascade is possible.
+      // EGM E4 (signed): terminal branch synchronizing with external systems (absence of a Supabase client is an environment fact, not derived state). It sets terminal defaults once and returns; no render cascade is possible.
       setUser(null);
       setProvider('gemini');
       setApiKey('');
