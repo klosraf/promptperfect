@@ -1,4 +1,7 @@
-# PromptPerfect — production multi-stage image (Next.js standalone server).
+# PromptPerfect — production multi-stage image. The runner serves with
+# `npm start` (no Next.js standalone output: `output: 'standalone'` is not
+# configured in next.config.ts). EGM E6 (F6-06): earlier wording claimed a
+# standalone server that does not exist.
 # Build:  docker build -t promptperfect .
 # Run:    docker run -p 3000:3000 --env-file .env.local promptperfect
 # Env (.env.local, never baked in): GOOGLE_GENERATIVE_AI_API_KEY,

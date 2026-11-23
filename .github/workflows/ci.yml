@@ -2,9 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, feat/db-production-hardening]
   push:
-    branches: [main]
+    branches: [main, feat/db-production-hardening]
 
 jobs:
   # Fast fail: type safety + lint, independent of tests/build.
@@ -51,6 +51,10 @@ jobs:
       - run: npm ci
       - name: Production build
         run: npm run build
+      # EGM E6 (F6-02/PP-19): bundle budget gate on the same runner that
+      # produced .next — perf:budget was declared but wired nowhere.
+      - name: Bundle budget gate
+        run: npm run perf:budget
 
   # Real-browser E2E (Playwright: landing + axe). Needs a build for `next start`.
   e2e:

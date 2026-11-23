@@ -22,6 +22,10 @@ This n8n workflow calls the **PromptPerfect Optimize API** (`POST /api/optimize-
 
 1. Open the workflow and click the **Set Prompt Input** node.
 2. Find the assignment **`apiKey`** and replace `YOUR_API_KEY_HERE` with your real PromptPerfect API key.
+
+> ⚠️ **Credential hygiene (EGM E7):** a key pasted into the **Set Prompt Input** node travels with the exported workflow JSON. For anything you share or commit, store the key in n8n **Credentials** or **Variables** (or an environment variable) and reference it from the Set node instead — never export a workflow that contains a real key.
+
+> **Manual test script (EGM E7):** `test-n8n-workflow.js` in this folder is a standalone manual script — it is **not** executed by `npm test`, Vitest or CI, and needs a live PromptPerfect instance to do anything useful. It is kept for manual checks only.
 3. **Save** the workflow.
 
 ### Step 3: Set Your Prompt

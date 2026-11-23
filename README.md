@@ -18,7 +18,7 @@ PromptPerfect takes your draft prompts—whether vague, messy, or just a rough i
   - **Chain-of-Thought**: Structures the prompt to encourage step-by-step reasoning.
   - **Production Audit**: Link a project directory (analyzed locally in your browser, files stay on your device) and get the integral master prompt — everything that codebase needs to reach production-ready level.
 - **Privacy-First**: Your API keys are stored locally in your browser and never saved to our servers.
-- **Template Library**: 60 production-ready prompt templates across 60 categories (SaaS, Fintech, AI Agent, Legal, Security…) — fork any of them into the optimizer with one click. Works offline, no account needed.
+- **Template Library**: 75 production-ready prompt templates (SaaS, Fintech, AI Agent, Legal, Security…) — fork any of them into the optimizer with one click. Works offline, no account needed.
 - **Open Source**: Built with modern web technologies, free to use and extend.
 - **n8n Integration**: Ready-to-import workflow templates for automation (see `examples/`).
 
@@ -148,7 +148,7 @@ Follow these steps to run PromptPerfect locally on your machine.
 | `npm run dev` | Local dev server with Turbopack |
 | `npm run test:coverage` | Test suite with V8 coverage report (`./coverage`) |
 | `npm run db:migrate` | Apply `supabase/migrations/*.sql` (`DATABASE_URL` required) |
-| `npm run db:verify` | 47 DB assertions: schema, CHECK enforcement, RLS, triggers |
+| `npm run db:verify` | DB assertions (schema, CHECK enforcement, RLS, triggers) — `supabase/tests/verify.js` |
 | `npm run db:seed` | Idempotent local-dev fixtures (never on production) |
 | `npm run db:check` | Exit 1 if migrations pending (pre-deploy gate) |
 | `docker build -t promptperfect .` | Validate the production container (see `Dockerfile`) |
@@ -156,6 +156,7 @@ Follow these steps to run PromptPerfect locally on your machine.
 - **Browser extension:** load `extension/` unpacked via `chrome://extensions` (details in `extension/README.md`); it calls `/api/optimize-sync` with your own provider key (BYOK).
 - **API validation:** new payload routes must extend the zero-dependency parsers in `src/lib/apiSchemas.ts` — no Zod (see `docs/adr/0002-request-validation-without-zod.md`).
 - **Supabase clients:** browser code uses `@/lib/client/supabaseBrowser`, server code uses `@/lib/server/supabase` — never the reverse (see `docs/adr/0001-supabase-client-factories.md`).
+- **E2E scope (honest):** `npm run test:e2e` is 3 Playwright specs covering smoke + axe (WCAG 2.1 AA) checks on **unauthenticated** surfaces (landing, `/app`, `/library` in guest state). Authenticated flows and a live optimization round-trip are **not** covered by e2e; they are covered by the colocated Vitest route/component tests. The critical coverage gate (`test:coverage:critical`) is per-file over 5 core files (see `vitest.critical.config.ts`).
 
 ## Integrations
 
