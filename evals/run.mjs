@@ -17,7 +17,9 @@
  * Writes a Markdown report under evals/results/ and prints a summary.
  */
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { appendFileSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
@@ -58,6 +60,38 @@ function splitRegions(text) {
     changes: text.slice(chgIdx + 13).trim(),
     structured: true,
   };
+}
+
+/**
+ * POST JSON via node:http directly. The global fetch (undici) kills
+ * bodies at ~300 s by default, which silently capped run 2 of this
+ * harness on a loaded machine; node:http has no such ceiling, and the
+ * explicit timeout below is the only one that applies.
+ */
+function postJson(urlString, body, headers, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const url = new URL(urlString);
+    const req = (url.protocol === "https:" ? httpsRequest : httpRequest)(
+      {
+        hostname: url.hostname,
+        port: url.port,
+        path: url.pathname + url.search,
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...headers },
+        timeout: timeoutMs,
+      },
+      (res) => {
+        const chunks = [];
+        res.on("data", (c) => chunks.push(c));
+        res.on("end", () =>
+          resolve({ status: res.statusCode ?? 0, text: Buffer.concat(chunks).toString("utf8") }),
+        );
+      },
+    );
+    req.on("timeout", () => req.destroy(new Error(`request timeout after ${timeoutMs} ms`)));
+    req.on("error", reject);
+    req.end(JSON.stringify(body));
+  });
 }
 
 function checkCase(c, out) {
@@ -101,21 +135,17 @@ function checkCase(c, out) {
 
 const results = [];
 const rawLines = [];
+const runStamp = `${new Date().toISOString().slice(0, 10)}-${MODEL.replace(/[^a-z0-9]+/gi, "-")}-${new Date().toISOString().slice(11, 19).replace(/:/g, "")}`;
 for (const c of cases) {
   const t0 = Date.now();
   let out = "";
   let error = "";
   let finish = "";
-  const timeoutMs = Number(process.env.EVAL_TIMEOUT_MS || 600000);
+  const timeoutMs = Number(process.env.EVAL_TIMEOUT_MS || 900000);
   try {
-    const res = await fetch(`${BASE}/chat/completions`, {
-      method: "POST",
-      signal: AbortSignal.timeout(timeoutMs),
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${KEY}`,
-      },
-      body: JSON.stringify({
+    const res = await postJson(
+      `${BASE}/chat/completions`,
+      {
         model: MODEL,
         temperature: TEMP,
         max_tokens: MAX_TOKENS,
@@ -123,19 +153,22 @@ for (const c of cases) {
           { role: "system", content: getSystemPrompt(c.mode) },
           { role: "user", content: c.input },
         ],
-      }),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
+      },
+      { Authorization: `Bearer ${KEY}` },
+      timeoutMs,
+    );
+    if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
+    const json = JSON.parse(res.text);
     out = json.choices?.[0]?.message?.content ?? "";
     finish = json.choices?.[0]?.finish_reason ?? "";
     if (!out) error = `empty content (finish_reason=${finish || "n/a"})`;
   } catch (e) {
     error = String(e?.message ?? e);
   }
-  rawLines.push(
-    JSON.stringify({ id: c.id, ms: Date.now() - t0, finish, error, out }),
-  );
+  const rawLine = JSON.stringify({ id: c.id, ms: Date.now() - t0, finish, error, out });
+  rawLines.push(rawLine);
+  mkdirSync(join(here, "results"), { recursive: true });
+  appendFileSync(join(here, "results", `${runStamp}.raw.jsonl`), rawLine + "\n");
   const checks = error
     ? { pass: false, structure: false, tagged: false, preserve: false, cover: [], length: false, spans: { total: 0, ok: 0 }, ratio: 0 }
     : checkCase(c, out);
@@ -187,10 +220,6 @@ ${results
 `;
 
 mkdirSync(join(here, "results"), { recursive: true });
-const file = join(here, "results", `${date.slice(0, 10)}-${MODEL.replace(/[^a-z0-9]+/gi, "-")}-${date.slice(11, 19).replace(/:/g, "")}.md`);
+const file = join(here, "results", `${runStamp}.md`);
 writeFileSync(file, md);
-writeFileSync(
-  join(here, "results", `${date.slice(0, 10)}-${MODEL.replace(/[^a-z0-9]+/gi, "-")}-${date.slice(11, 19).replace(/:/g, "")}.raw.jsonl`),
-  rawLines.join("\n") + "\n",
-);
 console.log(`\nFull pass ${passed}/${n}; spans ${spanOk}/${spanTotal}; report: ${file}`);
