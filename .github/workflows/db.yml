@@ -73,7 +73,16 @@ jobs:
           # a PR changes real SQL in legacy setup scripts instead of adding
           # a migration (ADR-0004). Comment-only (-- ...) and blank-line
           # changes (e.g. a DEPRECATED header or a redaction note) pass.
-          base="origin/${{ github.base_ref || 'main' }}"
+          base_ref="${{ github.base_ref || 'main' }}"
+          # actions/checkout (fetch-depth 1) does not materialize origin/<base>:
+          # on push events the guard failed closed with "bad revision origin/main"
+          # (Database run 45093740994, 2026-11-22). Fetch the base ref explicitly;
+          # a failed fetch still fails closed, exactly as designed.
+          if ! git fetch --no-tags --depth=1 origin "$base_ref:refs/remotes/origin/$base_ref"; then
+            echo "git fetch of base ref $base_ref failed - failing closed instead of passing silently."
+            exit 1
+          fi
+          base="origin/$base_ref"
           if ! raw_diff="$(git diff -U0 "$base" -- supabase/setup.sql supabase/run-all.sql supabase/SETUP_SHARE_FEATURE.sql supabase/fix_model_column.sql)"; then
             echo "❌ git diff against $base failed (base ref unavailable?) — failing closed instead of passing silently."
             exit 1
