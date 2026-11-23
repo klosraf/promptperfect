@@ -325,6 +325,7 @@ export function useSavedLibrary(): SavedLibrary {
       // Local mode without backend: library works off localStorage, no sign-in.
       if (isUnlimitedMode()) {
         // EGM E4 (signed): terminal branch synchronizing with external systems (no Supabase client + local-mode flag are environment facts). It sets the terminal local user once and returns; no render cascade is possible.
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- EGM E4 (signed): rationale in the comment above; terminal branch, no cascade possible.
         setUser({ id: 'local', name: 'Local device', email: '', provider: '', model: '' });
         void loadSaved('local');
         setAuthReady(true);

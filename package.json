@@ -24,7 +24,8 @@
     "db:check": "node supabase/migrate.js --check",
     "db:verify": "node supabase/tests/verify.js",
     "db:seed": "psql \"$DATABASE_URL\" -f supabase/tests/seed.sql",
-    "postinstall": "node scripts/fix-supabase-js-types.mjs"
+    "postinstall": "node scripts/fix-supabase-js-types.mjs",
+    "brand:assets": "node scripts/brand/build-assets.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.54",
@@ -40,7 +41,7 @@
     "dotenv": "^17.3.1",
     "lucide-react": "^0.563.0",
     "nanoid": "^5.1.7",
-    "next": "16.1.6",
+    "next": "^16.4.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "tailwind-merge": "3.7.0"
@@ -55,13 +56,13 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5.1.4",
-    "@vitest/coverage-v8": "^4.1.4",
+    "@vitest/coverage-v8": "^4.1.12",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "^16.4.6",
     "jsdom": "^28.0.0",
     "pg": "^8.18.0",
     "tailwindcss": "^4",
     "typescript": "5.9.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.12"
   }
 }
