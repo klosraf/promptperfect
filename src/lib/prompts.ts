@@ -32,6 +32,7 @@ Your reply has exactly three regions in this order:
 • One line by itself, exactly: ---CHANGES---
 
 • Then 2–6 lines; each line starts with "- [METHOD] " describing one concrete edit vs. the user's original, where METHOD is exactly one of: ADD (content inserted), REPLACE (wording swapped), DELETE (content removed), EXAMPLE (an example added or enriched), STRUCTURE (reorganisation, sections, ordering). One method per line — never tag a line with two methods.
+• For REPLACE lines, quote the spans verbatim: - [REPLACE] «exact original wording» → «exact new wording» — then a brief reason after an em dash. For ADD lines, quote the inserted span: - [ADD] «exact inserted wording» — then the reason. Quote exactly as written (the app lets the user revert a change only when its quoted span matches the improved prompt word for word), keep each quoted span under 12 words, and never invent a quote you did not actually make.
 
 Use clear, professional wording.
 
@@ -72,10 +73,10 @@ Success looks like: a reader can decide whether to escalate without opening the 
 - Added a hard word budget and a no-speculation rule, which were the two real failure modes.
 - Defined the output shape explicitly, so the summary stops drifting into prose.
 ---CHANGES---
-- [ADD] Added an audience definition with assumed prior knowledge.
-- [ADD] Inserted a 400-word constraint and a no-speculation rule.
+- [ADD] «for an engineering audience that already knows our infrastructure» — Added an audience definition with assumed prior knowledge.
+- [ADD] «keep it under 400 words; do not speculate about root cause beyond what» — Inserted a word constraint and a no-speculation rule.
 - [STRUCTURE] Specified a three-paragraph-plus-bullets output shape.
-- [ADD] Added a success definition so the result is checkable.
+- [ADD] «a reader can decide whether to escalate without opening the report» — Added a success definition so the result is checkable.
 <<<END EXAMPLE>>>
 
 Now produce the real answer for the user's prompt. Do not copy the example's

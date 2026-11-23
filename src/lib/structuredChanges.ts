@@ -20,6 +20,14 @@ export type EditMethod =
 export interface StructuredChange {
   method: EditMethod;
   text: string;
+  /**
+   * Verbatim spans quoted by the contract («...»): for REPLACE, `before`
+   * is the original span and `after` the span in the improved prompt; for
+   * ADD, `after` is the inserted span. Absent when the model did not quote
+   * (older runs, non-compliant output) — such changes are display-only.
+   */
+  before?: string;
+  after?: string;
 }
 
 const METHODS: EditMethod[] = ["ADD", "REPLACE", "DELETE", "EXAMPLE", "STRUCTURE"];
@@ -34,13 +42,33 @@ export function parseStructuredChanges(changes: string): StructuredChange[] {
     if (!line) continue;
     const tag = TAG_RE.exec(line);
     if (tag) {
-      const method = METHODS.find((m) => m === tag[1]?.toUpperCase());
-      out.push({ method: method ?? "OTHER", text: line.replace(TAG_RE, "").trim() });
+      const method = METHODS.find((m) => m === tag[1]?.toUpperCase()) ?? "OTHER";
+      const rest = line.replace(TAG_RE, "").trim();
+      out.push({ method, text: rest, ...parseSpans(method, rest) });
     } else {
       out.push({ method: "OTHER", text: line });
     }
   }
   return out;
+}
+
+
+const SPAN_RE = /«([^»]+)»/g;
+
+/** Extract the quoted spans of a change line, per method. Tolerant: any
+ *  shape that does not match the contract yields no spans. */
+function parseSpans(
+  method: EditMethod,
+  rest: string,
+): Pick<StructuredChange, "before" | "after"> {
+  const spans = [...rest.matchAll(SPAN_RE)].map((m) => m[1] ?? "");
+  if (method === "REPLACE" && spans.length >= 2) {
+    return { before: spans[0], after: spans[1] };
+  }
+  if (method === "ADD" && spans.length >= 1) {
+    return { after: spans[0] };
+  }
+  return {};
 }
 
 /** Human label for a method chip. */

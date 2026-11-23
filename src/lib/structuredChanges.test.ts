@@ -26,6 +26,29 @@ describe("parseStructuredChanges", () => {
     expect(out).toEqual([{ method: "DELETE", text: "Removed the greeting." }]);
   });
 
+
+  it("extracts quoted spans for REPLACE and ADD lines", () => {
+    const out = parseStructuredChanges(
+      "- [REPLACE] «write a poem» → «write a four-line poem» — Set the length.\n" +
+        "- [ADD] «in the style of Neruda» — Anchored the voice.\n" +
+        "- [STRUCTURE] Reorganised into sections.",
+    );
+    expect(out[0]).toMatchObject({
+      method: "REPLACE",
+      before: "write a poem",
+      after: "write a four-line poem",
+    });
+    expect(out[1]).toMatchObject({ method: "ADD", after: "in the style of Neruda" });
+    expect(out[1]?.before).toBeUndefined();
+    expect(out[2]).toMatchObject({ method: "STRUCTURE" });
+    expect(out[2]?.after).toBeUndefined();
+  });
+
+  it("leaves spans undefined when a tagged line quotes nothing", () => {
+    const out = parseStructuredChanges("- [ADD] Added a constraint.");
+    expect(out[0]?.after).toBeUndefined();
+  });
+
   it("returns [] for empty input", () => {
     expect(parseStructuredChanges("")).toEqual([]);
     expect(parseStructuredChanges("  \n ")).toEqual([]);

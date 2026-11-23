@@ -9,6 +9,7 @@ import {
   EDIT_METHOD_LABEL,
   parseStructuredChanges,
 } from '@/lib/structuredChanges';
+import { applyReverts, checkRevertible } from '@/lib/applyChanges';
 
 const DiffViewLazy = dynamic(
   () => import('@/components/DiffView').then((m) => ({ default: m.DiffView })),
@@ -44,6 +45,27 @@ export function ExplanationPanel({
   const trimmed = explanation.trim();
   const hasDiffInputs = original.trim().length > 0 || optimized.trim().length > 0;
   const structuredChanges = parseStructuredChanges(changes);
+  // Per-change review: indices of changes the user reverted. Keyed to the
+  // current run's inputs so a new run starts unreviewed, without an effect.
+  const reviewKey = `${optimized}\n---\n${changes}`;
+  const [reviewState, setReviewState] = useState<{
+    key: string;
+    reverted: ReadonlySet<number>;
+  }>({ key: '', reverted: new Set() });
+  const reverted: ReadonlySet<number> =
+    reviewState.key === reviewKey ? reviewState.reverted : new Set();
+  const review =
+    reverted.size > 0 && optimized
+      ? applyReverts(optimized, structuredChanges, reverted)
+      : null;
+  const [reviewCopied, setReviewCopied] = useState(false);
+  const toggleRevert = (index: number) => {
+    const next = new Set(reverted);
+    if (next.has(index)) next.delete(index);
+    else next.add(index);
+    setReviewState({ key: reviewKey, reverted: next });
+    setReviewCopied(false);
+  };
   const tokenDelta =
     original.trim() && optimized.trim()
       ? { from: estimateTokens(original), to: estimateTokens(optimized) }
@@ -116,15 +138,62 @@ export function ExplanationPanel({
                 Changes made
               </p>
               <ul className="mt-2.5 space-y-2">
-                {structuredChanges.map((c, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-[14px] leading-[1.6] text-foreground-dim">
-                    <span className="mt-0.5 shrink-0 rounded-full border border-border px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-accent-text">
-                      {EDIT_METHOD_LABEL[c.method]}
-                    </span>
-                    <span>{c.text}</span>
-                  </li>
-                ))}
+                {structuredChanges.map((c, i) => {
+                  const check = optimized
+                    ? checkRevertible(c, optimized)
+                    : { ok: false as const, reason: 'no-spans' as const };
+                  const isReverted = reverted.has(i);
+                  return (
+                    <li key={i} className="flex items-start gap-2.5 text-[14px] leading-[1.6] text-foreground-dim">
+                      <span className="mt-0.5 shrink-0 rounded-full border border-border px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-accent-text">
+                        {EDIT_METHOD_LABEL[c.method]}
+                      </span>
+                      <span className={isReverted ? 'line-through opacity-60' : undefined}>{c.text}</span>
+                      {check.ok && (
+                        <button
+                          type="button"
+                          onClick={() => toggleRevert(i)}
+                          aria-pressed={isReverted}
+                          className="mt-0.5 shrink-0 rounded-full border border-border px-2 py-0.5 text-[11px] font-medium text-muted-foreground transition hover:border-accent/60 hover:text-foreground"
+                        >
+                          {isReverted ? 'Reverted · Undo' : 'Revert'}
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
+              {review && (
+                <div className="mt-4 rounded-xl border border-border bg-card p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+                      Your reviewed version
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void navigator.clipboard
+                          .writeText(review.text)
+                          .then(() => setReviewCopied(true))
+                          .catch(() => setReviewCopied(false));
+                      }}
+                      className="shrink-0 rounded-full border border-border px-2.5 py-1 text-[11.5px] font-medium text-foreground-dim transition hover:border-accent/60 hover:text-foreground"
+                    >
+                      {reviewCopied ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
+                  <p className="mt-2.5 whitespace-pre-wrap text-[13.5px] leading-[1.65] text-foreground">
+                    {review.text}
+                  </p>
+                  <p className="mt-2.5 text-[12px] text-muted-foreground">
+                    {review.applied.length} change
+                    {review.applied.length === 1 ? '' : 's'} reverted by exact
+                    quoted-span swap.
+                    {review.skipped.length > 0 &&
+                      ` ${review.skipped.length} selected revert(s) no longer match the text verbatim and were left applied.`}
+                  </p>
+                </div>
+              )}
             </div>
           )}
           {viewMode === 'explanation' && tokenDelta && (
