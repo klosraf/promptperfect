@@ -1,5 +1,7 @@
 'use client';
 
+import { PromptAnalysisPanel } from '@/components/workspace/PromptAnalysisPanel';
+import { splitOptimizedOutput } from '@/lib/delimiter';
 import { useEffect, useState } from 'react';
 import { PromptInput } from '@/components/PromptInput';
 import { StreamingPromptOutput } from '@/components/StreamingPromptOutput';
@@ -121,6 +123,11 @@ export default function AppPage() {
               onChange={setInputText}
               disabled={isLoading}
             />
+            <PromptAnalysisPanel
+              text={inputText}
+              onApplyFix={setInputText}
+              disabled={isLoading}
+            />
             <div className="mt-2 flex justify-end">
               <TranslateButton
                 text={inputText}
@@ -203,6 +210,9 @@ export default function AppPage() {
             explanation={explanation}
             original={inputText}
             optimized={optimizedTextFromFullCompletion(completion)}
+            changes={
+              completion ? splitOptimizedOutput(completion).changes : ''
+            }
           />
         </div>
         </ClientErrorBoundary>

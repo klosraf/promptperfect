@@ -4,6 +4,11 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { SegmentedToggle } from '@/components/ui/SegmentedToggle';
+import { estimateTokens } from '@/lib/promptAnalysis';
+import {
+  EDIT_METHOD_LABEL,
+  parseStructuredChanges,
+} from '@/lib/structuredChanges';
 
 const DiffViewLazy = dynamic(
   () => import('@/components/DiffView').then((m) => ({ default: m.DiffView })),
@@ -14,6 +19,8 @@ interface ExplanationPanelProps {
   explanation: string;
   original?: string;
   optimized?: string;
+  /** Raw ---CHANGES--- region; parsed into method-tagged items. */
+  changes?: string;
 }
 
 function isBulletLine(line: string): boolean {
@@ -29,14 +36,20 @@ export function ExplanationPanel({
   explanation,
   original = '',
   optimized = '',
+  changes = '',
 }: ExplanationPanelProps) {
   const [expanded, setExpanded] = useState(true);
   const [viewMode, setViewMode] = useState<'explanation' | 'diff'>('explanation');
 
   const trimmed = explanation.trim();
   const hasDiffInputs = original.trim().length > 0 || optimized.trim().length > 0;
+  const structuredChanges = parseStructuredChanges(changes);
+  const tokenDelta =
+    original.trim() && optimized.trim()
+      ? { from: estimateTokens(original), to: estimateTokens(optimized) }
+      : null;
 
-  if (!trimmed && !hasDiffInputs) return null;
+  if (!trimmed && !hasDiffInputs && structuredChanges.length === 0) return null;
 
   const lines = trimmed
     .split('\n')
@@ -96,6 +109,33 @@ export function ExplanationPanel({
             )
           ) : (
             <p className="text-[14px] text-[#808088]">No explanation for this run.</p>
+          )}
+          {viewMode === 'explanation' && structuredChanges.length > 0 && (
+            <div className="mt-5 border-t border-[#1e1e1e] pt-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[#808088]">
+                Changes made
+              </p>
+              <ul className="mt-2.5 space-y-2">
+                {structuredChanges.map((c, i) => (
+                  <li key={i} className="flex items-start gap-2.5 text-[14px] leading-[1.6] text-[#aaa]">
+                    <span className="mt-0.5 shrink-0 rounded-full border border-[#2a2a2a] px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-[#8b93ff]">
+                      {EDIT_METHOD_LABEL[c.method]}
+                    </span>
+                    <span>{c.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {viewMode === 'explanation' && tokenDelta && (
+            <p className="mt-4 text-[12px] text-[#666]">
+              Length: ≈{tokenDelta.from} → ≈{tokenDelta.to} tokens (
+              {tokenDelta.to - tokenDelta.from >= 0 ? '+' : ''}
+              {tokenDelta.from > 0
+                ? Math.round(((tokenDelta.to - tokenDelta.from) / tokenDelta.from) * 100)
+                : 0}
+              %)
+            </p>
           )}
         </div>
       )}

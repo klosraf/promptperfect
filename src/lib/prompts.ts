@@ -31,7 +31,7 @@ Your reply has exactly three regions in this order:
 
 • One line by itself, exactly: ---CHANGES---
 
-• Then 2–6 lines; each line starts with "- " describing one concrete edit vs. the user's original.
+• Then 2–6 lines; each line starts with "- [METHOD] " describing one concrete edit vs. the user's original, where METHOD is exactly one of: ADD (content inserted), REPLACE (wording swapped), DELETE (content removed), EXAMPLE (an example added or enriched), STRUCTURE (reorganisation, sections, ordering). One method per line — never tag a line with two methods.
 
 Use clear, professional wording.
 
@@ -72,10 +72,10 @@ Success looks like: a reader can decide whether to escalate without opening the 
 - Added a hard word budget and a no-speculation rule, which were the two real failure modes.
 - Defined the output shape explicitly, so the summary stops drifting into prose.
 ---CHANGES---
-- Added an audience definition with assumed prior knowledge.
-- Inserted a 400-word constraint and a no-speculation rule.
-- Specified a three-paragraph-plus-bullets output shape.
-- Added a success definition so the result is checkable.
+- [ADD] Added an audience definition with assumed prior knowledge.
+- [ADD] Inserted a 400-word constraint and a no-speculation rule.
+- [STRUCTURE] Specified a three-paragraph-plus-bullets output shape.
+- [ADD] Added a success definition so the result is checkable.
 <<<END EXAMPLE>>>
 
 Now produce the real answer for the user's prompt. Do not copy the example's
