@@ -81,7 +81,11 @@ async function main() {
   const { Client } = require('pg');
   const client = new Client({
     connectionString: databaseUrl,
-    ssl: /localhost|127\.0\.0\.1/.test(databaseUrl) ? false : { rejectUnauthorized: false },
+    // EGM E5 (F5-05): verify TLS by default; PGSSL_INSECURE=1 is the
+    // deliberate escape hatch (same contract as migrate.js).
+    ssl: /localhost|127\.0\.0\.1/.test(databaseUrl)
+      ? false
+      : { rejectUnauthorized: process.env.PGSSL_INSECURE !== '1' },
   });
   await client.connect();
 
@@ -261,6 +265,20 @@ async function main() {
        AND tablename='pp_optimization_history' AND cmd IN ('SELECT','UPDATE','DELETE')`,
     );
     await expectNoPolicies(
+      'guarded INSERT policies forbid user_id spoofing (EGM E2)',
+      `SELECT policyname FROM pg_policies WHERE schemaname='public'
+       AND tablename IN ('pp_optimization_history','optimization_logs')
+       AND policyname LIKE '%guarded%'
+       AND (with_check IS NULL OR position('user_id' in with_check)=0)`,
+    );
+    await expectNoPolicies(
+      'history guarded INSERT forbids share_id spoofing (EGM E2)',
+      `SELECT policyname FROM pg_policies WHERE schemaname='public'
+       AND tablename='pp_optimization_history' AND cmd='INSERT'
+       AND policyname LIKE '%guarded%'
+       AND (with_check IS NULL OR position('share_id' in with_check)=0)`,
+    );
+    await expectNoPolicies(
       'history INSERT policies all constrain session_id',
       `SELECT policyname FROM pg_policies WHERE schemaname='public'
        AND tablename='pp_optimization_history' AND cmd='INSERT'
@@ -282,6 +300,20 @@ async function main() {
       if (anonExists === 0) {
         console.log('  ℹ️  no anon role on this instance — anon probes skipped');
       } else {
+        // Emulate Supabase's platform privileges INSIDE this rolled-back
+        // transaction (cierre EGM, Goldfish P1): on Supabase, anon and
+        // authenticated hold DML grants on public tables and RLS alone
+        // governs which rows they can touch. Plain Postgres (CI db.yml,
+        // local ephemeral clusters) grants nothing, so without this every
+        // probe below dies with "permission denied" before RLS is ever
+        // consulted — testing the harness, not the policies. The grants
+        // roll back together with the probes.
+        await client.query(
+          `GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon, authenticated`,
+        );
+        await client.query(
+          `GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated`,
+        );
         await client.query(
           `INSERT INTO public.pp_optimization_history
              (session_id, prompt_original, prompt_optimized, mode)
@@ -309,24 +341,58 @@ async function main() {
         else fail('anon cannot SELECT profiles', `${prof.rowCount} row(s) visible`);
         await client.query('RESET ROLE');
         // user_id spoofing on log insert (WITH CHECK violation raises).
+        // Goldfish P1 (cierre EGM): each negative probe runs in its OWN
+        // savepoint — a rejected INSERT aborts the whole transaction
+        // (25P02 on the next statement), which would poison the positive
+        // probes below and fail verify precisely when the RLS fix IS
+        // applied. Same pattern as expectReject in §5; the SET LOCAL ROLE
+        // stays outside the savepoint so a rollback cannot undo it.
         await client.query('SET LOCAL ROLE anon');
-        try {
-          await client.query(
-            `INSERT INTO public.optimization_logs
-               (session_id, mode, version, provider, model, prompt_length, user_id)
-             VALUES ('adv-spoof', 'better', 'v', 'gemini', 'test-model', 10,
-                     '22222222-2222-4222-8222-222222222222')`,
-          );
-          fail('anon cannot spoof user_id on log insert');
-        } catch {
-          ok('anon cannot spoof user_id on log insert');
+        async function expectInsertReject(name, sql) {
+          await client.query('SAVEPOINT adv_probe');
+          try {
+            await client.query(sql);
+            await client.query('RELEASE SAVEPOINT adv_probe');
+            fail(name);
+          } catch {
+            await client.query('ROLLBACK TO SAVEPOINT adv_probe');
+            ok(name);
+          }
         }
+        await expectInsertReject(
+          'anon cannot spoof user_id on log insert',
+          `INSERT INTO public.optimization_logs
+             (session_id, mode, version, provider, model, prompt_length, user_id)
+           VALUES ('adv-spoof', 'better', 'v', 'gemini', 'test-model', 10,
+                   '22222222-2222-4222-8222-222222222222')`,
+        );
         await client.query(
           `INSERT INTO public.optimization_logs
              (session_id, mode, version, provider, model, prompt_length, user_id)
            VALUES ('adv-guest', 'better', 'v', 'gemini', 'test-model', 10, NULL)`,
         );
         ok('anon guest log insert (NULL user_id) still accepted');
+        // EGM E2: identity spoofing through the GUARDED history policy —
+        // before 20261112000000 these INSERTs were allowed (OR semantics).
+        await expectInsertReject(
+          'anon cannot spoof user_id on history insert',
+          `INSERT INTO public.pp_optimization_history
+             (session_id, prompt_original, prompt_optimized, mode, user_id)
+           VALUES ('adv-spoof-h', 'a', 'b', 'better',
+                   '22222222-2222-4222-8222-222222222222')`,
+        );
+        await expectInsertReject(
+          'anon cannot pre-claim a share_id on history insert',
+          `INSERT INTO public.pp_optimization_history
+             (session_id, prompt_original, prompt_optimized, mode, share_id)
+           VALUES ('adv-spoof-s', 'a', 'b', 'better', 'advshare123456')`,
+        );
+        await client.query(
+          `INSERT INTO public.pp_optimization_history
+             (session_id, prompt_original, prompt_optimized, mode)
+           VALUES ('adv-guest-h', 'a', 'b', 'better')`,
+        );
+        ok('anon guest history insert (NULL identity) still accepted');
         await client.query('RESET ROLE');
       }
     } finally {

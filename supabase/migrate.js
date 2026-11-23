@@ -72,7 +72,12 @@ async function main() {
   const client = new Client({
     connectionString: databaseUrl,
     // Supabase pooler / managed instances require TLS; local ephemeral does not.
-    ssl: /localhost|127\.0\.0\.1/.test(databaseUrl) ? false : { rejectUnauthorized: false },
+    // EGM E5 (F5-05): verify TLS certificates by default. The explicit
+    // escape hatch for a self-signed local/managed instance is
+    // PGSSL_INSECURE=1 — set it deliberately, never silently.
+    ssl: /localhost|127\.0\.0\.1/.test(databaseUrl)
+      ? false
+      : { rejectUnauthorized: process.env.PGSSL_INSECURE !== '1' },
   });
 
   await client.connect();
@@ -117,8 +122,22 @@ async function main() {
 
     for (const file of pending) {
       const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, file), 'utf8');
-      if (!sql.trim() || sql.trim().startsWith('-- empty')) {
-        console.log(`⏭️  Skipping empty ${file}`);
+      // EGM E5 (F5-03): a comment/whitespace-only file is a valid
+      // no-op migration. It must be RECORDED as applied — skipping it
+      // unrecorded left it pending forever and `db:check` exited 1
+      // eternally even on a fully migrated database.
+      const isEmptyMigration =
+        sql.replace(/--[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '').trim() === '';
+      if (isEmptyMigration) {
+        await client.query('BEGIN');
+        try {
+          await client.query(`INSERT INTO ${TRACKING_TABLE} (version) VALUES ($1)`, [file]);
+          await client.query('COMMIT');
+          console.log(`✅ ${file} recorded (empty migration, no-op).`);
+        } catch (err) {
+          await client.query('ROLLBACK');
+          throw err;
+        }
       } else {
         console.log(`📋 Applying ${file} ...`);
         // One transaction per file (atomic). pg supports multi-statement

@@ -3,7 +3,7 @@
 -- Prefer `npm run db:migrate`.
 -- PromptPerfect Database Setup
 -- Run this entire file in Supabase Dashboard → SQL Editor
--- https://ideifzsqrpygaxisisuj.supabase.co/
+-- (Project URL redacted — EGM E5: do not commit live project hosts.)
 
 -- 1. Create pp_optimization_history table for storing optimization results
 CREATE TABLE IF NOT EXISTS pp_optimization_history (

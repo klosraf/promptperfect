@@ -31,7 +31,7 @@ export DATABASE_URL='postgresql://postgres:password@db.<ref>.supabase.co:5432/po
 # 3. Migrate (creates everything, re-runnable no-op when up to date)
 npm run db:migrate
 
-# 4. Verify (47 assertions: tables, constraints, RLS, trigger workflows)
+# 4. Verify (assertions in tests/verify.js: tables, constraints, RLS, trigger workflows)
 npm run db:verify
 ```
 
@@ -140,3 +140,13 @@ Pre-deploy checklist for production Supabase:
 | `relation "auth.users" does not exist` | Same — stub first on ephemeral; on Supabase it always exists. |
 | Migration fails mid-file | File ran in one transaction → rolled back, stays pending. Fix the file, re-run. |
 | `db:verify` reports missing constraint | A migration was edited after applying — reset the DB or add a new repair migration. |
+
+
+> **Replay limitation (EGM 2026-11-12):** a fresh replay converges to
+> the production shape only when migrations apply in filename order on
+> an empty database. Known divergence: `20260401000000`'s
+> `CREATE TABLE guest_usage` (uuid-PK shape) is a no-op wherever
+> `20250404000000` created the table first (text-PK shape) — the live
+> shape is the 20250404 one. Schema convergence is tracked as a
+> pending decision (see ADR-0006 addendum); do not "fix" it by editing
+> applied migrations.

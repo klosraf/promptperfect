@@ -32,3 +32,17 @@ in two files meant fresh databases could never build from scratch.
 - Editing an already-applied migration is forbidden; ship a repair migration instead.
 - `DATABASE_URL` (direct Postgres) is required for DDL; anon/service keys are
   data-plane only.
+
+
+## Addendum EGM 2026-11-12
+
+- El árbol contiene **27 migraciones** (25 al abrir el programa EGM;
+  +`20261112000000_close_guarded_policy_spoofing.sql`
+  +`20261112000001_atomic_guest_usage.sql`). Ninguna está aplicada a
+  producción por este programa: su aplicación es decisión del titular.
+- `migrate.js` registra ahora las migraciones vacías (solo comentarios
+  o blancos) como aplicadas (F5-03): antes quedaban pendientes para
+  siempre y `db:check` no podía salir 0 jamás.
+- TLS: `migrate.js` y `tests/verify.js` verifican certificados por
+  defecto (`rejectUnauthorized: true`); la única vía de escape es
+  `PGSSL_INSECURE=1`, explícita (F5-05).

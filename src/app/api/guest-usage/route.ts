@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { GUEST_LIMIT, assertGuestId } from '@/lib/guest'
-import { getServiceClient } from '@/lib/server/supabase'
-import { getRequestId, logApi } from '@/lib/logger'
+import { getServiceClient, getSupabaseAdminClient } from '@/lib/server/supabase'
+import { getRequestId, logApi, logWarn } from '@/lib/logger'
 import { enforceRateLimit } from '@/lib/auth/rateLimit'
 
 /**
@@ -27,8 +27,11 @@ async function handlePost(request: Request) {
   const limited = enforceRateLimit('guest-usage', request, GUEST_USAGE_RATE_LIMIT)
   if (limited) return limited
 
-  const supabase = getServiceClient()
-  if (!supabase) {
+  // EGM E5: the atomic increment runs only through the admin client
+  // (the RPC's EXECUTE is granted to service_role alone). No admin
+  // client -> honest 503, never a silent downgrade.
+  const admin = getSupabaseAdminClient()
+  if (!admin) {
     return NextResponse.json(
       { error: 'Database not configured' },
       { status: 503 }
@@ -48,7 +51,61 @@ async function handlePost(request: Request) {
     return NextResponse.json({ error: 'Guest ID required' }, { status: 400 })
   }
 
-  const { data: existing } = await supabase
+  // Atomic check-and-increment (migration 20261112000001): the RPC
+  // returns the new count only when the increment stays within the
+  // limit; zero rows means the quota was already exhausted.
+  const { data: rpcRows, error: rpcError } = await admin.rpc(
+    'increment_guest_usage',
+    {
+      p_guest_id: guestId,
+      p_limit: GUEST_LIMIT,
+      p_mode: mode ?? null,
+      p_provider: provider ?? null,
+    },
+  )
+
+  if (!rpcError) {
+    const newCount = rpcRows?.[0]?.optimization_count
+    if (typeof newCount === 'number') {
+      return NextResponse.json({
+        count: newCount,
+        limit: GUEST_LIMIT,
+        remaining: GUEST_LIMIT - newCount,
+      })
+    }
+    // Quota exhausted: report the standing count with the 429.
+    const { data: standing } = await admin
+      .from('guest_usage')
+      .select('optimization_count')
+      .eq('guest_id', guestId)
+      .single()
+    const currentCount = standing?.optimization_count ?? GUEST_LIMIT
+    return NextResponse.json(
+      {
+        error: 'Guest limit reached. Sign up for unlimited access.',
+        limitReached: true,
+        count: currentCount,
+        limit: GUEST_LIMIT,
+      },
+      { status: 429 }
+    )
+  }
+
+  // Fallback to the legacy read-then-upsert ONLY when the RPC does not
+  // exist yet on this database (PGRST202 / 42883: migration not
+  // applied). Any other RPC error is a real 500 — never a silent
+  // downgrade to the racy path.
+  const rpcCode = (rpcError as { code?: string }).code ?? ''
+  if (rpcCode !== 'PGRST202' && rpcCode !== '42883') {
+    logWarn('guest-usage', `increment RPC failed: ${rpcError.message}`)
+    return NextResponse.json({ error: 'Failed to record usage' }, { status: 500 })
+  }
+  logWarn(
+    'guest-usage',
+    'increment_guest_usage RPC missing (migration 20261112000001 not applied); using legacy path',
+  )
+
+  const { data: existing } = await admin
     .from('guest_usage')
     .select('optimization_count')
     .eq('guest_id', guestId)
@@ -68,7 +125,7 @@ async function handlePost(request: Request) {
     )
   }
 
-  const { error: upsertError } = await supabase
+  const { error: upsertError } = await admin
     .from('guest_usage')
     .upsert(
       {

@@ -2,12 +2,12 @@ name: Database
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, feat/db-production-hardening]
     paths:
       - 'supabase/**'
       - '.github/workflows/db.yml'
   push:
-    branches: [main]
+    branches: [main, feat/db-production-hardening]
     paths:
       - 'supabase/**'
       - '.github/workflows/db.yml'
@@ -68,8 +68,20 @@ jobs:
 
       - name: Schema-diff guard (unrecorded DDL check)
         run: |
-          # Fails if a PR edits legacy setup scripts instead of migrations/.
-          if git diff --name-only "origin/${{ github.base_ref || 'main' }}" -- supabase/setup.sql supabase/run-all.sql supabase/SETUP_SHARE_FEATURE.sql supabase/fix_model_column.sql | grep -q .; then
-            echo "⚠️ Legacy setup scripts changed. New schema must go in supabase/migrations/ (see ADR-0004)."
-            echo "   If the change is only the DEPRECATED header, ignore this warning."
+          # EGM E6 (F6-05): content-based guard — the old name-only check
+          # only echoed a warning and could never fail. Now it exits 1 when
+          # a PR changes real SQL in legacy setup scripts instead of adding
+          # a migration (ADR-0004). Comment-only (-- ...) and blank-line
+          # changes (e.g. a DEPRECATED header or a redaction note) pass.
+          base="origin/${{ github.base_ref || 'main' }}"
+          if ! raw_diff="$(git diff -U0 "$base" -- supabase/setup.sql supabase/run-all.sql supabase/SETUP_SHARE_FEATURE.sql supabase/fix_model_column.sql)"; then
+            echo "❌ git diff against $base failed (base ref unavailable?) — failing closed instead of passing silently."
+            exit 1
           fi
+          changed="$(printf '%s\n' "$raw_diff" | grep -E '^[+-]' | grep -vE '^(\+\+\+|---)' | grep -vE '^[+-][[:space:]]*$' | grep -vE '^[+-][[:space:]]*--' || true)"
+          if [ -n "$changed" ]; then
+            echo "❌ Legacy setup scripts changed beyond comments/blank lines. New schema must go in supabase/migrations/ (see ADR-0004)."
+            printf '%s\n' "$changed"
+            exit 1
+          fi
+          echo "✅ Legacy setup scripts: no non-comment changes."
