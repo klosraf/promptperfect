@@ -4,13 +4,15 @@ import { POST, OPTIONS } from "./route";
 
 const generateText = vi.fn();
 
+// Single Supabase mock (route uses both the admin client and the route-handler
+// auth gate). One factory for both symbols: a previous double `vi.mock` for the
+// same path was order-fragile and intermittently let the real (un-available)
+// `createRouteHandlerClient` execute in the auth gate, surfacing as a flaky
+// 400 "Invalid request" from the route's outer catch — esp. under the
+// coverage-instrumented full-suite gate. This file has no coverage-threshold
+// files, but the double mock still destabilized the shared gate run.
 vi.mock("@/lib/server/supabase", () => ({
   getSupabaseAdminClient: () => null,
-}));
-
-// Mock the route-handler Supabase client so the auth gate passes in tests.
-// Tests that exercise the no-key path need an authenticated session.
-vi.mock("@/lib/server/supabase", () => ({
   createRouteHandlerClient: async () => ({
     auth: {
       getUser: async () => ({
